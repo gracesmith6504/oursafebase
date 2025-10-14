@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import SocietyDashboard from "./pages/SocietyDashboard";
 import SocietyMembers from "./pages/SocietyMembers";
+import SocietyEvents from "./pages/SocietyEvents";
 import InviteJoin from "./pages/InviteJoin";
 import NotFound from "./pages/NotFound";
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/invite/:code" element={<InviteJoin />} />
           <Route path="/society/:slug/dashboard" element={<SocietyDashboard />} />
           <Route path="/society/:slug/members" element={<SocietyMembers />} />
+          <Route path="/society/:slug/events" element={<SocietyEvents />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
