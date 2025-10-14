@@ -14,13 +14,457 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      code_acceptances: {
+        Row: {
+          accepted_at: string | null
+          code_of_conduct_id: string | null
+          event_id: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          code_of_conduct_id?: string | null
+          event_id: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          code_of_conduct_id?: string | null
+          event_id?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "code_acceptances_code_of_conduct_id_fkey"
+            columns: ["code_of_conduct_id"]
+            isOneToOne: false
+            referencedRelation: "code_of_conduct"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "code_acceptances_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      code_of_conduct: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          society_id: string
+          version: number | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          society_id: string
+          version?: number | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          society_id?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "code_of_conduct_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergency_info: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          hospital_address: string | null
+          hospital_phone: string | null
+          id: string
+          nearest_hospital: string | null
+          nearest_pharmacy: string | null
+          on_duty_contact: string | null
+          on_duty_phone: string | null
+          pharmacy_address: string | null
+          pharmacy_phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          hospital_address?: string | null
+          hospital_phone?: string | null
+          id?: string
+          nearest_hospital?: string | null
+          nearest_pharmacy?: string | null
+          on_duty_contact?: string | null
+          on_duty_phone?: string | null
+          pharmacy_address?: string | null
+          pharmacy_phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          hospital_address?: string | null
+          hospital_phone?: string | null
+          id?: string
+          nearest_hospital?: string | null
+          nearest_pharmacy?: string | null
+          on_duty_contact?: string | null
+          on_duty_phone?: string | null
+          pharmacy_address?: string | null
+          pharmacy_phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_info_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_feedback: {
+        Row: {
+          contact_email: string | null
+          contact_name: string | null
+          event_id: string
+          felt_safe: string
+          id: string
+          improvements: string | null
+          is_anonymous: boolean | null
+          submitted_at: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_name?: string | null
+          event_id: string
+          felt_safe: string
+          id?: string
+          improvements?: string | null
+          is_anonymous?: boolean | null
+          submitted_at?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_name?: string | null
+          event_id?: string
+          felt_safe?: string
+          id?: string
+          improvements?: string | null
+          is_anonymous?: boolean | null
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_feedback_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          event_date: string
+          id: string
+          location: string | null
+          slug: string
+          society_id: string
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_date: string
+          id?: string
+          location?: string | null
+          slug: string
+          society_id: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          event_date?: string
+          id?: string
+          location?: string | null
+          slug?: string
+          society_id?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          concern_type: string
+          description: string
+          event_id: string
+          id: string
+          is_anonymous: boolean | null
+          notes: string | null
+          reporter_email: string | null
+          reporter_name: string | null
+          resolved_at: string | null
+          severity: string | null
+          status: string | null
+          submitted_at: string | null
+        }
+        Insert: {
+          concern_type: string
+          description: string
+          event_id: string
+          id?: string
+          is_anonymous?: boolean | null
+          notes?: string | null
+          reporter_email?: string | null
+          reporter_name?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          submitted_at?: string | null
+        }
+        Update: {
+          concern_type?: string
+          description?: string
+          event_id?: string
+          id?: string
+          is_anonymous?: boolean | null
+          notes?: string | null
+          reporter_email?: string | null
+          reporter_name?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      safety_page_views: {
+        Row: {
+          event_id: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          viewed_at: string | null
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          viewed_at?: string | null
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_page_views_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      societies: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          invite_code: string
+          name: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          invite_code?: string
+          name: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          invite_code?: string
+          name?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      society_members: {
+        Row: {
+          id: string
+          joined_at: string | null
+          society_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string | null
+          society_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string | null
+          society_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "society_members_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "society_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      welfare_contacts: {
+        Row: {
+          contact_info: string | null
+          created_at: string | null
+          display_order: number | null
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          contact_info?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          contact_info?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "welfare_contacts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "welfare_contacts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_invite_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
