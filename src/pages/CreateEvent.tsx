@@ -44,12 +44,6 @@ interface ExternalContact {
   email: string;
 }
 
-interface EmergencyField {
-  id: string;
-  label: string;
-  value: string;
-}
-
 const CreateEvent = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -67,19 +61,15 @@ const CreateEvent = () => {
   const [location, setLocation] = useState("");
   const [selectedContacts, setSelectedContacts] = useState<WelfareContact[]>([]);
   const [externalContacts, setExternalContacts] = useState<ExternalContact[]>([]);
-  const [emergencyFields, setEmergencyFields] = useState<EmergencyField[]>([
-    { id: "hospital", label: "Nearest Hospital", value: "" },
-    { id: "hospital_address", label: "Hospital Address", value: "" },
-    { id: "hospital_phone", label: "Hospital Phone", value: "" },
-    { id: "pharmacy", label: "Nearest Pharmacy", value: "" },
-    { id: "pharmacy_address", label: "Pharmacy Address", value: "" },
-    { id: "pharmacy_phone", label: "Pharmacy Phone", value: "" },
-    { id: "on_duty", label: "On Duty Contact", value: "" },
-    { id: "on_duty_phone", label: "On Duty Phone", value: "" },
-  ]);
+  const [nearestHospital, setNearestHospital] = useState("");
+  const [hospitalAddress, setHospitalAddress] = useState("");
+  const [hospitalPhone, setHospitalPhone] = useState("");
+  const [nearestPharmacy, setNearestPharmacy] = useState("");
+  const [pharmacyAddress, setPharmacyAddress] = useState("");
+  const [pharmacyPhone, setPharmacyPhone] = useState("");
   const [codeOfConduct, setCodeOfConduct] = useState("");
-  const [pendingMemberRole, setPendingMemberRole] = useState("");
-  const [pendingMember, setPendingMember] = useState<Member | null>(null);
+  const [onDutyContact, setOnDutyContact] = useState("");
+  const [onDutyPhone, setOnDutyPhone] = useState("");
 
   useEffect(() => {
     if (user && slug) {
@@ -146,7 +136,12 @@ const CreateEvent = () => {
       .replace(/^-+|-+$/g, "");
   };
 
-  const addMemberContact = (member: Member) => {
+  const addMemberContact = (member: Member, role: string) => {
+    if (!role.trim()) {
+      toast.error("Please enter a role for the contact");
+      return;
+    }
+
     const exists = selectedContacts.some(c => c.userId === member.user_id);
     if (exists) {
       toast.error("Contact already added");
@@ -158,17 +153,9 @@ const CreateEvent = () => {
       {
         userId: member.user_id,
         displayName: member.profile?.display_name || "Anonymous",
-        role: "",
+        role: role.trim(),
       },
     ]);
-  };
-
-  const updateMemberContactRole = (userId: string, role: string) => {
-    setSelectedContacts(
-      selectedContacts.map(contact =>
-        contact.userId === userId ? { ...contact, role } : contact
-      )
-    );
   };
 
   const removeMemberContact = (userId: string) => {
@@ -198,25 +185,6 @@ const CreateEvent = () => {
 
   const removeExternalContact = (id: string) => {
     setExternalContacts(externalContacts.filter(c => c.id !== id));
-  };
-
-  const addEmergencyField = () => {
-    setEmergencyFields([
-      ...emergencyFields,
-      { id: crypto.randomUUID(), label: "", value: "" },
-    ]);
-  };
-
-  const updateEmergencyField = (id: string, field: "label" | "value", newValue: string) => {
-    setEmergencyFields(
-      emergencyFields.map(f =>
-        f.id === id ? { ...f, [field]: newValue } : f
-      )
-    );
-  };
-
-  const removeEmergencyField = (id: string) => {
-    setEmergencyFields(emergencyFields.filter(f => f.id !== id));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -279,21 +247,21 @@ const CreateEvent = () => {
       }
 
       // Create emergency info
-      const emergencyData: any = { event_id: eventData.id };
-      emergencyFields.forEach(field => {
-        if (field.value.trim()) {
-          const fieldKey = field.id.includes("_") ? field.id : field.label.toLowerCase().replace(/\s+/g, "_");
-          emergencyData[fieldKey] = field.value.trim();
-        }
-      });
+      const { error: emergencyError } = await supabase
+        .from("emergency_info")
+        .insert({
+          event_id: eventData.id,
+          nearest_hospital: nearestHospital.trim() || null,
+          hospital_address: hospitalAddress.trim() || null,
+          hospital_phone: hospitalPhone.trim() || null,
+          nearest_pharmacy: nearestPharmacy.trim() || null,
+          pharmacy_address: pharmacyAddress.trim() || null,
+          pharmacy_phone: pharmacyPhone.trim() || null,
+          on_duty_contact: onDutyContact.trim() || null,
+          on_duty_phone: onDutyPhone.trim() || null,
+        });
 
-      if (Object.keys(emergencyData).length > 1) {
-        const { error: emergencyError } = await supabase
-          .from("emergency_info")
-          .insert(emergencyData);
-
-        if (emergencyError) throw emergencyError;
-      }
+      if (emergencyError) throw emergencyError;
 
       // Create code of conduct if provided
       if (codeOfConduct.trim()) {
@@ -309,7 +277,7 @@ const CreateEvent = () => {
       }
 
       toast.success("Event created. Safety Page ready.");
-      navigate(`/event/${eventData.id}`);
+      navigate(`/society/${slug}/events/${eventData.id}`);
     } catch (error) {
       console.error("Error creating event:", error);
       toast.error("Failed to create event");
@@ -439,28 +407,24 @@ const CreateEvent = () => {
                   <Label>Society Team Members</Label>
                   
                   {selectedContacts.length > 0 && (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {selectedContacts.map((contact) => (
                         <div
                           key={contact.userId}
-                          className="space-y-2 rounded-lg border bg-muted p-3"
+                          className="flex items-center gap-2 rounded-lg border bg-muted p-3"
                         >
-                          <div className="flex items-center justify-between">
+                          <div className="flex-1">
                             <p className="font-medium">{contact.displayName}</p>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeMemberContact(contact.userId)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
+                            <p className="text-sm text-muted-foreground">{contact.role}</p>
                           </div>
-                          <Input
-                            placeholder="Role (e.g., Welfare Officer)"
-                            value={contact.role}
-                            onChange={(e) => updateMemberContactRole(contact.userId, e.target.value)}
-                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeMemberContact(contact.userId)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -468,26 +432,31 @@ const CreateEvent = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="memberSelect">Add Team Member</Label>
-                    <select
-                      id="memberSelect"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      onChange={(e) => {
-                        const member = members.find(m => m.user_id === e.target.value);
-                        if (member) {
-                          addMemberContact(member);
-                        }
-                        e.target.value = "";
-                      }}
-                    >
-                      <option value="">Select a member...</option>
-                      {members
-                        .filter(m => !selectedContacts.some(c => c.userId === m.user_id))
-                        .map((member) => (
-                          <option key={member.user_id} value={member.user_id}>
-                            {member.profile?.display_name || "Anonymous"}
-                          </option>
-                        ))}
-                    </select>
+                    <div className="flex gap-2">
+                      <select
+                        id="memberSelect"
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        onChange={(e) => {
+                          const member = members.find(m => m.user_id === e.target.value);
+                          if (member) {
+                            const role = prompt("Enter their role (e.g., Welfare Officer):");
+                            if (role) {
+                              addMemberContact(member, role);
+                            }
+                          }
+                          e.target.value = "";
+                        }}
+                      >
+                        <option value="">Select a member...</option>
+                        {members
+                          .filter(m => !selectedContacts.some(c => c.userId === m.user_id))
+                          .map((member) => (
+                            <option key={member.user_id} value={member.user_id}>
+                              {member.profile?.display_name || "Anonymous"}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -561,43 +530,60 @@ const CreateEvent = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Emergency Information</CardTitle>
-                <CardDescription>Add and customize emergency contact fields</CardDescription>
+                <CardDescription>Nearest medical facilities</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {emergencyFields.map((field) => (
-                  <div key={field.id} className="space-y-2 rounded-lg border p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <Input
-                        placeholder="Field label (e.g., Nearest Hospital)"
-                        value={field.label}
-                        onChange={(e) => updateEmergencyField(field.id, "label", e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeEmergencyField(field.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <Input
-                      placeholder="Value (e.g., City Hospital, 123-456-7890)"
-                      value={field.value}
-                      onChange={(e) => updateEmergencyField(field.id, "value", e.target.value)}
-                    />
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addEmergencyField}
-                  className="w-full"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Emergency Field
-                </Button>
+              <CardContent className="space-y-6">
+                <div className="space-y-3">
+                  <Label className="text-base">Nearest Hospital</Label>
+                  <Input
+                    placeholder="Hospital name"
+                    value={nearestHospital}
+                    onChange={(e) => setNearestHospital(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Address"
+                    value={hospitalAddress}
+                    onChange={(e) => setHospitalAddress(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Phone number"
+                    value={hospitalPhone}
+                    onChange={(e) => setHospitalPhone(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-base">Nearest Pharmacy</Label>
+                  <Input
+                    placeholder="Pharmacy name"
+                    value={nearestPharmacy}
+                    onChange={(e) => setNearestPharmacy(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Address"
+                    value={pharmacyAddress}
+                    onChange={(e) => setPharmacyAddress(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Phone number"
+                    value={pharmacyPhone}
+                    onChange={(e) => setPharmacyPhone(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-base">On-Duty Contact (optional)</Label>
+                  <Input
+                    placeholder="Name or role"
+                    value={onDutyContact}
+                    onChange={(e) => setOnDutyContact(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Phone number"
+                    value={onDutyPhone}
+                    onChange={(e) => setOnDutyPhone(e.target.value)}
+                  />
+                </div>
               </CardContent>
             </Card>
 

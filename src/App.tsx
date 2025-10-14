@@ -10,7 +10,6 @@ import SocietyDashboard from "./pages/SocietyDashboard";
 import SocietyMembers from "./pages/SocietyMembers";
 import SocietyEvents from "./pages/SocietyEvents";
 import CreateEvent from "./pages/CreateEvent";
-import EventSafetyPage from "./pages/EventSafetyPage";
 import InviteJoin from "./pages/InviteJoin";
 import NotFound from "./pages/NotFound";
 
@@ -31,7 +30,6 @@ const App = () => (
           <Route path="/society/:slug/members" element={<SocietyMembers />} />
           <Route path="/society/:slug/events" element={<SocietyEvents />} />
           <Route path="/society/:slug/events/new" element={<CreateEvent />} />
-          <Route path="/event/:eventId" element={<EventSafetyPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

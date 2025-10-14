@@ -179,7 +179,11 @@ const SocietyEvents = () => {
                 const eventMetrics = metrics[event.id] || { reports: 0, feedback: 0, pageViews: 0, codeAcceptances: 0 };
                 
                 return (
-                  <Card key={event.id} className="transition-all hover:shadow-lg">
+                  <Card
+                    key={event.id}
+                    className="cursor-pointer transition-all hover:shadow-lg"
+                    onClick={() => navigate(`/society/${slug}/events/${event.slug}`)}
+                  >
                     <CardHeader>
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
@@ -198,7 +202,7 @@ const SocietyEvents = () => {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="flex items-center gap-2 text-sm">
                           <FileText className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium">{eventMetrics.reports}</span>
@@ -220,15 +224,9 @@ const SocietyEvents = () => {
                           <span className="text-muted-foreground">Accepted</span>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          className="flex-1" 
-                          variant="outline"
-                          onClick={() => navigate(`/event/${event.id}`)}
-                        >
-                          View Safety Page
-                        </Button>
-                      </div>
+                      <Button className="mt-4 w-full" variant="outline">
+                        Manage Event
+                      </Button>
                     </CardContent>
                   </Card>
                 );
