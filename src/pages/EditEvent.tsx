@@ -149,52 +149,10 @@ const EditEvent = () => {
         .from("emergency_info")
         .select("*")
         .eq("event_id", eventId)
-        .single();
+        .maybeSingle();
 
-      if (emergencyData) {
-        const fields: EmergencyField[] = [];
-        
-        if (emergencyData.nearest_hospital) {
-          fields.push({
-            id: "hospital",
-            label: "Nearest Hospital",
-            name: emergencyData.nearest_hospital,
-            address: emergencyData.hospital_address || "",
-            phone: emergencyData.hospital_phone || "",
-          });
-        }
-        
-        if (emergencyData.nearest_pharmacy) {
-          fields.push({
-            id: "pharmacy",
-            label: "Nearest Pharmacy",
-            name: emergencyData.nearest_pharmacy,
-            address: emergencyData.pharmacy_address || "",
-            phone: emergencyData.pharmacy_phone || "",
-          });
-        }
-        
-        if (emergencyData.on_duty_contact) {
-          fields.push({
-            id: "on-duty",
-            label: "On-Duty Contact",
-            name: emergencyData.on_duty_contact,
-            address: "",
-            phone: emergencyData.on_duty_phone || "",
-          });
-        }
-
-        if (emergencyData.custom_emergency_info) {
-          const customFields = Array.isArray(emergencyData.custom_emergency_info) 
-            ? emergencyData.custom_emergency_info 
-            : [];
-          customFields.forEach((f: any) => {
-            if (f && typeof f === 'object') {
-              fields.push(f as EmergencyField);
-            }
-          });
-        }
-
+      if (emergencyData && emergencyData.custom_emergency_info) {
+        const fields = (emergencyData.custom_emergency_info || []) as any as EmergencyField[];
         setEmergencyFields(fields);
       }
 
@@ -350,13 +308,6 @@ const EditEvent = () => {
       }
 
       // Update emergency info
-      const standardFields = emergencyFields.slice(0, 3);
-      const customFields = emergencyFields.slice(3);
-
-      const hospitalField = standardFields.find(f => f.id === "hospital" || f.label === "Nearest Hospital");
-      const pharmacyField = standardFields.find(f => f.id === "pharmacy" || f.label === "Nearest Pharmacy");
-      const onDutyField = standardFields.find(f => f.id === "on-duty" || f.label === "On-Duty Contact");
-
       await supabase.from("emergency_info").delete().eq("event_id", eventId);
 
       if (emergencyFields.length > 0) {
@@ -364,15 +315,7 @@ const EditEvent = () => {
           .from("emergency_info")
           .insert({
             event_id: eventId!,
-            nearest_hospital: hospitalField?.name || null,
-            hospital_address: hospitalField?.address || null,
-            hospital_phone: hospitalField?.phone || null,
-            nearest_pharmacy: pharmacyField?.name || null,
-            pharmacy_address: pharmacyField?.address || null,
-            pharmacy_phone: pharmacyField?.phone || null,
-            on_duty_contact: onDutyField?.name || null,
-            on_duty_phone: onDutyField?.phone || null,
-            custom_emergency_info: customFields as any,
+            custom_emergency_info: emergencyFields as any,
           });
 
         if (emergencyError) throw emergencyError;

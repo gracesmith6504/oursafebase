@@ -20,6 +20,8 @@ interface WelfareContact {
   contact_info: string;
   profile: {
     display_name: string | null;
+    phone_number: string | null;
+    avatar_url: string | null;
   };
 }
 
@@ -73,7 +75,7 @@ const EventSafetyPage = () => {
         .select(`
           id,
           contact_info,
-          profile:profiles(display_name)
+          profile:profiles(display_name, phone_number, avatar_url)
         `)
         .eq("event_id", eventId)
         .order("display_order");
@@ -183,10 +185,27 @@ const EventSafetyPage = () => {
                 {welfareContacts.map((contact) => (
                   <div
                     key={contact.id}
-                    className="rounded-lg border bg-muted/50 p-4"
+                    className="flex gap-3 rounded-lg border bg-muted/50 p-4"
                   >
-                    <p className="font-semibold">{contact.profile?.display_name || "Anonymous"}</p>
-                    <p className="text-sm text-muted-foreground">{contact.contact_info}</p>
+                    {contact.profile?.avatar_url && (
+                      <img 
+                        src={contact.profile.avatar_url} 
+                        alt={contact.profile.display_name || "Contact"} 
+                        className="h-12 w-12 rounded-full object-cover"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <p className="font-semibold">{contact.profile?.display_name || "Anonymous"}</p>
+                      {contact.contact_info && (
+                        <p className="text-sm text-muted-foreground">{contact.contact_info}</p>
+                      )}
+                      {contact.profile?.phone_number && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                          <Phone className="h-3 w-3" />
+                          {contact.profile.phone_number}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -195,7 +214,7 @@ const EventSafetyPage = () => {
         )}
 
         {/* Emergency Information */}
-        {emergencyInfo && (
+        {emergencyInfo && customEmergencyFields.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -204,63 +223,6 @@ const EventSafetyPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {emergencyInfo.nearest_hospital && (
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-lg">Nearest Hospital</h3>
-                  <div className="space-y-1">
-                    <p className="font-medium">{emergencyInfo.nearest_hospital}</p>
-                    {emergencyInfo.hospital_address && (
-                      <p className="text-sm text-muted-foreground flex items-start gap-2">
-                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                        {emergencyInfo.hospital_address}
-                      </p>
-                    )}
-                    {emergencyInfo.hospital_phone && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        {emergencyInfo.hospital_phone}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {emergencyInfo.nearest_pharmacy && (
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-lg">Nearest Pharmacy</h3>
-                  <div className="space-y-1">
-                    <p className="font-medium">{emergencyInfo.nearest_pharmacy}</p>
-                    {emergencyInfo.pharmacy_address && (
-                      <p className="text-sm text-muted-foreground flex items-start gap-2">
-                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                        {emergencyInfo.pharmacy_address}
-                      </p>
-                    )}
-                    {emergencyInfo.pharmacy_phone && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        {emergencyInfo.pharmacy_phone}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {emergencyInfo.on_duty_contact && (
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-lg">On-Duty Contact</h3>
-                  <div className="space-y-1">
-                    <p className="font-medium">{emergencyInfo.on_duty_contact}</p>
-                    {emergencyInfo.on_duty_phone && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        {emergencyInfo.on_duty_phone}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
               {customEmergencyFields.map((field: any, index: number) => (
                 <div key={index} className="space-y-2">
                   <h3 className="font-semibold text-lg">{field.label}</h3>

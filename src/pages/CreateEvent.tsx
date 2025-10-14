@@ -252,28 +252,13 @@ const CreateEvent = () => {
         if (contactsError) throw contactsError;
       }
 
-      // Create emergency info
+      // Create emergency info - store all fields as custom_emergency_info
       if (emergencyFields.length > 0) {
-        const standardFields = emergencyFields.slice(0, 3);
-        const customFields = emergencyFields.slice(3);
-
-        const hospitalField = standardFields.find(f => f.label.toLowerCase().includes("hospital"));
-        const pharmacyField = standardFields.find(f => f.label.toLowerCase().includes("pharmacy"));
-        const onDutyField = standardFields.find(f => f.label.toLowerCase().includes("on-duty") || f.label.toLowerCase().includes("contact"));
-
         const { error: emergencyError } = await supabase
           .from("emergency_info")
           .insert({
             event_id: eventData.id,
-            nearest_hospital: hospitalField?.name || null,
-            hospital_address: hospitalField?.address || null,
-            hospital_phone: hospitalField?.phone || null,
-            nearest_pharmacy: pharmacyField?.name || null,
-            pharmacy_address: pharmacyField?.address || null,
-            pharmacy_phone: pharmacyField?.phone || null,
-            on_duty_contact: onDutyField?.name || null,
-            on_duty_phone: onDutyField?.phone || null,
-            custom_emergency_info: customFields as any,
+            custom_emergency_info: emergencyFields as any,
           });
 
         if (emergencyError) throw emergencyError;
