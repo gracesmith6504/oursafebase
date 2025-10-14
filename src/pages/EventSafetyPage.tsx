@@ -68,16 +68,17 @@ const EventSafetyPage = () => {
       if (eventError) throw eventError;
       setEvent(eventData);
 
-      // Fetch welfare contacts
+      // Fetch event contacts with profiles
       const { data: contactsData } = await supabase
-        .from("welfare_contacts")
+        .from("event_contacts")
         .select(`
           id,
-          contact_info,
+          role,
           user_id,
           external_name,
           external_phone,
-          profiles!welfare_contacts_user_id_fkey(
+          display_order,
+          profiles:user_id (
             display_name,
             phone_number,
             avatar_url
@@ -87,13 +88,27 @@ const EventSafetyPage = () => {
         .order("display_order");
 
       if (contactsData) {
-        const processedContacts = (contactsData || []).map((contact: any) => ({
-          id: contact.id,
-          name: contact.user_id ? contact.profiles?.display_name : contact.external_name,
-          phone: contact.user_id ? contact.profiles?.phone_number : contact.external_phone,
-          avatar: contact.user_id ? contact.profiles?.avatar_url : null,
-          role: contact.contact_info,
-        }));
+        const processedContacts = (contactsData || []).map((contact: any) => {
+          // If user_id exists, it's a society member
+          if (contact.user_id && contact.profiles) {
+            return {
+              id: contact.id,
+              name: contact.profiles.display_name || "Unknown Member",
+              phone: contact.profiles.phone_number,
+              avatar: contact.profiles.avatar_url,
+              role: contact.role,
+            };
+          }
+          
+          // Otherwise, it's an external contact
+          return {
+            id: contact.id,
+            name: contact.external_name,
+            phone: contact.external_phone,
+            avatar: null,
+            role: contact.role,
+          };
+        });
         setWelfareContacts(processedContacts);
       }
 

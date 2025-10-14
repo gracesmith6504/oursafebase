@@ -147,6 +147,47 @@ export type Database = {
           },
         ]
       }
+      event_contacts: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          event_id: string
+          external_name: string | null
+          external_phone: string | null
+          id: string
+          role: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          event_id: string
+          external_name?: string | null
+          external_phone?: string | null
+          id?: string
+          role: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          event_id?: string
+          external_name?: string | null
+          external_phone?: string | null
+          id?: string
+          role?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_contacts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_feedback: {
         Row: {
           contact_email: string | null
@@ -413,54 +454,6 @@ export type Database = {
           },
           {
             foreignKeyName: "society_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      welfare_contacts: {
-        Row: {
-          contact_info: string | null
-          created_at: string | null
-          display_order: number | null
-          event_id: string
-          external_name: string | null
-          external_phone: string | null
-          id: string
-          user_id: string | null
-        }
-        Insert: {
-          contact_info?: string | null
-          created_at?: string | null
-          display_order?: number | null
-          event_id: string
-          external_name?: string | null
-          external_phone?: string | null
-          id?: string
-          user_id?: string | null
-        }
-        Update: {
-          contact_info?: string | null
-          created_at?: string | null
-          display_order?: number | null
-          event_id?: string
-          external_name?: string | null
-          external_phone?: string | null
-          id?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "welfare_contacts_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "welfare_contacts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

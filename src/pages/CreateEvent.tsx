@@ -282,30 +282,30 @@ const CreateEvent = () => {
 
       if (eventError) throw eventError;
 
-      // Create welfare contacts (society members)
-      const welfareContactsToInsert = selectedContacts.map((contact, index) => ({
-        event_id: eventData.id,
-        user_id: contact.userId,
-        contact_info: contact.role,
-        display_order: index,
-      }));
+      // Create event contacts
+      const contactsToInsert = [
+        ...selectedContacts.map((contact, index) => ({
+          event_id: eventData.id,
+          user_id: contact.userId,
+          external_name: null,
+          external_phone: null,
+          role: contact.role,
+          display_order: index,
+        })),
+        ...externalContacts.map((contact, index) => ({
+          event_id: eventData.id,
+          user_id: null,
+          external_name: contact.name,
+          external_phone: contact.phone,
+          role: contact.role,
+          display_order: selectedContacts.length + index,
+        }))
+      ];
 
-      // Add external contacts
-      const externalContactsToInsert = externalContacts.map((contact, index) => ({
-        event_id: eventData.id,
-        user_id: null,
-        external_name: contact.name,
-        external_phone: contact.phone,
-        contact_info: contact.role,
-        display_order: selectedContacts.length + index,
-      }));
-
-      const allContacts = [...welfareContactsToInsert, ...externalContactsToInsert];
-
-      if (allContacts.length > 0) {
+      if (contactsToInsert.length > 0) {
         const { error: contactsError } = await supabase
-          .from("welfare_contacts")
-          .insert(allContacts);
+          .from("event_contacts")
+          .insert(contactsToInsert);
 
         if (contactsError) throw contactsError;
       }
