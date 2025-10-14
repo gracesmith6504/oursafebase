@@ -15,9 +15,20 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [countryCode, setCountryCode] = useState("+353");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  
+  const countryCodes = [
+    { code: "+353", country: "Ireland", flag: "🇮🇪" },
+    { code: "+44", country: "UK", flag: "🇬🇧" },
+    { code: "+1", country: "USA/Canada", flag: "🇺🇸" },
+    { code: "+61", country: "Australia", flag: "🇦🇺" },
+    { code: "+49", country: "Germany", flag: "🇩🇪" },
+    { code: "+33", country: "France", flag: "🇫🇷" },
+  ];
   
   const inviteCode = searchParams.get("invite");
 
@@ -34,12 +45,14 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (!email || !password || !phoneNumber) {
       toast.error("Please fill in all fields");
       return;
     }
 
     setLoading(true);
+    
+    const fullPhoneNumber = `${countryCode}${phoneNumber}`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -48,6 +61,7 @@ const Auth = () => {
         emailRedirectTo: window.location.origin,
         data: {
           display_name: displayName || email.split("@")[0],
+          phone_number: fullPhoneNumber,
         },
       },
     });
@@ -163,6 +177,32 @@ const Auth = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-phone">Phone Number *</Label>
+                  <div className="flex gap-2">
+                    <select
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      className="w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      disabled={loading}
+                    >
+                      {countryCodes.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.flag} {c.code}
+                        </option>
+                      ))}
+                    </select>
+                    <Input
+                      id="signup-phone"
+                      type="tel"
+                      placeholder="87 123 4567"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      disabled={loading}
+                      required
+                    />
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Creating account..." : "Create Account"}

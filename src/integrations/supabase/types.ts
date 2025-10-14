@@ -426,24 +426,30 @@ export type Database = {
           created_at: string | null
           display_order: number | null
           event_id: string
+          external_name: string | null
+          external_phone: string | null
           id: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           contact_info?: string | null
           created_at?: string | null
           display_order?: number | null
           event_id: string
+          external_name?: string | null
+          external_phone?: string | null
           id?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           contact_info?: string | null
           created_at?: string | null
           display_order?: number | null
           event_id?: string
+          external_name?: string | null
+          external_phone?: string | null
           id?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {

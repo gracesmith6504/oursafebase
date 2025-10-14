@@ -3,8 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText } from "lucide-react";
+import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
 interface Event {
@@ -17,12 +18,10 @@ interface Event {
 
 interface WelfareContact {
   id: string;
-  contact_info: string;
-  profile: {
-    display_name: string | null;
-    phone_number: string | null;
-    avatar_url: string | null;
-  };
+  name: string | null;
+  phone: string | null;
+  avatar: string | null;
+  role: string | null;
 }
 
 interface EmergencyInfo {
@@ -75,13 +74,27 @@ const EventSafetyPage = () => {
         .select(`
           id,
           contact_info,
-          profile:profiles(display_name, phone_number, avatar_url)
+          user_id,
+          external_name,
+          external_phone,
+          profiles!welfare_contacts_user_id_fkey(
+            display_name,
+            phone_number,
+            avatar_url
+          )
         `)
         .eq("event_id", eventId)
         .order("display_order");
 
       if (contactsData) {
-        setWelfareContacts(contactsData as any);
+        const processedContacts = (contactsData || []).map((contact: any) => ({
+          id: contact.id,
+          name: contact.user_id ? contact.profiles?.display_name : contact.external_name,
+          phone: contact.user_id ? contact.profiles?.phone_number : contact.external_phone,
+          avatar: contact.user_id ? contact.profiles?.avatar_url : null,
+          role: contact.contact_info,
+        }));
+        setWelfareContacts(processedContacts);
       }
 
       // Fetch emergency info
@@ -113,6 +126,11 @@ const EventSafetyPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const copyPhoneNumber = (phone: string) => {
+    navigator.clipboard.writeText(phone);
+    toast.success("Phone number copied!");
   };
 
   const trackPageView = async () => {
@@ -187,23 +205,36 @@ const EventSafetyPage = () => {
                     key={contact.id}
                     className="flex gap-3 rounded-lg border bg-muted/50 p-4"
                   >
-                    {contact.profile?.avatar_url && (
+                    {contact.avatar && (
                       <img 
-                        src={contact.profile.avatar_url} 
-                        alt={contact.profile.display_name || "Contact"} 
+                        src={contact.avatar} 
+                        alt={contact.name || "Contact"} 
                         className="h-12 w-12 rounded-full object-cover"
                       />
                     )}
                     <div className="flex-1">
-                      <p className="font-semibold">{contact.profile?.display_name || "Anonymous"}</p>
-                      {contact.contact_info && (
-                        <p className="text-sm text-muted-foreground">{contact.contact_info}</p>
+                      <p className="font-semibold">{contact.name || "Anonymous"}</p>
+                      {contact.role && (
+                        <p className="text-sm text-muted-foreground">{contact.role}</p>
                       )}
-                      {contact.profile?.phone_number && (
-                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                          <Phone className="h-3 w-3" />
-                          {contact.profile.phone_number}
-                        </p>
+                      {contact.phone && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <a
+                            href={`tel:${contact.phone}`}
+                            className="text-sm text-primary hover:underline flex items-center gap-1 font-medium"
+                          >
+                            <Phone className="h-4 w-4" />
+                            {contact.phone}
+                          </a>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyPhoneNumber(contact.phone!)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>

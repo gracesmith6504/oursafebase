@@ -36,6 +36,13 @@ interface WelfareContact {
   role: string;
 }
 
+interface ExternalContact {
+  id: string;
+  name: string;
+  phone: string;
+  role: string;
+}
+
 interface EmergencyField {
   id: string;
   label: string;
@@ -60,12 +67,26 @@ const CreateEvent = () => {
   const [eventTime, setEventTime] = useState("");
   const [location, setLocation] = useState("");
   const [selectedContacts, setSelectedContacts] = useState<WelfareContact[]>([]);
+  const [externalContacts, setExternalContacts] = useState<ExternalContact[]>([]);
   const [emergencyFields, setEmergencyFields] = useState<EmergencyField[]>([]);
   const [codeOfConduct, setCodeOfConduct] = useState("");
 
   // Team member selection state
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [tempRole, setTempRole] = useState("");
+  
+  // External contact state
+  const [externalName, setExternalName] = useState("");
+  const [externalPhone, setExternalPhone] = useState("");
+  const [externalRole, setExternalRole] = useState("");
+  const [externalCountryCode, setExternalCountryCode] = useState("+353");
+  
+  const countryCodes = [
+    { code: "+353", country: "Ireland", flag: "🇮🇪" },
+    { code: "+44", country: "UK", flag: "🇬🇧" },
+    { code: "+1", country: "USA/Canada", flag: "🇺🇸" },
+    { code: "+61", country: "Australia", flag: "🇦🇺" },
+  ];
 
   useEffect(() => {
     if (user && slug) {
@@ -168,6 +189,31 @@ const CreateEvent = () => {
     setSelectedContacts(selectedContacts.filter(c => c.userId !== userId));
   };
 
+  const handleAddExternalContact = () => {
+    if (!externalName.trim() || !externalPhone.trim()) {
+      toast.error("Please provide name and phone number");
+      return;
+    }
+
+    setExternalContacts([
+      ...externalContacts,
+      {
+        id: crypto.randomUUID(),
+        name: externalName.trim(),
+        phone: `${externalCountryCode}${externalPhone}`,
+        role: externalRole.trim(),
+      },
+    ]);
+    
+    setExternalName("");
+    setExternalPhone("");
+    setExternalRole("");
+  };
+
+  const removeExternalContact = (id: string) => {
+    setExternalContacts(externalContacts.filter(c => c.id !== id));
+  };
+
   const addEmergencyField = () => {
     setEmergencyFields([
       ...emergencyFields,
@@ -236,7 +282,7 @@ const CreateEvent = () => {
 
       if (eventError) throw eventError;
 
-      // Create welfare contacts
+      // Create welfare contacts (society members)
       const welfareContactsToInsert = selectedContacts.map((contact, index) => ({
         event_id: eventData.id,
         user_id: contact.userId,
@@ -244,10 +290,22 @@ const CreateEvent = () => {
         display_order: index,
       }));
 
-      if (welfareContactsToInsert.length > 0) {
+      // Add external contacts
+      const externalContactsToInsert = externalContacts.map((contact, index) => ({
+        event_id: eventData.id,
+        user_id: null,
+        external_name: contact.name,
+        external_phone: contact.phone,
+        contact_info: contact.role,
+        display_order: selectedContacts.length + index,
+      }));
+
+      const allContacts = [...welfareContactsToInsert, ...externalContactsToInsert];
+
+      if (allContacts.length > 0) {
         const { error: contactsError } = await supabase
           .from("welfare_contacts")
-          .insert(welfareContactsToInsert);
+          .insert(allContacts);
 
         if (contactsError) throw contactsError;
       }
@@ -486,6 +544,90 @@ const CreateEvent = () => {
                         </Button>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* External Contacts */}
+                <div className="space-y-4 pt-6 border-t">
+                  <Label>External Contacts</Label>
+                  <p className="text-sm text-muted-foreground">Add contacts who are not society members (e.g., venue staff, security)</p>
+                  
+                  {externalContacts.length > 0 && (
+                    <div className="space-y-2">
+                      {externalContacts.map((contact) => (
+                        <div
+                          key={contact.id}
+                          className="flex items-center gap-2 rounded-lg border bg-muted p-3"
+                        >
+                          <div className="flex-1">
+                            <p className="font-medium">{contact.name}</p>
+                            <p className="text-sm text-muted-foreground">{contact.phone}</p>
+                            {contact.role && <p className="text-sm text-muted-foreground">{contact.role}</p>}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeExternalContact(contact.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="space-y-3 rounded-lg border bg-muted p-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="externalName">Name *</Label>
+                      <Input
+                        id="externalName"
+                        value={externalName}
+                        onChange={(e) => setExternalName(e.target.value)}
+                        placeholder="Contact name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="externalPhone">Phone Number *</Label>
+                      <div className="flex gap-2">
+                        <select
+                          value={externalCountryCode}
+                          onChange={(e) => setExternalCountryCode(e.target.value)}
+                          className="w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                          {countryCodes.map((c) => (
+                            <option key={c.code} value={c.code}>
+                              {c.flag} {c.code}
+                            </option>
+                          ))}
+                        </select>
+                        <Input
+                          id="externalPhone"
+                          type="tel"
+                          value={externalPhone}
+                          onChange={(e) => setExternalPhone(e.target.value)}
+                          placeholder="87 123 4567"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="externalRole">Role (optional)</Label>
+                      <Input
+                        id="externalRole"
+                        value={externalRole}
+                        onChange={(e) => setExternalRole(e.target.value)}
+                        placeholder="e.g., Security, Venue Staff"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleAddExternalContact}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add External Contact
+                    </Button>
                   </div>
                 </div>
 
