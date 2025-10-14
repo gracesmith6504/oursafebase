@@ -94,6 +94,7 @@ export type Database = {
       emergency_info: {
         Row: {
           created_at: string | null
+          custom_emergency_info: Json | null
           event_id: string
           hospital_address: string | null
           hospital_phone: string | null
@@ -108,6 +109,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          custom_emergency_info?: Json | null
           event_id: string
           hospital_address?: string | null
           hospital_phone?: string | null
@@ -122,6 +124,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          custom_emergency_info?: Json | null
           event_id?: string
           hospital_address?: string | null
           hospital_phone?: string | null

@@ -44,8 +44,8 @@ interface EmergencyField {
   phone: string;
 }
 
-const CreateEvent = () => {
-  const { slug } = useParams();
+const EditEvent = () => {
+  const { slug, eventId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -68,10 +68,10 @@ const CreateEvent = () => {
   const [tempRole, setTempRole] = useState("");
 
   useEffect(() => {
-    if (user && slug) {
+    if (user && slug && eventId) {
       fetchData();
     }
-  }, [user, slug]);
+  }, [user, slug, eventId]);
 
   const fetchData = async () => {
     try {
@@ -104,6 +104,114 @@ const CreateEvent = () => {
         return;
       }
 
+      // Fetch event data
+      const { data: eventData, error: eventError } = await supabase
+        .from("events")
+        .select("*")
+        .eq("id", eventId)
+        .single();
+
+      if (eventError || !eventData) {
+        toast.error("Event not found");
+        navigate(`/society/${slug}/events`);
+        return;
+      }
+
+      // Set event data
+      setEventName(eventData.title);
+      setEventDate(new Date(eventData.event_date));
+      setEventTime(format(new Date(eventData.event_date), "HH:mm"));
+      setLocation(eventData.location || "");
+
+      // Fetch welfare contacts
+      const { data: contactsData } = await supabase
+        .from("welfare_contacts")
+        .select(`
+          user_id,
+          contact_info,
+          profile:profiles(display_name)
+        `)
+        .eq("event_id", eventId)
+        .order("display_order");
+
+      if (contactsData) {
+        setSelectedContacts(
+          contactsData.map((c: any) => ({
+            userId: c.user_id,
+            displayName: c.profile?.display_name || "Anonymous",
+            role: c.contact_info || "",
+          }))
+        );
+      }
+
+      // Fetch emergency info
+      const { data: emergencyData } = await supabase
+        .from("emergency_info")
+        .select("*")
+        .eq("event_id", eventId)
+        .single();
+
+      if (emergencyData) {
+        const fields: EmergencyField[] = [];
+        
+        if (emergencyData.nearest_hospital) {
+          fields.push({
+            id: "hospital",
+            label: "Nearest Hospital",
+            name: emergencyData.nearest_hospital,
+            address: emergencyData.hospital_address || "",
+            phone: emergencyData.hospital_phone || "",
+          });
+        }
+        
+        if (emergencyData.nearest_pharmacy) {
+          fields.push({
+            id: "pharmacy",
+            label: "Nearest Pharmacy",
+            name: emergencyData.nearest_pharmacy,
+            address: emergencyData.pharmacy_address || "",
+            phone: emergencyData.pharmacy_phone || "",
+          });
+        }
+        
+        if (emergencyData.on_duty_contact) {
+          fields.push({
+            id: "on-duty",
+            label: "On-Duty Contact",
+            name: emergencyData.on_duty_contact,
+            address: "",
+            phone: emergencyData.on_duty_phone || "",
+          });
+        }
+
+        if (emergencyData.custom_emergency_info) {
+          const customFields = Array.isArray(emergencyData.custom_emergency_info) 
+            ? emergencyData.custom_emergency_info 
+            : [];
+          customFields.forEach((f: any) => {
+            if (f && typeof f === 'object') {
+              fields.push(f as EmergencyField);
+            }
+          });
+        }
+
+        setEmergencyFields(fields);
+      }
+
+      // Fetch code of conduct
+      const { data: cocData } = await supabase
+        .from("code_of_conduct")
+        .select("content")
+        .eq("society_id", societyData.id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (cocData) {
+        setCodeOfConduct(cocData.content);
+      }
+
       // Fetch all members
       const { data: membersData, error: membersError } = await supabase
         .from("society_members")
@@ -123,13 +231,6 @@ const CreateEvent = () => {
       toast.error("Failed to load data");
       navigate("/dashboard");
     }
-  };
-
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
   };
 
   const handleMemberSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -218,27 +319,23 @@ const CreateEvent = () => {
         eventDateTime.setHours(parseInt(hours), parseInt(minutes));
       }
 
-      // Create event
-      const eventSlug = generateSlug(eventName);
-      const { data: eventData, error: eventError } = await supabase
+      // Update event
+      const { error: eventError } = await supabase
         .from("events")
-        .insert({
+        .update({
           title: eventName.trim(),
-          slug: eventSlug,
           event_date: eventDateTime.toISOString(),
           location: location.trim() || null,
-          society_id: society.id,
-          created_by: user!.id,
-          status: "upcoming",
         })
-        .select()
-        .single();
+        .eq("id", eventId);
 
       if (eventError) throw eventError;
 
-      // Create welfare contacts
+      // Delete and recreate welfare contacts
+      await supabase.from("welfare_contacts").delete().eq("event_id", eventId);
+
       const welfareContactsToInsert = selectedContacts.map((contact, index) => ({
-        event_id: eventData.id,
+        event_id: eventId,
         user_id: contact.userId,
         contact_info: contact.role,
         display_order: index,
@@ -252,19 +349,21 @@ const CreateEvent = () => {
         if (contactsError) throw contactsError;
       }
 
-      // Create emergency info
+      // Update emergency info
+      const standardFields = emergencyFields.slice(0, 3);
+      const customFields = emergencyFields.slice(3);
+
+      const hospitalField = standardFields.find(f => f.id === "hospital" || f.label === "Nearest Hospital");
+      const pharmacyField = standardFields.find(f => f.id === "pharmacy" || f.label === "Nearest Pharmacy");
+      const onDutyField = standardFields.find(f => f.id === "on-duty" || f.label === "On-Duty Contact");
+
+      await supabase.from("emergency_info").delete().eq("event_id", eventId);
+
       if (emergencyFields.length > 0) {
-        const standardFields = emergencyFields.slice(0, 3);
-        const customFields = emergencyFields.slice(3);
-
-        const hospitalField = standardFields.find(f => f.label.toLowerCase().includes("hospital"));
-        const pharmacyField = standardFields.find(f => f.label.toLowerCase().includes("pharmacy"));
-        const onDutyField = standardFields.find(f => f.label.toLowerCase().includes("on-duty") || f.label.toLowerCase().includes("contact"));
-
         const { error: emergencyError } = await supabase
           .from("emergency_info")
           .insert({
-            event_id: eventData.id,
+            event_id: eventId!,
             nearest_hospital: hospitalField?.name || null,
             hospital_address: hospitalField?.address || null,
             hospital_phone: hospitalField?.phone || null,
@@ -279,8 +378,13 @@ const CreateEvent = () => {
         if (emergencyError) throw emergencyError;
       }
 
-      // Create code of conduct if provided
+      // Update code of conduct
       if (codeOfConduct.trim()) {
+        await supabase
+          .from("code_of_conduct")
+          .update({ is_active: false })
+          .eq("society_id", society.id);
+
         const { error: cocError } = await supabase
           .from("code_of_conduct")
           .insert({
@@ -292,11 +396,11 @@ const CreateEvent = () => {
         if (cocError) throw cocError;
       }
 
-      toast.success("Event created. Safety Page ready.");
-      navigate(`/event/${eventData.id}`);
+      toast.success("Event updated successfully");
+      navigate(`/event/${eventId}`);
     } catch (error) {
-      console.error("Error creating event:", error);
-      toast.error("Failed to create event");
+      console.error("Error updating event:", error);
+      toast.error("Failed to update event");
     } finally {
       setSubmitting(false);
     }
@@ -327,7 +431,7 @@ const CreateEvent = () => {
               </Button>
               <img src={logo} alt="OurSafeBase" className="h-8" />
               <div>
-                <h1 className="text-xl font-bold">Create Event</h1>
+                <h1 className="text-xl font-bold">Edit Event</h1>
                 <p className="text-sm text-muted-foreground">{society?.name}</p>
               </div>
             </div>
@@ -418,7 +522,6 @@ const CreateEvent = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Society Members */}
                 <div className="space-y-4">
                   <Label>Society Team Members</Label>
                   
@@ -431,7 +534,9 @@ const CreateEvent = () => {
                         >
                           <div className="flex-1">
                             <p className="font-medium">{contact.displayName}</p>
-                            <p className="text-sm text-muted-foreground">{contact.role}</p>
+                            {contact.role && (
+                              <p className="text-sm text-muted-foreground">{contact.role}</p>
+                            )}
                           </div>
                           <Button
                             type="button"
@@ -503,7 +608,6 @@ const CreateEvent = () => {
                     )}
                   </div>
                 </div>
-
               </CardContent>
             </Card>
 
@@ -598,7 +702,7 @@ const CreateEvent = () => {
               className="flex-1"
               disabled={submitting}
             >
-              {submitting ? "Creating..." : "Save & Create Safety Page"}
+              {submitting ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>
@@ -607,4 +711,4 @@ const CreateEvent = () => {
   );
 };
 
-export default CreateEvent;
+export default EditEvent;

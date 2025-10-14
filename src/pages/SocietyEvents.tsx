@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProtectedRoute } from "@/lib/auth";
-import { ArrowLeft, Plus, Calendar, FileText, MessageSquare, Eye, Shield } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, FileText, MessageSquare, Eye, Shield, Share2, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -179,11 +179,7 @@ const SocietyEvents = () => {
                 const eventMetrics = metrics[event.id] || { reports: 0, feedback: 0, pageViews: 0, codeAcceptances: 0 };
                 
                 return (
-                  <Card
-                    key={event.id}
-                    className="cursor-pointer transition-all hover:shadow-lg"
-                    onClick={() => navigate(`/society/${slug}/events/${event.slug}`)}
-                  >
+                  <Card key={event.id} className="transition-all hover:shadow-lg">
                     <CardHeader>
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
@@ -201,7 +197,7 @@ const SocietyEvents = () => {
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="flex items-center gap-2 text-sm">
                           <FileText className="h-4 w-4 text-muted-foreground" />
@@ -224,7 +220,32 @@ const SocietyEvents = () => {
                           <span className="text-muted-foreground">Accepted</span>
                         </div>
                       </div>
-                      <Button className="mt-4 w-full" variant="outline">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/event/${event.id}`)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          View Page
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/event/${event.id}`);
+                            toast.success("Link copied to clipboard");
+                          }}
+                        >
+                          <Share2 className="mr-2 h-4 w-4" />
+                          Share
+                        </Button>
+                      </div>
+                      <Button 
+                        className="w-full" 
+                        onClick={() => navigate(`/society/${slug}/events/${event.id}/edit`)}
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
                         Manage Event
                       </Button>
                     </CardContent>
