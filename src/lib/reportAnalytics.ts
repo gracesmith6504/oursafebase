@@ -71,3 +71,35 @@ export async function getSeverityDistribution(societyId: string) {
   // TODO: Implement with GROUP BY severity, COUNT(*)
   return [];
 }
+
+/**
+ * Get feedback by event
+ * Future: Will return feedback counts per event
+ */
+export async function getFeedbackByEvent(societyId: string) {
+  // TODO: Implement with GROUP BY event_id, COUNT(*)
+  // Join with events table to get event titles
+  // Filter by society_id through events
+  return [];
+}
+
+/**
+ * Get safety rating distribution
+ * Future: Will return breakdown of safety ratings
+ */
+export async function getSafetyRatingDistribution(societyId: string) {
+  // TODO: Implement with GROUP BY felt_safe, COUNT(*)
+  return { very_safe: 0, mostly_safe: 0, somewhat_safe: 0, unsafe: 0, very_unsafe: 0 };
+}
+
+/**
+ * Get average safety score
+ * Future: Calculate average safety score (1-5 scale)
+ * Map ratings to numbers and calculate average
+ */
+export async function getAverageSafetyScore(societyId: string) {
+  // TODO: Implement
+  // Map: very_unsafe=1, unsafe=2, somewhat_safe=3, mostly_safe=4, very_safe=5
+  // Calculate AVG()
+  return null;
+}

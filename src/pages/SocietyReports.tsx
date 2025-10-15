@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReportDetailDialog } from "@/components/ReportDetailDialog";
+import { FeedbackDetailDialog } from "@/components/FeedbackDetailDialog";
 import { ArrowLeft, Search, Filter, AlertCircle } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
@@ -39,6 +40,21 @@ interface ReportWithEvent extends Report {
   events: Event;
 }
 
+interface Feedback {
+  id: string;
+  event_id: string;
+  felt_safe: string;
+  improvements: string | null;
+  is_anonymous: boolean;
+  contact_name: string | null;
+  contact_email: string | null;
+  submitted_at: string;
+}
+
+interface FeedbackWithEvent extends Feedback {
+  events: Event;
+}
+
 const CONCERN_TYPE_LABELS: Record<string, string> = {
   harassment: "Harassment",
   safety: "Safety Issue",
@@ -54,6 +70,7 @@ export default function SocietyReports() {
   const [societyId, setSocietyId] = useState<string | null>(null);
   const [societyName, setSocietyName] = useState("");
   const [reports, setReports] = useState<ReportWithEvent[]>([]);
+  const [feedback, setFeedback] = useState<FeedbackWithEvent[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -62,8 +79,16 @@ export default function SocietyReports() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   
+  const [feedbackEventFilter, setFeedbackEventFilter] = useState<string>("all");
+  const [feedbackSafetyFilter, setFeedbackSafetyFilter] = useState<string>("all");
+  const [feedbackContactFilter, setFeedbackContactFilter] = useState<string>("all");
+  const [feedbackSearchQuery, setFeedbackSearchQuery] = useState("");
+  
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
+  
+  const [selectedFeedback, setSelectedFeedback] = useState<FeedbackWithEvent | null>(null);
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
 
   useEffect(() => {
     if (user && slug) {
@@ -115,6 +140,7 @@ export default function SocietyReports() {
 
       // Fetch reports
       await fetchReports(society.id);
+      await fetchFeedback(society.id);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -160,6 +186,39 @@ export default function SocietyReports() {
     }
   };
 
+  const fetchFeedback = async (socId: string) => {
+    try {
+      // Get event IDs for this society
+      const { data: societyEvents, error: eventsError } = await supabase
+        .from("events")
+        .select("id")
+        .eq("society_id", socId);
+
+      if (eventsError) throw eventsError;
+
+      const eventIds = societyEvents.map(e => e.id);
+
+      // Fetch feedback for these events
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from("event_feedback")
+        .select(`
+          *,
+          events:event_id (
+            id,
+            title,
+            event_date
+          )
+        `)
+        .in("event_id", eventIds)
+        .order("submitted_at", { ascending: false });
+
+      if (feedbackError) throw feedbackError;
+      setFeedback(feedbackData || []);
+    } catch (error) {
+      console.error("Error fetching feedback:", error);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "new": return "bg-yellow-100 text-yellow-800 border-yellow-200";
@@ -181,11 +240,53 @@ export default function SocietyReports() {
     }
   };
 
+  const getSafetyColor = (feltSafe: string) => {
+    switch (feltSafe) {
+      case "very_safe": return "bg-green-100 text-green-800";
+      case "mostly_safe": return "bg-green-50 text-green-700";
+      case "somewhat_safe": return "bg-yellow-100 text-yellow-800";
+      case "unsafe": return "bg-orange-100 text-orange-800";
+      case "very_unsafe": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getSafetyEmoji = (feltSafe: string) => {
+    switch (feltSafe) {
+      case "very_safe": return "😊";
+      case "mostly_safe": return "🙂";
+      case "somewhat_safe": return "😐";
+      case "unsafe": return "😟";
+      case "very_unsafe": return "😢";
+      default: return "❓";
+    }
+  };
+
+  const getSafetyLabel = (feltSafe: string) => {
+    switch (feltSafe) {
+      case "very_safe": return "Very Safe";
+      case "mostly_safe": return "Mostly Safe";
+      case "somewhat_safe": return "Somewhat Safe";
+      case "unsafe": return "Unsafe";
+      case "very_unsafe": return "Very Unsafe";
+      default: return feltSafe;
+    }
+  };
+
   const filteredReports = reports.filter(report => {
     if (statusFilter !== "all" && report.status !== statusFilter) return false;
     if (eventFilter !== "all" && report.event_id !== eventFilter) return false;
     if (categoryFilter !== "all" && report.concern_type !== categoryFilter) return false;
     if (searchQuery && !report.description.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
+
+  const filteredFeedback = feedback.filter(fb => {
+    if (feedbackEventFilter !== "all" && fb.event_id !== feedbackEventFilter) return false;
+    if (feedbackSafetyFilter !== "all" && fb.felt_safe !== feedbackSafetyFilter) return false;
+    if (feedbackContactFilter === "with_contact" && fb.is_anonymous) return false;
+    if (feedbackContactFilter === "anonymous" && !fb.is_anonymous) return false;
+    if (feedbackSearchQuery && fb.improvements && !fb.improvements.toLowerCase().includes(feedbackSearchQuery.toLowerCase())) return false;
     return true;
   });
 
@@ -198,6 +299,11 @@ export default function SocietyReports() {
     if (societyId) {
       fetchReports(societyId);
     }
+  };
+
+  const handleViewFeedback = (fb: FeedbackWithEvent) => {
+    setSelectedFeedback(fb);
+    setShowFeedbackDialog(true);
   };
 
   if (loading) {
@@ -227,7 +333,8 @@ export default function SocietyReports() {
 
         <Tabs defaultValue="reports" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
+            <TabsTrigger value="reports">Concerns</TabsTrigger>
+            <TabsTrigger value="feedback">Feedback</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -373,6 +480,157 @@ export default function SocietyReports() {
             </div>
           </TabsContent>
 
+          <TabsContent value="feedback" className="space-y-6">
+            {/* Feedback Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="h-5 w-5" />
+                  Filters
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Event</label>
+                    <Select value={feedbackEventFilter} onValueChange={setFeedbackEventFilter}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Events</SelectItem>
+                        {events.map(event => (
+                          <SelectItem key={event.id} value={event.id}>
+                            {event.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Safety Rating</label>
+                    <Select value={feedbackSafetyFilter} onValueChange={setFeedbackSafetyFilter}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Ratings</SelectItem>
+                        <SelectItem value="very_safe">Very Safe 😊</SelectItem>
+                        <SelectItem value="mostly_safe">Mostly Safe 🙂</SelectItem>
+                        <SelectItem value="somewhat_safe">Somewhat Safe 😐</SelectItem>
+                        <SelectItem value="unsafe">Unsafe 😟</SelectItem>
+                        <SelectItem value="very_unsafe">Very Unsafe 😢</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Contact Status</label>
+                    <Select value={feedbackContactFilter} onValueChange={setFeedbackContactFilter}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Feedback</SelectItem>
+                        <SelectItem value="with_contact">With Contact</SelectItem>
+                        <SelectItem value="anonymous">Anonymous</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Search</label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search suggestions..."
+                        value={feedbackSearchQuery}
+                        onChange={(e) => setFeedbackSearchQuery(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Feedback List */}
+            <div className="space-y-4">
+              {filteredFeedback.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12">
+                    <div className="text-center text-muted-foreground">
+                      {feedback.length === 0 
+                        ? "No feedback received yet. Encourage attendees to share their experience! 🎤"
+                        : "No feedback matches your filters."}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                filteredFeedback.map(fb => {
+                  return (
+                    <Card key={fb.id} className="hover:shadow-lg transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col gap-4">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-2 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge variant="secondary" className={getSafetyColor(fb.felt_safe)}>
+                                  <span className="mr-1">{getSafetyEmoji(fb.felt_safe)}</span>
+                                  {getSafetyLabel(fb.felt_safe)}
+                                </Badge>
+                                <Badge variant="outline" className={fb.is_anonymous ? "bg-gray-100 text-gray-800" : "bg-blue-100 text-blue-800"}>
+                                  {fb.is_anonymous ? "Anonymous" : "With Contact"}
+                                </Badge>
+                                {fb.contact_email && (
+                                  <span className="text-xs text-green-600 flex items-center gap-1">
+                                    <span className="h-2 w-2 rounded-full bg-green-500" />
+                                    Has Contact
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <p className="text-sm font-medium text-muted-foreground">
+                                {fb.events.title}
+                              </p>
+                              
+                              <p className="text-sm text-muted-foreground">
+                                Submitted {formatDistanceToNow(new Date(fb.submitted_at), { addSuffix: true })}
+                              </p>
+                              
+                              {fb.improvements && (
+                                <p className="text-sm line-clamp-2 bg-muted p-3 rounded-md">
+                                  {fb.improvements}
+                                </p>
+                              )}
+                              
+                              {!fb.improvements && (
+                                <p className="text-sm text-muted-foreground italic">
+                                  No improvement suggestions provided
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-end">
+                            <Button
+                              onClick={() => handleViewFeedback(fb)}
+                              size="sm"
+                              variant="outline"
+                            >
+                              View Details
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+          </TabsContent>
+
           <TabsContent value="analytics">
             <Card>
               <CardHeader>
@@ -391,6 +649,10 @@ export default function SocietyReports() {
                       <li>• Trend over time (line chart)</li>
                       <li>• Average time to first response</li>
                       <li>• Resolution rate</li>
+                      <li>• Safety ratings distribution (pie chart)</li>
+                      <li>• Safety trends over time (line chart)</li>
+                      <li>• Events with lowest safety scores</li>
+                      <li>• Anonymous vs named feedback ratio</li>
                     </ul>
                   </div>
                 </div>
@@ -405,6 +667,12 @@ export default function SocietyReports() {
         onOpenChange={setShowDetailDialog}
         reportId={selectedReportId}
         onUpdate={handleReportUpdate}
+      />
+
+      <FeedbackDetailDialog
+        feedback={selectedFeedback}
+        open={showFeedbackDialog}
+        onOpenChange={setShowFeedbackDialog}
       />
     </div>
   );

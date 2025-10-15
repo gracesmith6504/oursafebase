@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import { ReportConcernDialog } from "@/components/ReportConcernDialog";
+import { SubmitFeedbackDialog } from "@/components/SubmitFeedbackDialog";
 
 interface Event {
   id: string;
@@ -51,6 +52,7 @@ const EventSafetyPage = () => {
   const [codeOfConduct, setCodeOfConduct] = useState<CodeOfConduct | null>(null);
   const [loading, setLoading] = useState(true);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
 
   useEffect(() => {
     if (eventId) {
@@ -299,7 +301,7 @@ const EventSafetyPage = () => {
             <FileText className="mr-2 h-5 w-5" />
             Report a Concern
           </Button>
-          <Button size="lg" className="w-full" variant="outline">
+          <Button size="lg" className="w-full" variant="outline" onClick={() => setShowFeedbackDialog(true)}>
             <MessageSquare className="mr-2 h-5 w-5" />
             Submit Feedback
           </Button>
@@ -319,6 +321,13 @@ const EventSafetyPage = () => {
         open={showReportDialog}
         onOpenChange={setShowReportDialog}
         eventId={eventId!}
+      />
+
+      <SubmitFeedbackDialog
+        open={showFeedbackDialog}
+        onOpenChange={setShowFeedbackDialog}
+        eventId={eventId!}
+        eventTitle={event?.title || ""}
       />
     </div>
   );
