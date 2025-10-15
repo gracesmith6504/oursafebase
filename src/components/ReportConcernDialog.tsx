@@ -19,7 +19,7 @@ const reportSchema = z.object({
   }),
   description: z.string()
     .trim()
-    .min(10, "Description must be at least 10 characters")
+    .min(1, "Please provide a description")
     .max(1000, "Description must be less than 1000 characters"),
   isAnonymous: z.boolean(),
   name: z.string().trim().max(100).optional().or(z.literal("")),
@@ -63,7 +63,7 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
   const onSubmit = async (data: ReportFormData) => {
     setIsSubmitting(true);
     try {
-      const { data: report, error } = await supabase
+      const { error } = await supabase
         .from("reports")
         .insert({
           event_id: eventId,
@@ -75,14 +75,14 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
           reporter_phone: data.isAnonymous ? null : (data.phone || null),
           status: "new",
           severity: "medium",
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
-      // Generate reference ID from the UUID
-      const refId = `REF-${report.id.split('-')[0].toUpperCase()}-${report.id.split('-')[1].toUpperCase()}`;
+      // Generate reference ID from timestamp (unique enough for user reference)
+      const timestamp = Date.now().toString(36).toUpperCase();
+      const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const refId = `REF-${timestamp}-${random}`;
       setReferenceId(refId);
       setShowSuccess(true);
       form.reset();
@@ -232,7 +232,8 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
 
             {!isAnonymous && (
               <div className="space-y-4 p-4 bg-muted rounded-lg">
-                <p className="text-sm font-medium">Contact Information (Optional)</p>
+                <p className="text-sm font-medium">Contact Information</p>
+                <p className="text-xs text-muted-foreground">Provide at least an email or phone number so we can follow up with you.</p>
                 
                 <FormField
                   control={form.control}
@@ -253,7 +254,7 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Email (optional)</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="your.email@example.com" {...field} />
                       </FormControl>
@@ -267,7 +268,7 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone</FormLabel>
+                      <FormLabel>Phone (optional)</FormLabel>
                       <FormControl>
                         <Input type="tel" placeholder="+353 12 345 6789" {...field} />
                       </FormControl>
