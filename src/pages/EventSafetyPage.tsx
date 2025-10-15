@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -68,10 +69,10 @@ const EventSafetyPage = () => {
       if (eventError) throw eventError;
       setEvent(eventData);
 
-      // Fetch event contacts using snapshot fields (no join needed for public page)
+      // Fetch event contacts using snapshot fields including avatar (no join needed for public page)
       const { data: contactsData, error: contactsError } = await supabase
         .from("event_contacts")
-        .select("id, role, contact_name, contact_phone, display_order")
+        .select("id, role, contact_name, contact_phone, contact_avatar_url, display_order")
         .eq("event_id", eventId)
         .order("display_order");
 
@@ -84,7 +85,7 @@ const EventSafetyPage = () => {
           id: contact.id,
           name: contact.contact_name || "Anonymous",
           phone: contact.contact_phone,
-          avatar: null, // No avatar on public page to avoid RLS issues
+          avatar: contact.contact_avatar_url,
           role: contact.role,
         }));
         setWelfareContacts(processedContacts);
@@ -198,13 +199,12 @@ const EventSafetyPage = () => {
                     key={contact.id}
                     className="flex gap-3 rounded-lg border bg-muted/50 p-4"
                   >
-                    {contact.avatar && (
-                      <img 
-                        src={contact.avatar} 
-                        alt={contact.name || "Contact"} 
-                        className="h-12 w-12 rounded-full object-cover"
-                      />
-                    )}
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={contact.avatar || undefined} alt={contact.name || "Contact"} />
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {(contact.name || "?").charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex-1">
                       <p className="font-semibold">{contact.name || "Anonymous"}</p>
                       {contact.role && (

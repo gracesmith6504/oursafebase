@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, Copy, Check } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
@@ -20,10 +21,11 @@ interface Society {
 interface Member {
   id: string;
   joined_at: string;
-  profile: {
+  profiles: {
     id: string;
     display_name: string | null;
     avatar_url: string | null;
+    phone_number: string | null;
   };
 }
 
@@ -41,9 +43,14 @@ const SocietyMembers = () => {
   useEffect(() => {
     if (user && slug) {
       fetchSociety();
-      fetchMembers();
     }
   }, [user, slug]);
+
+  useEffect(() => {
+    if (society?.id) {
+      fetchMembers();
+    }
+  }, [society?.id]);
 
   const fetchSociety = async () => {
     const { data, error } = await supabase
@@ -70,7 +77,7 @@ const SocietyMembers = () => {
       .select(`
         id,
         joined_at,
-        profile:profiles(id, display_name, avatar_url)
+        profiles!inner(id, display_name, avatar_url, phone_number)
       `)
       .eq("society_id", society.id)
       .order("joined_at", { ascending: true });
@@ -159,12 +166,15 @@ const SocietyMembers = () => {
                     key={member.id}
                     className="flex items-center gap-4 rounded-lg border p-4"
                   >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      {member.profile?.display_name?.[0]?.toUpperCase() || "?"}
-                    </div>
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={member.profiles?.avatar_url || undefined} alt={member.profiles?.display_name || "Member"} />
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {(member.profiles?.display_name || "?").charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex-1">
                       <p className="font-medium">
-                        {member.profile?.display_name || "Anonymous Member"}
+                        {member.profiles?.display_name || "Anonymous Member"}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Joined {new Date(member.joined_at).toLocaleDateString()}

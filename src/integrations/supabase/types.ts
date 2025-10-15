@@ -149,6 +149,7 @@ export type Database = {
       }
       event_contacts: {
         Row: {
+          contact_avatar_url: string | null
           contact_name: string | null
           contact_phone: string | null
           created_at: string | null
@@ -161,6 +162,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          contact_avatar_url?: string | null
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string | null
@@ -173,6 +175,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          contact_avatar_url?: string | null
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string | null

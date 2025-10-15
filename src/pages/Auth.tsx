@@ -17,6 +17,8 @@ const Auth = () => {
   const [displayName, setDisplayName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [countryCode, setCountryCode] = useState("+353");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
@@ -42,6 +44,32 @@ const Auth = () => {
     }
   }, [user, navigate, inviteCode]);
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Image must be less than 2MB");
+        return;
+      }
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error("Please select an image file");
+        return;
+      }
+      
+      setAvatarFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -52,24 +80,57 @@ const Auth = () => {
 
     setLoading(true);
     
-    const fullPhoneNumber = `${countryCode}${phoneNumber}`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: {
-          display_name: displayName || email.split("@")[0],
-          phone_number: fullPhoneNumber,
+    try {
+      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: {
+            display_name: displayName || email.split("@")[0],
+            phone_number: fullPhoneNumber,
+          },
         },
-      },
-    });
+      });
 
-    if (error) {
-      toast.error(error.message);
-    } else {
+      if (error) {
+        toast.error(error.message);
+        setLoading(false);
+        return;
+      }
+
+      // Upload avatar if provided
+      if (avatarFile && data.user) {
+        const fileExt = avatarFile.name.split('.').pop();
+        const filePath = `${data.user.id}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, avatarFile, { upsert: true });
+
+        if (uploadError) {
+          console.error("Avatar upload error:", uploadError);
+          toast.error("Account created but avatar upload failed");
+        } else {
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(filePath);
+
+          // Update profile with avatar URL
+          await supabase
+            .from('profiles')
+            .update({ avatar_url: publicUrl })
+            .eq('id', data.user.id);
+        }
+      }
+
       toast.success("Account created! Please check your email to verify.");
+    } catch (error) {
+      console.error("Signup error:", error);
+      toast.error("An error occurred during signup");
     }
     
     setLoading(false);
@@ -155,7 +216,30 @@ const Auth = () => {
                     placeholder="Your name"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
+                    disabled={loading}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-avatar">Profile Picture (optional)</Label>
+                  {avatarPreview && (
+                    <div className="mb-2 flex justify-center">
+                      <img 
+                        src={avatarPreview} 
+                        alt="Avatar preview" 
+                        className="h-20 w-20 rounded-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <Input
+                    id="signup-avatar"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Max size: 2MB. Your photo will appear on event safety pages when you're listed as a contact.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
@@ -165,6 +249,7 @@ const Auth = () => {
                     placeholder="you@university.edu"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
                     required
                   />
                 </div>
@@ -175,6 +260,7 @@ const Auth = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
                     required
                   />
                 </div>

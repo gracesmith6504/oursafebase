@@ -352,7 +352,7 @@ const EditEvent = () => {
         const memberIds = selectedContacts.map(c => c.userId);
         const { data: profilesData } = await supabase
           .from("profiles")
-          .select("id, display_name, phone_number")
+          .select("id, display_name, phone_number, avatar_url")
           .in("id", memberIds);
         
         if (profilesData) {
@@ -370,6 +370,7 @@ const EditEvent = () => {
             user_id: contact.userId,
             contact_name: profile?.display_name || contact.displayName,
             contact_phone: profile?.phone_number,
+            contact_avatar_url: profile?.avatar_url,
             external_name: null,
             external_phone: null,
             role: contact.role,
@@ -381,6 +382,7 @@ const EditEvent = () => {
           user_id: null,
           contact_name: contact.name,
           contact_phone: contact.phone,
+          contact_avatar_url: null,
           external_name: contact.name,
           external_phone: contact.phone,
           role: contact.role,

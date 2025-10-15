@@ -30,9 +30,14 @@ const SocietyDashboard = () => {
   useEffect(() => {
     if (user && slug) {
       fetchSociety();
-      fetchStats();
     }
   }, [user, slug]);
+
+  useEffect(() => {
+    if (society?.id) {
+      fetchStats();
+    }
+  }, [society?.id]);
 
   const fetchSociety = async () => {
     const { data, error } = await supabase

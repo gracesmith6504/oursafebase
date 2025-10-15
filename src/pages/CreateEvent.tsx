@@ -288,7 +288,7 @@ const CreateEvent = () => {
         const memberIds = selectedContacts.map(c => c.userId);
         const { data: profilesData } = await supabase
           .from("profiles")
-          .select("id, display_name, phone_number")
+          .select("id, display_name, phone_number, avatar_url")
           .in("id", memberIds);
         
         if (profilesData) {
@@ -298,7 +298,7 @@ const CreateEvent = () => {
         }
       }
 
-      // Create event contacts with snapshot fields
+      // Create event contacts with snapshot fields including avatar
       const contactsToInsert = [
         ...selectedContacts.map((contact, index) => {
           const profile = memberProfiles[contact.userId];
@@ -307,6 +307,7 @@ const CreateEvent = () => {
             user_id: contact.userId,
             contact_name: profile?.display_name || contact.displayName,
             contact_phone: profile?.phone_number,
+            contact_avatar_url: profile?.avatar_url,
             external_name: null,
             external_phone: null,
             role: contact.role,
@@ -318,6 +319,7 @@ const CreateEvent = () => {
           user_id: null,
           contact_name: contact.name,
           contact_phone: contact.phone,
+          contact_avatar_url: null,
           external_name: contact.name,
           external_phone: contact.phone,
           role: contact.role,
