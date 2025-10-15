@@ -8,6 +8,7 @@ import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy
 import { format } from "date-fns";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
+import { ReportConcernDialog } from "@/components/ReportConcernDialog";
 
 interface Event {
   id: string;
@@ -49,6 +50,7 @@ const EventSafetyPage = () => {
   const [emergencyInfo, setEmergencyInfo] = useState<EmergencyInfo | null>(null);
   const [codeOfConduct, setCodeOfConduct] = useState<CodeOfConduct | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
   useEffect(() => {
     if (eventId) {
@@ -288,7 +290,12 @@ const EventSafetyPage = () => {
 
         {/* Action Buttons */}
         <div className="grid gap-4 sm:grid-cols-2">
-          <Button size="lg" className="w-full" variant="destructive">
+          <Button 
+            size="lg" 
+            className="w-full" 
+            variant="destructive"
+            onClick={() => setShowReportDialog(true)}
+          >
             <FileText className="mr-2 h-5 w-5" />
             Report a Concern
           </Button>
@@ -307,6 +314,12 @@ const EventSafetyPage = () => {
           </p>
         </div>
       </footer>
+
+      <ReportConcernDialog
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+        eventId={eventId!}
+      />
     </div>
   );
 };

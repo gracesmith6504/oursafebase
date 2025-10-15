@@ -329,6 +329,7 @@ export type Database = {
           notes: string | null
           reporter_email: string | null
           reporter_name: string | null
+          reporter_phone: string | null
           resolved_at: string | null
           severity: string | null
           status: string | null
@@ -343,6 +344,7 @@ export type Database = {
           notes?: string | null
           reporter_email?: string | null
           reporter_name?: string | null
+          reporter_phone?: string | null
           resolved_at?: string | null
           severity?: string | null
           status?: string | null
@@ -357,6 +359,7 @@ export type Database = {
           notes?: string | null
           reporter_email?: string | null
           reporter_name?: string | null
+          reporter_phone?: string | null
           resolved_at?: string | null
           severity?: string | null
           status?: string | null
