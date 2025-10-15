@@ -31,6 +31,18 @@ const Dashboard = () => {
     }
   }, [user]);
 
+  // Refresh societies when user returns to the page
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && user) {
+        fetchSocieties();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [user]);
+
   const fetchSocieties = async () => {
     const { data, error } = await supabase
       .from("society_members")

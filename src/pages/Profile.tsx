@@ -158,14 +158,33 @@ const Profile = () => {
         .delete()
         .eq("id", membershipId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Leave society error:", error);
+        if (error.message.includes("policy")) {
+          toast.error("Permission denied. Please contact support.");
+        } else {
+          toast.error(`Failed to leave ${societyName}: ${error.message}`);
+        }
+        return;
+      }
 
-      toast.success(`Left ${societyName}`);
-      fetchSocieties();
+      toast.success(`Successfully left ${societyName}`);
+      
+      // Refresh societies list
+      await fetchSocieties();
       setSocietyToLeave(null);
+      
+      // Navigate to dashboard if user left all societies
+      const updatedSocieties = societies.filter(s => s.society.id !== societyToLeave?.id);
+      if (updatedSocieties.length === 0) {
+        setTimeout(() => {
+          toast.info("Redirecting to dashboard...");
+          navigate("/dashboard");
+        }, 1500);
+      }
     } catch (error) {
-      toast.error("Failed to leave society");
-      console.error(error);
+      console.error("Unexpected error leaving society:", error);
+      toast.error("An unexpected error occurred");
     }
   };
 
