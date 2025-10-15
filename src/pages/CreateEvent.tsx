@@ -282,19 +282,42 @@ const CreateEvent = () => {
 
       if (eventError) throw eventError;
 
-      // Create event contacts
+      // Fetch member profiles for snapshot fields
+      let memberProfiles: any = {};
+      if (selectedContacts.length > 0) {
+        const memberIds = selectedContacts.map(c => c.userId);
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, display_name, phone_number")
+          .in("id", memberIds);
+        
+        if (profilesData) {
+          memberProfiles = Object.fromEntries(
+            profilesData.map(p => [p.id, p])
+          );
+        }
+      }
+
+      // Create event contacts with snapshot fields
       const contactsToInsert = [
-        ...selectedContacts.map((contact, index) => ({
-          event_id: eventData.id,
-          user_id: contact.userId,
-          external_name: null,
-          external_phone: null,
-          role: contact.role,
-          display_order: index,
-        })),
+        ...selectedContacts.map((contact, index) => {
+          const profile = memberProfiles[contact.userId];
+          return {
+            event_id: eventData.id,
+            user_id: contact.userId,
+            contact_name: profile?.display_name || contact.displayName,
+            contact_phone: profile?.phone_number,
+            external_name: null,
+            external_phone: null,
+            role: contact.role,
+            display_order: index,
+          };
+        }),
         ...externalContacts.map((contact, index) => ({
           event_id: eventData.id,
           user_id: null,
+          contact_name: contact.name,
+          contact_phone: contact.phone,
           external_name: contact.name,
           external_phone: contact.phone,
           role: contact.role,

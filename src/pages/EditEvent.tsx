@@ -144,31 +144,19 @@ const EditEvent = () => {
       setEventTime(format(new Date(eventData.event_date), "HH:mm"));
       setLocation(eventData.location || "");
 
-      // Fetch event contacts
+      // Fetch event contacts using snapshot fields
       const { data: contactsData } = await supabase
         .from("event_contacts")
-        .select(`
-          id,
-          role,
-          user_id,
-          external_name,
-          external_phone,
-          display_order,
-          profiles:user_id (
-            display_name,
-            phone_number,
-            avatar_url
-          )
-        `)
+        .select("id, role, user_id, contact_name, contact_phone, external_name, external_phone, display_order")
         .eq("event_id", eventId)
         .order("display_order");
 
       if (contactsData) {
         const internalContacts = contactsData
-          .filter((c: any) => c.user_id && c.profiles)
+          .filter((c: any) => c.user_id)
           .map((c: any) => ({
             userId: c.user_id,
-            displayName: c.profiles?.display_name || "Anonymous",
+            displayName: c.contact_name || "Anonymous",
             role: c.role || "",
           }));
         
@@ -176,8 +164,8 @@ const EditEvent = () => {
           .filter((c: any) => !c.user_id)
           .map((c: any) => ({
             id: crypto.randomUUID(),
-            name: c.external_name || "",
-            phone: c.external_phone || "",
+            name: c.contact_name || c.external_name || "",
+            phone: c.contact_phone || c.external_phone || "",
             role: c.role || "",
           }));
         
@@ -358,18 +346,41 @@ const EditEvent = () => {
       // Delete and recreate event contacts
       await supabase.from("event_contacts").delete().eq("event_id", eventId);
 
+      // Fetch member profiles for snapshot fields
+      let memberProfiles: any = {};
+      if (selectedContacts.length > 0) {
+        const memberIds = selectedContacts.map(c => c.userId);
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, display_name, phone_number")
+          .in("id", memberIds);
+        
+        if (profilesData) {
+          memberProfiles = Object.fromEntries(
+            profilesData.map(p => [p.id, p])
+          );
+        }
+      }
+
       const contactsToInsert = [
-        ...selectedContacts.map((contact, index) => ({
-          event_id: eventId,
-          user_id: contact.userId,
-          external_name: null,
-          external_phone: null,
-          role: contact.role,
-          display_order: index,
-        })),
+        ...selectedContacts.map((contact, index) => {
+          const profile = memberProfiles[contact.userId];
+          return {
+            event_id: eventId,
+            user_id: contact.userId,
+            contact_name: profile?.display_name || contact.displayName,
+            contact_phone: profile?.phone_number,
+            external_name: null,
+            external_phone: null,
+            role: contact.role,
+            display_order: index,
+          };
+        }),
         ...externalContacts.map((contact, index) => ({
           event_id: eventId,
           user_id: null,
+          contact_name: contact.name,
+          contact_phone: contact.phone,
           external_name: contact.name,
           external_phone: contact.phone,
           role: contact.role,

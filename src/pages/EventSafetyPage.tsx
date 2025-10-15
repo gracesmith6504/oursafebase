@@ -68,47 +68,25 @@ const EventSafetyPage = () => {
       if (eventError) throw eventError;
       setEvent(eventData);
 
-      // Fetch event contacts with profiles
-      const { data: contactsData } = await supabase
+      // Fetch event contacts using snapshot fields (no join needed for public page)
+      const { data: contactsData, error: contactsError } = await supabase
         .from("event_contacts")
-        .select(`
-          id,
-          role,
-          user_id,
-          external_name,
-          external_phone,
-          display_order,
-          profiles:user_id (
-            display_name,
-            phone_number,
-            avatar_url
-          )
-        `)
+        .select("id, role, contact_name, contact_phone, display_order")
         .eq("event_id", eventId)
         .order("display_order");
 
+      if (contactsError) {
+        console.error("Error fetching contacts:", contactsError);
+      }
+
       if (contactsData) {
-        const processedContacts = (contactsData || []).map((contact: any) => {
-          // If user_id exists, it's a society member
-          if (contact.user_id && contact.profiles) {
-            return {
-              id: contact.id,
-              name: contact.profiles.display_name || "Unknown Member",
-              phone: contact.profiles.phone_number,
-              avatar: contact.profiles.avatar_url,
-              role: contact.role,
-            };
-          }
-          
-          // Otherwise, it's an external contact
-          return {
-            id: contact.id,
-            name: contact.external_name,
-            phone: contact.external_phone,
-            avatar: null,
-            role: contact.role,
-          };
-        });
+        const processedContacts = contactsData.map((contact: any) => ({
+          id: contact.id,
+          name: contact.contact_name || "Anonymous",
+          phone: contact.contact_phone,
+          avatar: null, // No avatar on public page to avoid RLS issues
+          role: contact.role,
+        }));
         setWelfareContacts(processedContacts);
       }
 
