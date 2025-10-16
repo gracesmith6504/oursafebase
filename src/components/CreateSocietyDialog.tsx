@@ -63,12 +63,13 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
       return;
     }
 
-    // Add user as member
+    // Add user as member (as committee)
     const { error: memberError } = await supabase
       .from("society_members")
       .insert({
         society_id: society.id,
         user_id: user?.id,
+        role: "committee",
       });
 
     if (memberError) {

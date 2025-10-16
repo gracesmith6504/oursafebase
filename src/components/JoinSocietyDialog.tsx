@@ -34,12 +34,33 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
 
     setLoading(true);
 
-    // Find society by invite code
-    const { data: society, error: societyError } = await supabase
+    // Find society by either invite code (try both)
+    let society = null;
+    let societyError = null;
+    
+    // Try committee code first
+    const { data: committeeData, error: committeeError } = await supabase
       .from("societies")
       .select("*")
-      .eq("invite_code", inviteCode.trim())
-      .single();
+      .eq("committee_invite_code", inviteCode.trim())
+      .maybeSingle();
+    
+    if (committeeData) {
+      society = committeeData;
+    } else {
+      // Try attendee code
+      const { data: attendeeData, error: attendeeError } = await supabase
+        .from("societies")
+        .select("*")
+        .eq("attendee_invite_code", inviteCode.trim())
+        .maybeSingle();
+      
+      if (attendeeData) {
+        society = attendeeData;
+      } else {
+        societyError = attendeeError || committeeError;
+      }
+    }
 
     if (societyError || !society) {
       toast.error("Invalid invite code");
@@ -61,12 +82,17 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
       return;
     }
 
+    // Determine role based on which code was used
+    const isCommitteeCode = society.committee_invite_code === inviteCode.trim();
+    const role = isCommitteeCode ? 'committee' : 'attendee';
+    
     // Add user as member
     const { error: memberError } = await supabase
       .from("society_members")
       .insert({
         society_id: society.id,
         user_id: user?.id,
+        role: role,
       });
 
     if (memberError) {

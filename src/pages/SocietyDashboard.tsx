@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
+import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Users, AlertCircle, Settings, ArrowLeft } from "lucide-react";
@@ -26,6 +27,7 @@ const SocietyDashboard = () => {
     totalMembers: 0,
     newReports: 0,
   });
+  const { isCommittee, loading: roleLoading } = useCommitteeRole(society?.id);
 
   useEffect(() => {
     if (user && slug) {
@@ -100,11 +102,33 @@ const SocietyDashboard = () => {
     });
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <ProtectedRoute>
         <div className="flex min-h-screen items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
+
+  if (!isCommittee) {
+    return (
+      <ProtectedRoute>
+        <div className="flex min-h-screen items-center justify-center">
+          <Card className="max-w-md">
+            <CardHeader>
+              <CardTitle>Committee Access Required</CardTitle>
+              <CardDescription>
+                You need committee access to view this page.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate('/my-events')}>
+                Back to My Events
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </ProtectedRoute>
     );

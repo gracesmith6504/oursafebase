@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ProtectedRoute } from "@/lib/auth";
+import { ProtectedRoute, useAuth } from "@/lib/auth";
+import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { ArrowLeft, Plus, Calendar, FileText, MessageSquare, Eye, Shield, Share2, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -29,10 +30,13 @@ interface EventMetrics {
 const SocietyEvents = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [societyId, setSocietyId] = useState<string | null>(null);
   const [societyName, setSocietyName] = useState("");
   const [events, setEvents] = useState<Event[]>([]);
   const [metrics, setMetrics] = useState<Record<string, EventMetrics>>({});
   const [loading, setLoading] = useState(true);
+  const { isCommittee, loading: roleLoading } = useCommitteeRole(societyId || undefined);
 
   useEffect(() => {
     fetchEvents();
@@ -48,6 +52,8 @@ const SocietyEvents = () => {
         .single();
 
       if (societyError) throw societyError;
+      
+      setSocietyId(societyData.id);
       setSocietyName(societyData.name);
 
       // Check membership
@@ -122,11 +128,35 @@ const SocietyEvents = () => {
     }
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      </div>
+      <ProtectedRoute>
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
+
+  if (!isCommittee) {
+    return (
+      <ProtectedRoute>
+        <div className="flex min-h-screen items-center justify-center">
+          <Card className="max-w-md">
+            <CardHeader>
+              <CardTitle>Committee Access Required</CardTitle>
+              <CardDescription>
+                You need committee access to manage events.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate('/my-events')}>
+                Back to My Events
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </ProtectedRoute>
     );
   }
 

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 
 const InviteJoin = () => {
-  const { code } = useParams();
+  const { type, code } = useParams<{ type: 'committee' | 'attendee'; code: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [processing, setProcessing] = useState(true);
@@ -24,15 +24,18 @@ const InviteJoin = () => {
   }, [user, authLoading, code]);
 
   const joinSociety = async () => {
-    if (!code || !user) return;
+    if (!code || !user || !type) return;
 
     setProcessing(true);
 
+    // Determine which invite code column to check based on type
+    const codeColumn = type === 'committee' ? 'committee_invite_code' : 'attendee_invite_code';
+    
     // Find society by invite code
     const { data: society, error: societyError } = await supabase
       .from("societies")
       .select("*")
-      .eq("invite_code", code)
+      .eq(codeColumn, code)
       .single();
 
     if (societyError || !society) {
@@ -44,23 +47,27 @@ const InviteJoin = () => {
     // Check if already a member
     const { data: existing } = await supabase
       .from("society_members")
-      .select("*")
+      .select("id, role")
       .eq("society_id", society.id)
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       toast.success(`You're already a member of ${society.name}`);
-      navigate(`/society/${society.slug}/dashboard`);
+      const destination = existing.role === 'committee' 
+        ? `/society/${society.slug}/dashboard` 
+        : '/my-events';
+      navigate(destination);
       return;
     }
 
-    // Add user as member
+    // Add user as member with appropriate role
     const { error: memberError } = await supabase
       .from("society_members")
       .insert({
         society_id: society.id,
         user_id: user.id,
+        role: type === 'committee' ? 'committee' : 'attendee',
       });
 
     if (memberError) {
@@ -70,8 +77,17 @@ const InviteJoin = () => {
       return;
     }
 
-    toast.success(`Welcome to ${society.name}!`);
-    navigate("/my-events");
+    const successMessage = type === 'committee'
+      ? `Welcome to ${society.name} committee!`
+      : `Welcome to ${society.name}! You can now view events.`;
+    
+    toast.success(successMessage);
+    
+    // Redirect based on role
+    const destination = type === 'committee' 
+      ? `/society/${society.slug}/dashboard` 
+      : '/my-events';
+    navigate(destination);
   };
 
   return (

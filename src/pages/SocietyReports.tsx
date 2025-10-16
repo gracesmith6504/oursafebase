@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,6 +79,7 @@ export default function SocietyReports() {
   const [eventFilter, setEventFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const { isCommittee, loading: roleLoading } = useCommitteeRole(societyId || undefined);
   
   const [feedbackEventFilter, setFeedbackEventFilter] = useState<string>("all");
   const [feedbackSafetyFilter, setFeedbackSafetyFilter] = useState<string>("all");
@@ -306,10 +308,30 @@ export default function SocietyReports() {
     setShowFeedbackDialog(true);
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-muted-foreground">Loading reports...</div>
+      </div>
+    );
+  }
+
+  if (!isCommittee) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Committee Access Required</CardTitle>
+            <CardDescription>
+              You need committee access to view reports.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate('/my-events')}>
+              Back to My Events
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

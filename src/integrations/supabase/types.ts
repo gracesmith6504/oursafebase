@@ -428,28 +428,31 @@ export type Database = {
       }
       societies: {
         Row: {
+          attendee_invite_code: string
+          committee_invite_code: string
           created_at: string | null
           description: string | null
           id: string
-          invite_code: string
           name: string
           slug: string
           updated_at: string | null
         }
         Insert: {
+          attendee_invite_code?: string
+          committee_invite_code?: string
           created_at?: string | null
           description?: string | null
           id?: string
-          invite_code?: string
           name: string
           slug: string
           updated_at?: string | null
         }
         Update: {
+          attendee_invite_code?: string
+          committee_invite_code?: string
           created_at?: string | null
           description?: string | null
           id?: string
-          invite_code?: string
           name?: string
           slug?: string
           updated_at?: string | null
@@ -460,18 +463,21 @@ export type Database = {
         Row: {
           id: string
           joined_at: string | null
+          role: Database["public"]["Enums"]["society_member_role"]
           society_id: string
           user_id: string
         }
         Insert: {
           id?: string
           joined_at?: string | null
+          role?: Database["public"]["Enums"]["society_member_role"]
           society_id: string
           user_id: string
         }
         Update: {
           id?: string
           joined_at?: string | null
+          role?: Database["public"]["Enums"]["society_member_role"]
           society_id?: string
           user_id?: string
         }
@@ -501,13 +507,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      is_committee_member: {
+        Args: { _society_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_society_member: {
         Args: { _society_id: string; _user_id: string }
         Returns: boolean
       }
     }
     Enums: {
-      [_ in never]: never
+      society_member_role: "committee" | "attendee"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -634,6 +644,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      society_member_role: ["committee", "attendee"],
+    },
   },
 } as const

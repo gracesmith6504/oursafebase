@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
+import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,6 +61,7 @@ const CreateEvent = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const { isCommittee, loading: roleLoading } = useCommitteeRole(society?.id);
 
   // Form state
   const [eventName, setEventName] = useState("");
@@ -370,11 +372,33 @@ const CreateEvent = () => {
     }
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <ProtectedRoute>
         <div className="flex min-h-screen items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
+
+  if (!isCommittee) {
+    return (
+      <ProtectedRoute>
+        <div className="flex min-h-screen items-center justify-center">
+          <Card className="max-w-md">
+            <CardHeader>
+              <CardTitle>Committee Access Required</CardTitle>
+              <CardDescription>
+                You need committee access to create events.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate('/my-events')}>
+                Back to My Events
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </ProtectedRoute>
     );
