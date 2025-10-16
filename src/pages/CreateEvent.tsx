@@ -73,7 +73,7 @@ const CreateEvent = () => {
   const [externalContacts, setExternalContacts] = useState<ExternalContact[]>([]);
   const [emergencyFields, setEmergencyFields] = useState<EmergencyField[]>([]);
   const [selectedCoCId, setSelectedCoCId] = useState("");
-  const [availableCoCs, setAvailableCoCs] = useState<Array<{ id: string; version: number; content: string }>>([]);
+  const [availableCoCs, setAvailableCoCs] = useState<Array<{ id: string; version: number; content: string; is_active: boolean }>>([]);
 
   // Team member selection state
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -146,14 +146,18 @@ const CreateEvent = () => {
       // Fetch available society-level CoCs
       const { data: cocsData } = await supabase
         .from("code_of_conduct")
-        .select("id, version, content")
+        .select("id, version, content, is_active")
         .eq("society_id", societyData.id)
         .is("event_id", null)
-        .eq("is_active", true)
         .order("version", { ascending: false });
 
       if (cocsData) {
         setAvailableCoCs(cocsData);
+        // Auto-select the active CoC
+        const activeCoC = cocsData.find(c => c.is_active);
+        if (activeCoC) {
+          setSelectedCoCId(activeCoC.id);
+        }
       }
 
       setLoading(false);
@@ -365,14 +369,22 @@ const CreateEvent = () => {
         if (emergencyError) throw emergencyError;
       }
 
-      // Associate selected CoC with event if one was selected
+      // Create a copy of the selected CoC for this event
       if (selectedCoCId) {
-        const { error: cocError } = await supabase
-          .from("code_of_conduct")
-          .update({ event_id: eventData.id })
-          .eq("id", selectedCoCId);
+        const selectedCoC = availableCoCs.find(c => c.id === selectedCoCId);
+        if (selectedCoC) {
+          const { error: cocError } = await supabase
+            .from("code_of_conduct")
+            .insert({
+              society_id: society.id,
+              event_id: eventData.id,
+              content: selectedCoC.content,
+              version: selectedCoC.version,
+              is_active: true,
+            });
 
-        if (cocError) throw cocError;
+          if (cocError) throw cocError;
+        }
       }
 
       toast.success("Event created. Safety Page ready.");
@@ -785,7 +797,7 @@ const CreateEvent = () => {
                         <option value="">None (optional)</option>
                         {availableCoCs.map((coc) => (
                           <option key={coc.id} value={coc.id}>
-                            Version {coc.version}
+                            Version {coc.version}{coc.is_active ? ' (Active)' : ''}
                           </option>
                         ))}
                       </select>

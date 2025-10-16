@@ -73,7 +73,7 @@ const EditEvent = () => {
   const [externalContacts, setExternalContacts] = useState<ExternalContact[]>([]);
   const [emergencyFields, setEmergencyFields] = useState<EmergencyField[]>([]);
   const [selectedCoCId, setSelectedCoCId] = useState("");
-  const [availableCoCs, setAvailableCoCs] = useState<Array<{ id: string; version: number; content: string }>>([]);
+  const [availableCoCs, setAvailableCoCs] = useState<Array<{ id: string; version: number; content: string; is_active: boolean }>>([]);
 
   // Team member selection state
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -192,26 +192,29 @@ const EditEvent = () => {
       // Fetch available society-level CoCs
       const { data: cocsData } = await supabase
         .from("code_of_conduct")
-        .select("id, version, content")
+        .select("id, version, content, is_active")
         .eq("society_id", societyData.id)
         .is("event_id", null)
-        .eq("is_active", true)
         .order("version", { ascending: false });
 
       if (cocsData) {
         setAvailableCoCs(cocsData);
       }
 
-      // Check if this event has an associated CoC
+      // Check if this event has an associated CoC and find matching society CoC
       const { data: eventCoCData } = await supabase
         .from("code_of_conduct")
-        .select("id")
+        .select("version")
         .eq("event_id", eventId)
         .eq("is_active", true)
         .maybeSingle();
 
-      if (eventCoCData) {
-        setSelectedCoCId(eventCoCData.id);
+      if (eventCoCData && cocsData) {
+        // Find the society CoC with the same version
+        const matchingCoC = cocsData.find(c => c.version === eventCoCData.version);
+        if (matchingCoC) {
+          setSelectedCoCId(matchingCoC.id);
+        }
       }
 
       // Fetch all members
@@ -429,20 +432,28 @@ const EditEvent = () => {
       }
 
       // Update CoC association
-      // First, remove any existing event-specific CoC association
+      // First, delete any existing event-specific CoC
       await supabase
         .from("code_of_conduct")
-        .update({ event_id: null })
+        .delete()
         .eq("event_id", eventId);
 
-      // Then associate the selected CoC if one was chosen
+      // Create a copy of the selected society CoC for this event
       if (selectedCoCId) {
-        const { error: cocError } = await supabase
-          .from("code_of_conduct")
-          .update({ event_id: eventId })
-          .eq("id", selectedCoCId);
+        const selectedCoC = availableCoCs.find(c => c.id === selectedCoCId);
+        if (selectedCoC) {
+          const { error: cocError } = await supabase
+            .from("code_of_conduct")
+            .insert({
+              society_id: society.id,
+              event_id: eventId,
+              content: selectedCoC.content,
+              version: selectedCoC.version,
+              is_active: true,
+            });
 
-        if (cocError) throw cocError;
+          if (cocError) throw cocError;
+        }
       }
 
       toast.success("Event updated successfully");
@@ -855,7 +866,7 @@ const EditEvent = () => {
                         <option value="">None (optional)</option>
                         {availableCoCs.map((coc) => (
                           <option key={coc.id} value={coc.id}>
-                            Version {coc.version}
+                            Version {coc.version}{coc.is_active ? ' (Active)' : ''}
                           </option>
                         ))}
                       </select>

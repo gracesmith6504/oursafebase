@@ -112,6 +112,19 @@ const SocietyCodesOfConduct = () => {
   const handleDelete = async () => {
     if (!deletingCoCId) return;
 
+    // Check if this CoC is being used by any events (check for event-specific copies)
+    const { data: usageData } = await supabase
+      .from("code_of_conduct")
+      .select("id")
+      .not("event_id", "is", null)
+      .eq("version", cocs.find(c => c.id === deletingCoCId)?.version || 0);
+
+    if (usageData && usageData.length > 0) {
+      toast.error("Cannot delete: This CoC is being used by events");
+      setDeletingCoCId(null);
+      return;
+    }
+
     const { error } = await supabase
       .from("code_of_conduct")
       .delete()
