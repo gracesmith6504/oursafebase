@@ -215,6 +215,12 @@ const EditEvent = () => {
         if (matchingCoC) {
           setSelectedCoCId(matchingCoC.id);
         }
+      } else if (cocsData && cocsData.length > 0 && !eventCoCData) {
+        // If no event CoC exists, auto-select the active society CoC
+        const activeCoC = cocsData.find(c => c.is_active);
+        if (activeCoC) {
+          setSelectedCoCId(activeCoC.id);
+        }
       }
 
       // Fetch all members
@@ -450,17 +456,20 @@ const EditEvent = () => {
               content: selectedCoC.content,
               version: selectedCoC.version,
               is_active: true,
-            });
+            } as any);
 
-          if (cocError) throw cocError;
+          if (cocError) {
+            console.error("Error creating event CoC:", cocError);
+            throw new Error(cocError.message || "Failed to create event Code of Conduct");
+          }
         }
       }
 
       toast.success("Event updated successfully");
       navigate(`/event/${eventId}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating event:", error);
-      toast.error("Failed to update event");
+      toast.error(error?.message || "Failed to update event");
     } finally {
       setSubmitting(false);
     }

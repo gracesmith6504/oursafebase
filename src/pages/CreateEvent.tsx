@@ -153,10 +153,12 @@ const CreateEvent = () => {
 
       if (cocsData) {
         setAvailableCoCs(cocsData);
-        // Auto-select the active CoC
+        // Auto-select the active CoC, or the most recent if none is active
         const activeCoC = cocsData.find(c => c.is_active);
         if (activeCoC) {
           setSelectedCoCId(activeCoC.id);
+        } else if (cocsData.length > 0) {
+          setSelectedCoCId(cocsData[0].id);
         }
       }
 
@@ -381,17 +383,20 @@ const CreateEvent = () => {
               content: selectedCoC.content,
               version: selectedCoC.version,
               is_active: true,
-            });
+            } as any);
 
-          if (cocError) throw cocError;
+          if (cocError) {
+            console.error("Error creating event CoC:", cocError);
+            throw new Error(cocError.message || "Failed to create event Code of Conduct");
+          }
         }
       }
 
       toast.success("Event created. Safety Page ready.");
       navigate(`/event/${eventData.id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating event:", error);
-      toast.error("Failed to create event");
+      toast.error(error?.message || "Failed to create event");
     } finally {
       setSubmitting(false);
     }

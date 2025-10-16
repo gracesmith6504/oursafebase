@@ -110,14 +110,30 @@ const SocietyCodesOfConduct = () => {
   };
 
   const handleDelete = async () => {
-    if (!deletingCoCId) return;
+    if (!deletingCoCId || !society) return;
 
-    // Check if this CoC is being used by any events (check for event-specific copies)
+    const deletingCoC = cocs.find(c => c.id === deletingCoCId);
+    if (!deletingCoC) return;
+
+    // Check if this CoC has any acceptances
+    const { data: acceptancesData } = await supabase
+      .from("code_acceptances")
+      .select("id")
+      .eq("code_of_conduct_id", deletingCoCId)
+      .limit(1);
+
+    if (acceptancesData && acceptancesData.length > 0) {
+      toast.error("Cannot delete: This Code of Conduct has acceptance records");
+      setDeletingCoCId(null);
+      return;
+    }
+
+    // Check if this CoC is being used by any events (check for event-specific copies with same version)
     const { data: usageData } = await supabase
       .from("code_of_conduct")
       .select("id")
       .not("event_id", "is", null)
-      .eq("version", cocs.find(c => c.id === deletingCoCId)?.version || 0);
+      .eq("version", deletingCoC.version);
 
     if (usageData && usageData.length > 0) {
       toast.error("Cannot delete: This CoC is being used by events");
@@ -128,10 +144,12 @@ const SocietyCodesOfConduct = () => {
     const { error } = await supabase
       .from("code_of_conduct")
       .delete()
-      .eq("id", deletingCoCId);
+      .eq("id", deletingCoCId)
+      .eq("society_id", society.id);
 
     if (error) {
-      toast.error("Failed to delete Code of Conduct");
+      console.error("Error deleting CoC:", error);
+      toast.error(error.message || "Failed to delete Code of Conduct");
       return;
     }
 
