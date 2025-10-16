@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy, Loader2 } from "lucide-react";
+import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy, Loader2, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
@@ -12,6 +12,7 @@ import { ReportConcernDialog } from "@/components/ReportConcernDialog";
 import { SubmitFeedbackDialog } from "@/components/SubmitFeedbackDialog";
 import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
 import { useAuth } from "@/lib/auth";
+import { useCommitteeRole } from "@/lib/useCommitteeRole";
 
 interface Event {
   id: string;
@@ -20,6 +21,10 @@ interface Event {
   location: string | null;
   society_id: string;
   created_by: string | null;
+}
+
+interface Society {
+  slug: string;
 }
 
 interface WelfareContact {
@@ -51,6 +56,7 @@ const EventSafetyPage = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
+  const [society, setSociety] = useState<Society | null>(null);
   const [welfareContacts, setWelfareContacts] = useState<WelfareContact[]>([]);
   const [emergencyInfo, setEmergencyInfo] = useState<EmergencyInfo | null>(null);
   const [codeOfConduct, setCodeOfConduct] = useState<CodeOfConduct | null>(null);
@@ -60,6 +66,8 @@ const EventSafetyPage = () => {
   const [cocRequired, setCoCRequired] = useState(false);
   const [cocData, setCoCData] = useState<any>(null);
   const [showCoCDialog, setShowCoCDialog] = useState(false);
+  
+  const { isCommittee, loading: roleLoading } = useCommitteeRole(event?.society_id);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -85,6 +93,17 @@ const EventSafetyPage = () => {
 
       if (eventError) throw eventError;
       setEvent(eventData);
+
+      // Fetch society to get slug
+      const { data: societyData } = await supabase
+        .from("societies")
+        .select("slug")
+        .eq("id", eventData.society_id)
+        .single();
+      
+      if (societyData) {
+        setSociety(societyData);
+      }
 
       // Fetch event contacts using snapshot fields including avatar (no join needed for public page)
       const { data: contactsData, error: contactsError } = await supabase
@@ -257,12 +276,32 @@ const EventSafetyPage = () => {
 
   const customEmergencyFields = emergencyInfo?.custom_emergency_info || [];
 
+  const handleBackClick = () => {
+    if (!society) return;
+    
+    if (isCommittee) {
+      navigate(`/society/${society.slug}/dashboard`);
+    } else {
+      navigate(`/society/${society.slug}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-4">
+            {society && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleBackClick}
+                className="h-8 w-8"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
             <img src={logo} alt="OurSafeBase" className="h-10" />
             <div>
               <h1 className="text-2xl font-bold">{event.title}</h1>

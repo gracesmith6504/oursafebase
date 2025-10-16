@@ -41,7 +41,7 @@ const SocietyAttendee = () => {
 
     if (societyError || !societyData) {
       toast.error("Society not found");
-      navigate("/attendee");
+      navigate("/dashboard");
       return;
     }
 
@@ -55,7 +55,7 @@ const SocietyAttendee = () => {
 
     if (!memberData) {
       toast.error("You are not a member of this society");
-      navigate("/attendee");
+      navigate("/dashboard");
       return;
     }
 
@@ -83,15 +83,6 @@ const SocietyAttendee = () => {
     <ProtectedRoute>
       <div className="min-h-screen bg-background">
         <div className="container mx-auto max-w-4xl px-4 py-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/attendee")}
-            className="mb-6"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Button>
-
           {loading ? (
             <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />

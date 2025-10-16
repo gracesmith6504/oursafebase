@@ -206,16 +206,16 @@ const SocietyMembers = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Members ({committeeCount} committee, {attendeeCount} attendees)</CardTitle>
+              <CardTitle>Committee Members ({committeeCount})</CardTitle>
               <CardDescription>
                 Committee members can manage events and respond to concerns
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {members.map((member) => (
+                {members.filter(m => m.role === 'committee').map((member) => (
                   <div
                     key={member.id}
                     className="flex items-center gap-4 rounded-lg border p-4"
@@ -234,9 +234,42 @@ const SocietyMembers = () => {
                         Joined {new Date(member.joined_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <Badge variant={member.role === 'committee' ? 'default' : 'secondary'}>
-                      {member.role === 'committee' ? 'Committee' : 'Attendee'}
-                    </Badge>
+                    <Badge variant="default">Committee</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Attendees ({attendeeCount})</CardTitle>
+              <CardDescription>
+                Attendees can view events and submit feedback
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {members.filter(m => m.role === 'attendee').map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center gap-4 rounded-lg border p-4"
+                  >
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={member.profiles?.avatar_url || undefined} alt={member.profiles?.display_name || "Member"} />
+                      <AvatarFallback className="bg-primary text-primary-foreground">
+                        {(member.profiles?.display_name || "?").charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-medium">
+                        {member.profiles?.display_name || "Anonymous Member"}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Joined {new Date(member.joined_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Badge variant="secondary">Attendee</Badge>
                   </div>
                 ))}
               </div>
