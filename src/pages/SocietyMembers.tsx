@@ -61,19 +61,31 @@ const SocietyMembers = () => {
   }, [society?.id]);
 
   const fetchSociety = async () => {
-    const { data, error } = await supabase
+    // Fetch basic society info (available to all members)
+    const { data: basicData, error: basicError } = await supabase
       .from("societies")
-      .select("*")
+      .select("id, name, slug, description, created_at, updated_at")
       .eq("slug", slug)
       .single();
 
-    if (error || !data) {
+    if (basicError || !basicData) {
       toast.error("Society not found");
       navigate("/dashboard");
       return;
     }
 
-    setSociety(data);
+    // Fetch invite codes using security definer function (committee only)
+    const { data: inviteCodes } = await supabase
+      .rpc("get_society_invite_codes", { society_id: basicData.id });
+
+    // Combine data - invite codes will be null if user is not committee
+    const societyData = {
+      ...basicData,
+      committee_invite_code: inviteCodes?.[0]?.committee_invite_code || "",
+      attendee_invite_code: inviteCodes?.[0]?.attendee_invite_code || "",
+    };
+
+    setSociety(societyData as Society);
     setLoading(false);
   };
 

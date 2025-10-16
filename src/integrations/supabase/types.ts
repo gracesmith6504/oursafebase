@@ -507,6 +507,24 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_society_basic_info: {
+        Args: { society_id: string }
+        Returns: {
+          created_at: string
+          description: string
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }[]
+      }
+      get_society_invite_codes: {
+        Args: { society_id: string }
+        Returns: {
+          attendee_invite_code: string
+          committee_invite_code: string
+        }[]
+      }
       is_committee_member: {
         Args: { _society_id: string; _user_id: string }
         Returns: boolean

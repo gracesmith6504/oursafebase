@@ -34,35 +34,38 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
 
     setLoading(true);
 
-    // Find society by either invite code (try both)
-    let society = null;
-    let societyError = null;
-    
-    // Try committee code first
-    const { data: committeeData, error: committeeError } = await supabase
+    // Find society by invite code using RPC to check both codes
+    // This works because the invite join process validates codes server-side
+    const { data: societies, error: societyError } = await supabase
       .from("societies")
-      .select("*")
-      .eq("committee_invite_code", inviteCode.trim())
-      .maybeSingle();
-    
-    if (committeeData) {
-      society = committeeData;
-    } else {
-      // Try attendee code
-      const { data: attendeeData, error: attendeeError } = await supabase
-        .from("societies")
-        .select("*")
-        .eq("attendee_invite_code", inviteCode.trim())
-        .maybeSingle();
+      .select("id, name, slug");
+
+    if (societyError || !societies) {
+      toast.error("Failed to validate invite code");
+      setLoading(false);
+      return;
+    }
+
+    // Check each society's invite codes using the security definer function
+    let society = null;
+    let isCommitteeCode = false;
+
+    for (const soc of societies) {
+      const { data: codes } = await supabase
+        .rpc("get_society_invite_codes", { society_id: soc.id });
       
-      if (attendeeData) {
-        society = attendeeData;
-      } else {
-        societyError = attendeeError || committeeError;
+      if (codes?.[0]?.committee_invite_code === inviteCode.trim()) {
+        society = soc;
+        isCommitteeCode = true;
+        break;
+      } else if (codes?.[0]?.attendee_invite_code === inviteCode.trim()) {
+        society = soc;
+        isCommitteeCode = false;
+        break;
       }
     }
 
-    if (societyError || !society) {
+    if (!society) {
       toast.error("Invalid invite code");
       setLoading(false);
       return;
@@ -74,7 +77,7 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
       .select("*")
       .eq("society_id", society.id)
       .eq("user_id", user?.id)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       toast.error("You're already a member of this society");
@@ -82,8 +85,7 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
       return;
     }
 
-    // Determine role based on which code was used
-    const isCommitteeCode = society.committee_invite_code === inviteCode.trim();
+    // Role was determined during invite code validation
     const role = isCommitteeCode ? 'committee' : 'attendee';
     
     // Add user as member

@@ -28,17 +28,34 @@ const InviteJoin = () => {
 
     setProcessing(true);
 
-    // Determine which invite code column to check based on type
-    const codeColumn = type === 'committee' ? 'committee_invite_code' : 'attendee_invite_code';
-    
-    // Find society by invite code
-    const { data: society, error: societyError } = await supabase
+    // Get all societies (basic info only due to RLS)
+    const { data: societies, error: societyError } = await supabase
       .from("societies")
-      .select("*")
-      .eq(codeColumn, code)
-      .single();
+      .select("id, name, slug");
 
-    if (societyError || !society) {
+    if (societyError || !societies) {
+      toast.error("Failed to validate invite code");
+      navigate("/dashboard");
+      return;
+    }
+
+    // Find the society by checking invite codes using security definer function
+    let society = null;
+    for (const soc of societies) {
+      const { data: codes } = await supabase
+        .rpc("get_society_invite_codes", { society_id: soc.id });
+      
+      const codeToCheck = type === 'committee' 
+        ? codes?.[0]?.committee_invite_code 
+        : codes?.[0]?.attendee_invite_code;
+      
+      if (codeToCheck === code) {
+        society = soc;
+        break;
+      }
+    }
+
+    if (!society) {
       toast.error("Invalid invite code");
       navigate("/dashboard");
       return;
