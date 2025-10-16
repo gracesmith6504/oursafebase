@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +22,7 @@ interface JoinSocietyDialogProps {
 
 const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
 
@@ -86,6 +88,12 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
     setLoading(false);
     onOpenChange(false);
     onSuccess();
+    
+    // Redirect based on role
+    const destination = role === 'committee' 
+      ? `/society/${society.slug}/dashboard` 
+      : '/attendee';
+    navigate(destination);
   };
 
   return (

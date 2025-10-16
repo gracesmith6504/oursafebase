@@ -58,7 +58,7 @@ const InviteJoin = () => {
       toast.success(`You're already a member of ${society.name}`);
       const destination = existing.role === 'committee' 
         ? `/society/${society.slug}/dashboard` 
-        : '/my-events';
+        : '/attendee';
       navigate(destination);
       return;
     }
@@ -88,7 +88,7 @@ const InviteJoin = () => {
     // Redirect based on role
     const destination = role === 'committee' 
       ? `/society/${society.slug}/dashboard` 
-      : '/my-events';
+      : '/attendee';
     navigate(destination);
   };
 

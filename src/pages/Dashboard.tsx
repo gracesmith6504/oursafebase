@@ -3,24 +3,31 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
+import { useUserRoles } from "@/lib/useUserRoles";
+import RoleSwitcher from "@/components/RoleSwitcher";
 import { Plus, LogOut, User, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import CreateSocietyDialog from "@/components/CreateSocietyDialog";
 import JoinSocietyDialog from "@/components/JoinSocietyDialog";
 import logo from "@/assets/logo.png";
 
-interface Society {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
+interface SocietyMembership {
+  role: "committee" | "attendee";
+  society: {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+  };
 }
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [societies, setSocieties] = useState<Society[]>([]);
+  const { hasAttendee } = useUserRoles();
+  const [societies, setSocieties] = useState<SocietyMembership[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
@@ -46,14 +53,21 @@ const Dashboard = () => {
   const fetchSocieties = async () => {
     const { data, error } = await supabase
       .from("society_members")
-      .select("society:societies(*)")
+      .select("role, society:societies(id, name, slug, description)")
       .eq("user_id", user?.id);
 
     if (error) {
       toast.error("Failed to load societies");
       console.error(error);
     } else {
-      setSocieties(data.map((item: any) => item.society).filter(Boolean));
+      setSocieties(
+        data
+          .map((item: any) => ({
+            role: item.role,
+            society: item.society,
+          }))
+          .filter((m) => m.society)
+      );
     }
     setLoading(false);
   };
@@ -73,6 +87,7 @@ const Dashboard = () => {
               <h1 className="text-xl font-bold">OurSafeBase</h1>
             </div>
             <div className="flex items-center gap-2">
+              {hasAttendee && <RoleSwitcher currentRole="committee" />}
               <Button variant="outline" onClick={() => navigate("/my-events")}>
                 <Calendar className="mr-2 h-4 w-4" />
                 My Events
@@ -132,20 +147,33 @@ const Dashboard = () => {
               </div>
 
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {societies.map((society) => (
+                {societies.map((membership) => (
                   <Card
-                    key={society.id}
+                    key={membership.society.id}
                     className="cursor-pointer transition-all hover:shadow-lg"
-                    onClick={() => navigate(`/society/${society.slug}/dashboard`)}
+                    onClick={() =>
+                      navigate(
+                        membership.role === "committee"
+                          ? `/society/${membership.society.slug}/dashboard`
+                          : `/society/${membership.society.slug}`
+                      )
+                    }
                   >
                     <CardHeader>
-                      <CardTitle>{society.name}</CardTitle>
+                      <div className="flex items-start justify-between">
+                        <CardTitle>{membership.society.name}</CardTitle>
+                        <Badge variant={membership.role === "committee" ? "default" : "secondary"}>
+                          {membership.role === "committee" ? "Committee" : "Attendee"}
+                        </Badge>
+                      </div>
                       <CardDescription>
-                        {society.description || "No description"}
+                        {membership.society.description || "No description"}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Button className="w-full">View Dashboard</Button>
+                      <Button className="w-full">
+                        {membership.role === "committee" ? "View Dashboard" : "View Society"}
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
