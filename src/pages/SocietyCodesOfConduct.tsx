@@ -202,7 +202,7 @@ const SocietyCodesOfConduct = () => {
               <img src={logo} alt="OurSafeBase" className="h-8" />
               <div>
                 <h1 className="text-xl font-bold">{society?.name}</h1>
-                <p className="text-sm text-muted-foreground">Codes of Conduct</p>
+                <p className="text-sm text-muted-foreground">Code of Conduct Templates</p>
               </div>
             </div>
             <Button onClick={() => setCreateDialogOpen(true)}>
@@ -218,11 +218,11 @@ const SocietyCodesOfConduct = () => {
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Shield className="mb-4 h-12 w-12 text-muted-foreground" />
                 <p className="mb-4 text-center text-muted-foreground">
-                  No codes of conduct yet. Create one to use across your events.
+                  No templates yet. Create one to assign to your events.
                 </p>
                 <Button onClick={() => setCreateDialogOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Create First Code of Conduct
+                  Create First Template
                 </Button>
               </CardContent>
             </Card>
@@ -235,7 +235,7 @@ const SocietyCodesOfConduct = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <CardTitle className="text-lg">
-                            Code of Conduct v{coc.version}
+                            Template v{coc.version}
                           </CardTitle>
                           {coc.is_active && (
                             <Badge variant="default">Active</Badge>

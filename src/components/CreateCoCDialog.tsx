@@ -77,9 +77,9 @@ export const CreateCoCDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Create Code of Conduct</DialogTitle>
+          <DialogTitle>Create Code of Conduct Template</DialogTitle>
           <DialogDescription>
-            Create a new code of conduct that can be used across multiple events.
+            Create a new template that can be assigned to events.
           </DialogDescription>
         </DialogHeader>
 
@@ -101,7 +101,7 @@ export const CreateCoCDialog = ({
             Cancel
           </Button>
           <Button onClick={handleCreate} disabled={loading}>
-            {loading ? "Creating..." : "Create"}
+            {loading ? "Creating..." : "Create Template"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -139,7 +139,7 @@ const EventSafetyPage = () => {
         setEmergencyInfo(emergencyData);
       }
 
-      // Fetch code of conduct - first try event-specific, then society-level
+      // Fetch code of conduct - only event-specific for display
       let { data: cocData } = await supabase
         .from("code_of_conduct")
         .select("content")
@@ -147,9 +147,9 @@ const EventSafetyPage = () => {
         .eq("is_active", true)
         .maybeSingle();
 
-      // If no event-specific CoC, get society-level CoC
+      // If no event-specific CoC, optionally show active template content for display only
       if (!cocData) {
-        const { data: societyCocData } = await supabase
+        const { data: templateCocData } = await supabase
           .from("code_of_conduct")
           .select("content")
           .eq("society_id", eventData.society_id)
@@ -157,7 +157,7 @@ const EventSafetyPage = () => {
           .eq("is_active", true)
           .maybeSingle();
         
-        cocData = societyCocData;
+        cocData = templateCocData;
       }
 
       if (cocData) {
@@ -184,28 +184,16 @@ const EventSafetyPage = () => {
       return;
     }
 
-    // Check for event-level CoC first
-    let { data: coc } = await supabase
+    // Only check for event-level CoC (no society fallback for acceptance)
+    const { data: coc } = await supabase
       .from("code_of_conduct")
       .select("*")
       .eq("event_id", eventId)
       .eq("is_active", true)
       .maybeSingle();
 
-    // If no event-level CoC, check society-level
     if (!coc) {
-      const { data: societyCoC } = await supabase
-        .from("code_of_conduct")
-        .select("*")
-        .eq("society_id", eventData.society_id)
-        .eq("is_active", true)
-        .order("version", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      coc = societyCoC;
-    }
-
-    if (!coc) {
+      // No event-level CoC means no acceptance required
       setCoCRequired(false);
       return;
     }
@@ -426,6 +414,21 @@ const EventSafetyPage = () => {
             </CardHeader>
             <CardContent>
               <p className="whitespace-pre-wrap text-sm">{codeOfConduct.content}</p>
+              {!cocRequired && isCommittee && !cocData && (
+                <div className="mt-4 p-3 bg-muted rounded-md">
+                  <p className="text-sm text-muted-foreground">
+                    This event doesn't have a Code of Conduct assigned yet.{" "}
+                    <Button
+                      variant="link"
+                      className="h-auto p-0 text-sm"
+                      onClick={() => navigate(`/society/${society?.slug}/events/${eventId}/edit`)}
+                    >
+                      Edit Event
+                    </Button>{" "}
+                    to select a template.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

@@ -68,9 +68,9 @@ export const EditCoCDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Edit Code of Conduct v{coc.version}</DialogTitle>
+          <DialogTitle>Edit Template v{coc.version}</DialogTitle>
           <DialogDescription>
-            Update the content of this code of conduct.
+            Update the content of this template.
           </DialogDescription>
         </DialogHeader>
 
@@ -92,7 +92,7 @@ export const EditCoCDialog = ({
             Cancel
           </Button>
           <Button onClick={handleUpdate} disabled={loading}>
-            {loading ? "Updating..." : "Update"}
+            {loading ? "Updating..." : "Update Template"}
           </Button>
         </DialogFooter>
       </DialogContent>
