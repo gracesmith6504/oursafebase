@@ -25,6 +25,7 @@ interface Society {
 
 interface Member {
   user_id: string;
+  role: 'committee' | 'attendee';
   profile: {
     id: string;
     display_name: string | null;
@@ -202,13 +203,14 @@ const EditEvent = () => {
       }
 
       // Fetch all members
-      const { data: membersData, error: membersError } = await supabase
-        .from("society_members")
-        .select(`
-          user_id,
-          profile:profiles(id, display_name)
-        `)
-        .eq("society_id", societyData.id);
+    const { data: membersData, error: membersError } = await supabase
+      .from("society_members")
+      .select(`
+        user_id,
+        role,
+        profile:profiles(id, display_name)
+      `)
+      .eq("society_id", societyData.id);
 
       if (!membersError && membersData) {
         setMembers(membersData as any);
@@ -618,7 +620,7 @@ const EditEvent = () => {
                     >
                       <option value="">Select a member...</option>
                       {members
-                        .filter(m => !selectedContacts.some(c => c.userId === m.user_id))
+                        .filter(m => m.role === 'committee' && !selectedContacts.some(c => c.userId === m.user_id))
                         .map((member) => (
                           <option key={member.user_id} value={member.user_id}>
                             {member.profile?.display_name || "Anonymous"}

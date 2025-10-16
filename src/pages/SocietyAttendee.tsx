@@ -89,9 +89,18 @@ const SocietyAttendee = () => {
             </div>
           ) : (
             <>
-              <div className="mb-8">
-                <h1 className="mb-2 text-3xl font-bold">{society?.name}</h1>
-                <p className="text-muted-foreground">Upcoming events</p>
+              <div className="mb-8 flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div>
+                  <h1 className="text-3xl font-bold">{society?.name}</h1>
+                  <p className="text-muted-foreground">Upcoming events</p>
+                </div>
               </div>
 
               {events.length === 0 ? (
