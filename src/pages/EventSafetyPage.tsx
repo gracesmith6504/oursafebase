@@ -19,6 +19,7 @@ interface Event {
   event_date: string;
   location: string | null;
   society_id: string;
+  created_by: string | null;
 }
 
 interface WelfareContact {
@@ -145,6 +146,12 @@ const EventSafetyPage = () => {
 
   const checkCoCAcceptance = async (eventData: Event) => {
     if (!user) return;
+
+    // Skip CoC check if user is the event creator (committee member)
+    if (eventData.created_by === user.id) {
+      setCoCRequired(false);
+      return;
+    }
 
     // Check for event-level CoC first
     let { data: coc } = await supabase

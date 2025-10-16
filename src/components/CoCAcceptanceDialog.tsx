@@ -96,9 +96,6 @@ const CoCAcceptanceDialog = ({
         <div className="space-y-4 flex-1 flex flex-col min-h-0">
           <div className="space-y-1">
             <p className="text-sm font-medium">Event: {eventTitle}</p>
-            <p className="text-sm text-muted-foreground">
-              Version: {cocVersion}
-            </p>
           </div>
 
           <ScrollArea
@@ -138,31 +135,21 @@ const CoCAcceptanceDialog = ({
             </div>
           </ScrollArea>
 
-          {!scrolledToBottom && (
-            <p className="text-sm text-orange-600">
-              Please scroll to the bottom to continue
-            </p>
-          )}
-
           <div className="flex items-center space-x-2">
             <Checkbox
               id="agree"
               checked={agreed}
               onCheckedChange={(checked) => setAgreed(checked as boolean)}
-              disabled={!scrolledToBottom}
             />
-            <Label
-              htmlFor="agree"
-              className={!scrolledToBottom ? "text-muted-foreground" : ""}
-            >
-              I have read and agree to this Code of Conduct (version {cocVersion})
+            <Label htmlFor="agree">
+              I have read and agree to this Code of Conduct
             </Label>
           </div>
 
           <div className="flex justify-end gap-2">
             <Button
               onClick={handleAccept}
-              disabled={!agreed || !scrolledToBottom || loading}
+              disabled={!agreed || loading}
             >
               {loading ? "Accepting..." : "Accept Code of Conduct"}
             </Button>
