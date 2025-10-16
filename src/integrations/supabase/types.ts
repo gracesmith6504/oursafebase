@@ -533,6 +533,15 @@ export type Database = {
         Args: { _society_id: string; _user_id: string }
         Returns: boolean
       }
+      validate_invite_code: {
+        Args: { invite_code: string }
+        Returns: {
+          role_type: string
+          society_id: string
+          society_name: string
+          society_slug: string
+        }[]
+      }
     }
     Enums: {
       society_member_role: "committee" | "attendee"

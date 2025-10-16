@@ -34,42 +34,22 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
 
     setLoading(true);
 
-    // Find society by invite code using RPC to check both codes
-    // This works because the invite join process validates codes server-side
-    const { data: societies, error: societyError } = await supabase
-      .from("societies")
-      .select("id, name, slug");
+    // Validate invite code using security definer function
+    const { data: validationResult, error: validationError } = await supabase
+      .rpc("validate_invite_code", { invite_code: inviteCode.trim() });
 
-    if (societyError || !societies) {
-      toast.error("Failed to validate invite code");
-      setLoading(false);
-      return;
-    }
-
-    // Check each society's invite codes using the security definer function
-    let society = null;
-    let isCommitteeCode = false;
-
-    for (const soc of societies) {
-      const { data: codes } = await supabase
-        .rpc("get_society_invite_codes", { society_id: soc.id });
-      
-      if (codes?.[0]?.committee_invite_code === inviteCode.trim()) {
-        society = soc;
-        isCommitteeCode = true;
-        break;
-      } else if (codes?.[0]?.attendee_invite_code === inviteCode.trim()) {
-        society = soc;
-        isCommitteeCode = false;
-        break;
-      }
-    }
-
-    if (!society) {
+    if (validationError || !validationResult || validationResult.length === 0) {
       toast.error("Invalid invite code");
       setLoading(false);
       return;
     }
+
+    const society = {
+      id: validationResult[0].society_id,
+      name: validationResult[0].society_name,
+      slug: validationResult[0].society_slug,
+    };
+    const role = validationResult[0].role_type;
 
     // Check if already a member
     const { data: existing } = await supabase
@@ -85,16 +65,13 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
       return;
     }
 
-    // Role was determined during invite code validation
-    const role = isCommitteeCode ? 'committee' : 'attendee';
-    
     // Add user as member
     const { error: memberError } = await supabase
       .from("society_members")
       .insert({
         society_id: society.id,
         user_id: user?.id,
-        role: role,
+        role: role as 'committee' | 'attendee',
       });
 
     if (memberError) {

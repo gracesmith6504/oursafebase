@@ -24,42 +24,27 @@ const InviteJoin = () => {
   }, [user, authLoading, code]);
 
   const joinSociety = async () => {
-    if (!code || !user || !type) return;
+    if (!code || !user) return;
 
     setProcessing(true);
 
-    // Get all societies (basic info only due to RLS)
-    const { data: societies, error: societyError } = await supabase
-      .from("societies")
-      .select("id, name, slug");
+    // Validate invite code using security definer function
+    const { data: validationResult, error: validationError } = await supabase
+      .rpc("validate_invite_code", { invite_code: code });
 
-    if (societyError || !societies) {
-      toast.error("Failed to validate invite code");
-      navigate("/dashboard");
-      return;
-    }
-
-    // Find the society by checking invite codes using security definer function
-    let society = null;
-    for (const soc of societies) {
-      const { data: codes } = await supabase
-        .rpc("get_society_invite_codes", { society_id: soc.id });
-      
-      const codeToCheck = type === 'committee' 
-        ? codes?.[0]?.committee_invite_code 
-        : codes?.[0]?.attendee_invite_code;
-      
-      if (codeToCheck === code) {
-        society = soc;
-        break;
-      }
-    }
-
-    if (!society) {
+    if (validationError || !validationResult || validationResult.length === 0) {
       toast.error("Invalid invite code");
       navigate("/dashboard");
+      setProcessing(false);
       return;
     }
+
+    const society = {
+      id: validationResult[0].society_id,
+      name: validationResult[0].society_name,
+      slug: validationResult[0].society_slug,
+    };
+    const role = validationResult[0].role_type;
 
     // Check if already a member
     const { data: existing } = await supabase
@@ -84,7 +69,7 @@ const InviteJoin = () => {
       .insert({
         society_id: society.id,
         user_id: user.id,
-        role: type === 'committee' ? 'committee' : 'attendee',
+        role: role as 'committee' | 'attendee',
       });
 
     if (memberError) {
@@ -94,14 +79,14 @@ const InviteJoin = () => {
       return;
     }
 
-    const successMessage = type === 'committee'
+    const successMessage = role === 'committee'
       ? `Welcome to ${society.name} committee!`
       : `Welcome to ${society.name}! You can now view events.`;
     
     toast.success(successMessage);
     
     // Redirect based on role
-    const destination = type === 'committee' 
+    const destination = role === 'committee' 
       ? `/society/${society.slug}/dashboard` 
       : '/my-events';
     navigate(destination);
