@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import AttendeeDashboard from "./pages/AttendeeDashboard";
 import Profile from "./pages/Profile";
 import MyEvents from "./pages/MyEvents";
 import SocietyDashboard from "./pages/SocietyDashboard";
@@ -32,7 +31,6 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/attendee" element={<AttendeeDashboard />} />
           <Route path="/my-events" element={<MyEvents />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/invite/:code" element={<InviteJoin />} />

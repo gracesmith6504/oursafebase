@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
-import { useUserRoles } from "@/lib/useUserRoles";
-import RoleSwitcher from "@/components/RoleSwitcher";
 import { Plus, LogOut, User, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import CreateSocietyDialog from "@/components/CreateSocietyDialog";
@@ -26,7 +24,6 @@ interface SocietyMembership {
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { hasAttendee } = useUserRoles();
   const [societies, setSocieties] = useState<SocietyMembership[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -87,7 +84,6 @@ const Dashboard = () => {
               <h1 className="text-xl font-bold">OurSafeBase</h1>
             </div>
             <div className="flex items-center gap-2">
-              {hasAttendee && <RoleSwitcher currentRole="committee" />}
               <Button variant="outline" onClick={() => navigate("/my-events")}>
                 <Calendar className="mr-2 h-4 w-4" />
                 My Events

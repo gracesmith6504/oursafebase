@@ -92,7 +92,7 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
     // Redirect based on role
     const destination = role === 'committee' 
       ? `/society/${society.slug}/dashboard` 
-      : '/attendee';
+      : '/dashboard';
     navigate(destination);
   };
 

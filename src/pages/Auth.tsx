@@ -39,47 +39,10 @@ const Auth = () => {
       if (inviteCode) {
         navigate(`/invite/${inviteCode}`);
       } else {
-        // Determine where to redirect based on user's roles
-        determineDefaultRoute();
+        navigate("/dashboard");
       }
     }
   }, [user, navigate, inviteCode]);
-
-  const determineDefaultRoute = async () => {
-    if (!user) return;
-
-    // Fetch user's memberships to determine roles
-    const { data: memberships } = await supabase
-      .from("society_members")
-      .select("role")
-      .eq("user_id", user.id);
-
-    if (!memberships || memberships.length === 0) {
-      navigate("/dashboard");
-      return;
-    }
-
-    const hasCommittee = memberships.some((m) => m.role === "committee");
-    const hasAttendee = memberships.some((m) => m.role === "attendee");
-
-    // Check for preferred role in localStorage
-    const preferredRole = localStorage.getItem("preferredRole");
-
-    if (hasCommittee && hasAttendee) {
-      // Mixed roles - use preference or default to committee
-      if (preferredRole === "attendee") {
-        navigate("/attendee");
-      } else {
-        navigate("/dashboard");
-      }
-    } else if (hasAttendee) {
-      // Only attendee
-      navigate("/attendee");
-    } else {
-      // Only committee or no memberships
-      navigate("/dashboard");
-    }
-  };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
