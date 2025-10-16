@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
-import { Plus, LogOut, User } from "lucide-react";
+import { Plus, LogOut, User, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import CreateSocietyDialog from "@/components/CreateSocietyDialog";
 import JoinSocietyDialog from "@/components/JoinSocietyDialog";
@@ -73,6 +73,10 @@ const Dashboard = () => {
               <h1 className="text-xl font-bold">OurSafeBase</h1>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => navigate("/my-events")}>
+                <Calendar className="mr-2 h-4 w-4" />
+                My Events
+              </Button>
               <Button variant="ghost" onClick={() => navigate("/profile")}>
                 <User className="mr-2 h-4 w-4" />
                 Profile

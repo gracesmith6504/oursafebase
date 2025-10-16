@@ -94,6 +94,7 @@ export function SubmitFeedbackDialog({
   const onSubmit = async (data: FeedbackFormData) => {
     setIsSubmitting(true);
     try {
+      // User is always authenticated; is_anonymous controls contact visibility
       const { error } = await supabase
         .from("event_feedback")
         .insert({

@@ -71,7 +71,7 @@ const InviteJoin = () => {
     }
 
     toast.success(`Welcome to ${society.name}!`);
-    navigate(`/society/${society.slug}/dashboard`);
+    navigate("/my-events");
   };
 
   return (

@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import MyEvents from "./pages/MyEvents";
 import SocietyDashboard from "./pages/SocietyDashboard";
 import SocietyMembers from "./pages/SocietyMembers";
 import SocietyEvents from "./pages/SocietyEvents";
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/my-events" element={<MyEvents />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/invite/:code" element={<InviteJoin />} />
           <Route path="/event/:eventId" element={<EventSafetyPage />} />

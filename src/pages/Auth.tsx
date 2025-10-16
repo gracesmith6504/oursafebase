@@ -167,7 +167,9 @@ const Auth = () => {
           </div>
           <CardTitle className="text-2xl">Welcome to OurSafeBase</CardTitle>
           <CardDescription>
-            Create safer events for your student society
+            {inviteCode 
+              ? "You're joining a society. Sign in or create an account to continue." 
+              : "Create safer events for your student society"}
           </CardDescription>
         </CardHeader>
         <CardContent>

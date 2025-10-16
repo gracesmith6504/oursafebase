@@ -4,12 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy } from "lucide-react";
+import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import { ReportConcernDialog } from "@/components/ReportConcernDialog";
 import { SubmitFeedbackDialog } from "@/components/SubmitFeedbackDialog";
+import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
+import { useAuth } from "@/lib/auth";
 
 interface Event {
   id: string;
@@ -46,6 +48,7 @@ interface CodeOfConduct {
 const EventSafetyPage = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [welfareContacts, setWelfareContacts] = useState<WelfareContact[]>([]);
   const [emergencyInfo, setEmergencyInfo] = useState<EmergencyInfo | null>(null);
@@ -53,13 +56,22 @@ const EventSafetyPage = () => {
   const [loading, setLoading] = useState(true);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+  const [cocRequired, setCoCRequired] = useState(false);
+  const [cocData, setCoCData] = useState<any>(null);
+  const [showCoCDialog, setShowCoCDialog] = useState(false);
 
   useEffect(() => {
-    if (eventId) {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (eventId && user) {
       fetchEventData();
       trackPageView();
     }
-  }, [eventId]);
+  }, [eventId, user]);
 
   const fetchEventData = async () => {
     try {
@@ -119,10 +131,60 @@ const EventSafetyPage = () => {
       if (cocData) {
         setCodeOfConduct(cocData);
       }
+
+      // Check CoC acceptance after fetching event
+      if (eventData && user) {
+        await checkCoCAcceptance(eventData);
+      }
     } catch (error) {
       console.error("Error fetching event data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkCoCAcceptance = async (eventData: Event) => {
+    if (!user) return;
+
+    // Check for event-level CoC first
+    let { data: coc } = await supabase
+      .from("code_of_conduct")
+      .select("*")
+      .eq("event_id", eventId)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    // If no event-level CoC, check society-level
+    if (!coc) {
+      const { data: societyCoC } = await supabase
+        .from("code_of_conduct")
+        .select("*")
+        .eq("society_id", eventData.society_id)
+        .eq("is_active", true)
+        .order("version", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      coc = societyCoC;
+    }
+
+    if (!coc) {
+      setCoCRequired(false);
+      return;
+    }
+
+    // Check if user has accepted current version
+    const { data: acceptance } = await supabase
+      .from("code_acceptances")
+      .select("accepted_version")
+      .eq("user_id", user.id)
+      .eq("code_of_conduct_id", coc.id)
+      .gte("accepted_version", coc.version)
+      .maybeSingle();
+
+    if (!acceptance) {
+      setCoCRequired(true);
+      setCoCData(coc);
+      setShowCoCDialog(true);
     }
   };
 
@@ -143,10 +205,30 @@ const EventSafetyPage = () => {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show CoC dialog if required
+  if (cocRequired && showCoCDialog && cocData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <CoCAcceptanceDialog
+          eventId={eventId!}
+          eventTitle={event?.title || "Event"}
+          cocId={cocData.id}
+          cocVersion={cocData.version}
+          cocContent={cocData.content}
+          cocContentType={cocData.content_type || "text"}
+          onAccepted={() => {
+            setShowCoCDialog(false);
+            setCoCRequired(false);
+          }}
+        />
       </div>
     );
   }

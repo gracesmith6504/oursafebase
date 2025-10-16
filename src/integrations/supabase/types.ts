@@ -17,27 +17,33 @@ export type Database = {
       code_acceptances: {
         Row: {
           accepted_at: string | null
+          accepted_version: number | null
           code_of_conduct_id: string | null
           event_id: string
           id: string
           ip_address: string | null
           user_agent: string | null
+          user_id: string | null
         }
         Insert: {
           accepted_at?: string | null
+          accepted_version?: number | null
           code_of_conduct_id?: string | null
           event_id: string
           id?: string
           ip_address?: string | null
           user_agent?: string | null
+          user_id?: string | null
         }
         Update: {
           accepted_at?: string | null
+          accepted_version?: number | null
           code_of_conduct_id?: string | null
           event_id?: string
           id?: string
           ip_address?: string | null
           user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -59,7 +65,9 @@ export type Database = {
       code_of_conduct: {
         Row: {
           content: string
+          content_type: string | null
           created_at: string | null
+          event_id: string | null
           id: string
           is_active: boolean | null
           society_id: string
@@ -67,7 +75,9 @@ export type Database = {
         }
         Insert: {
           content: string
+          content_type?: string | null
           created_at?: string | null
+          event_id?: string | null
           id?: string
           is_active?: boolean | null
           society_id: string
@@ -75,13 +85,22 @@ export type Database = {
         }
         Update: {
           content?: string
+          content_type?: string | null
           created_at?: string | null
+          event_id?: string | null
           id?: string
           is_active?: boolean | null
           society_id?: string
           version?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "code_of_conduct_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "code_of_conduct_society_id_fkey"
             columns: ["society_id"]

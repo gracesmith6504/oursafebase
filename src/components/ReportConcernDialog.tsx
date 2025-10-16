@@ -63,6 +63,7 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
   const onSubmit = async (data: ReportFormData) => {
     setIsSubmitting(true);
     try {
+      // User is always authenticated; is_anonymous controls contact visibility
       const { error } = await supabase
         .from("reports")
         .insert({
