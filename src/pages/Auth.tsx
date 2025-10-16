@@ -33,16 +33,19 @@ const Auth = () => {
   ];
   
   const inviteCode = searchParams.get("invite");
+  const redirectPath = searchParams.get("redirect");
 
   useEffect(() => {
     if (user) {
       if (inviteCode) {
         navigate(`/invite/${inviteCode}`);
+      } else if (redirectPath) {
+        navigate(redirectPath);
       } else {
         navigate("/dashboard");
       }
     }
-  }, [user, navigate, inviteCode]);
+  }, [user, navigate, inviteCode, redirectPath]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

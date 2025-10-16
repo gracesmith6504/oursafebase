@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Copy, Check } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
+import { getAppUrl } from "@/lib/constants";
 
 interface Society {
   id: string;
@@ -42,8 +43,8 @@ const SocietyMembers = () => {
   const [copiedCommittee, setCopiedCommittee] = useState(false);
   const [copiedAttendee, setCopiedAttendee] = useState(false);
 
-  const committeeInviteUrl = society ? `${window.location.origin}/invite/committee/${society.committee_invite_code}` : "";
-  const attendeeInviteUrl = society ? `${window.location.origin}/invite/attendee/${society.attendee_invite_code}` : "";
+  const committeeInviteUrl = society ? `${getAppUrl()}/invite/committee/${society.committee_invite_code}` : "";
+  const attendeeInviteUrl = society ? `${getAppUrl()}/invite/attendee/${society.attendee_invite_code}` : "";
 
   const committeeCount = members.filter(m => m.role === 'committee').length;
   const attendeeCount = members.filter(m => m.role === 'attendee').length;

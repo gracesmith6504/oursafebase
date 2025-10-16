@@ -9,6 +9,8 @@ import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { ArrowLeft, Plus, Calendar, FileText, MessageSquare, Eye, Shield, Share2, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { getEventStatus } from "@/lib/eventHelpers";
+import { getAppUrl } from "@/lib/constants";
 
 interface Event {
   id: string;
@@ -222,8 +224,8 @@ const SocietyEvents = () => {
                             <p className="mt-1 text-sm text-muted-foreground">{event.location}</p>
                           )}
                         </div>
-                        <Badge className={getStatusColor(event.status)}>
-                          {event.status}
+                        <Badge className={getStatusColor(getEventStatus(event.event_date))}>
+                          {getEventStatus(event.event_date)}
                         </Badge>
                       </div>
                     </CardHeader>
@@ -263,7 +265,7 @@ const SocietyEvents = () => {
                           variant="outline" 
                           size="sm"
                           onClick={() => {
-                            navigator.clipboard.writeText(`${window.location.origin}/event/${event.id}`);
+                            navigator.clipboard.writeText(`${getAppUrl()}/event/${event.id}`);
                             toast.success("Link copied to clipboard");
                           }}
                         >

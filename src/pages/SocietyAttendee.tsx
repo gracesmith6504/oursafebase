@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { getEventStatus } from "@/lib/eventHelpers";
 
 interface Event {
   id: string;

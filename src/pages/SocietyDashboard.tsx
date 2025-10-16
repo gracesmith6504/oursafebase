@@ -5,7 +5,7 @@ import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, AlertCircle, Settings, ArrowLeft } from "lucide-react";
+import { Calendar, Users, AlertCircle, Shield, ArrowLeft } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
 
@@ -219,14 +219,14 @@ const SocietyDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="cursor-pointer transition-all hover:shadow-lg" onClick={() => navigate(`/society/${slug}/settings`)}>
+            <Card className="cursor-pointer transition-all hover:shadow-lg" onClick={() => navigate(`/society/${slug}/codes-of-conduct`)}>
               <CardHeader>
-                <Settings className="mb-2 h-10 w-10 text-primary" />
-                <CardTitle>Settings</CardTitle>
-                <CardDescription>Manage society information and code of conduct</CardDescription>
+                <Shield className="mb-2 h-10 w-10 text-primary" />
+                <CardTitle>Codes of Conduct</CardTitle>
+                <CardDescription>Manage and create codes of conduct for your events</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full">Society Settings</Button>
+                <Button className="w-full">Manage CoCs</Button>
               </CardContent>
             </Card>
           </div>

@@ -72,7 +72,8 @@ const CreateEvent = () => {
   const [selectedContacts, setSelectedContacts] = useState<WelfareContact[]>([]);
   const [externalContacts, setExternalContacts] = useState<ExternalContact[]>([]);
   const [emergencyFields, setEmergencyFields] = useState<EmergencyField[]>([]);
-  const [codeOfConduct, setCodeOfConduct] = useState("");
+  const [selectedCoCId, setSelectedCoCId] = useState("");
+  const [availableCoCs, setAvailableCoCs] = useState<Array<{ id: string; version: number; content: string }>>([]);
 
   // Team member selection state
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -140,6 +141,19 @@ const CreateEvent = () => {
 
       if (!membersError && membersData) {
         setMembers(membersData as any);
+      }
+
+      // Fetch available society-level CoCs
+      const { data: cocsData } = await supabase
+        .from("code_of_conduct")
+        .select("id, version, content")
+        .eq("society_id", societyData.id)
+        .is("event_id", null)
+        .eq("is_active", true)
+        .order("version", { ascending: false });
+
+      if (cocsData) {
+        setAvailableCoCs(cocsData);
       }
 
       setLoading(false);
@@ -351,15 +365,12 @@ const CreateEvent = () => {
         if (emergencyError) throw emergencyError;
       }
 
-      // Create code of conduct if provided
-      if (codeOfConduct.trim()) {
+      // Associate selected CoC with event if one was selected
+      if (selectedCoCId) {
         const { error: cocError } = await supabase
           .from("code_of_conduct")
-          .insert({
-            society_id: society.id,
-            content: codeOfConduct.trim(),
-            is_active: true,
-          });
+          .update({ event_id: eventData.id })
+          .eq("id", selectedCoCId);
 
         if (cocError) throw cocError;
       }
@@ -744,15 +755,51 @@ const CreateEvent = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Code of Conduct</CardTitle>
-                <CardDescription>Event guidelines and expectations</CardDescription>
+                <CardDescription>Select a code of conduct for this event</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Textarea
-                  placeholder="Enter your code of conduct or event guidelines..."
-                  value={codeOfConduct}
-                  onChange={(e) => setCodeOfConduct(e.target.value)}
-                  rows={6}
-                />
+              <CardContent className="space-y-4">
+                {availableCoCs.length === 0 ? (
+                  <div className="rounded-lg border border-dashed p-4 text-center">
+                    <p className="mb-2 text-sm text-muted-foreground">
+                      No codes of conduct available. Create one first.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/society/${slug}/codes-of-conduct`)}
+                    >
+                      Manage Codes of Conduct
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <Label htmlFor="coc-select">Select Code of Conduct</Label>
+                      <select
+                        id="coc-select"
+                        className="mt-1.5 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        value={selectedCoCId}
+                        onChange={(e) => setSelectedCoCId(e.target.value)}
+                      >
+                        <option value="">None (optional)</option>
+                        {availableCoCs.map((coc) => (
+                          <option key={coc.id} value={coc.id}>
+                            Version {coc.version}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {selectedCoCId && (
+                      <div className="rounded-lg bg-muted p-4">
+                        <p className="mb-2 text-sm font-medium">Preview:</p>
+                        <div className="max-h-40 overflow-y-auto text-sm text-muted-foreground">
+                          {availableCoCs.find(c => c.id === selectedCoCId)?.content.substring(0, 300)}...
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </CardContent>
             </Card>
           </form>

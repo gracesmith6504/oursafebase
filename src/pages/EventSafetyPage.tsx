@@ -71,9 +71,10 @@ const EventSafetyPage = () => {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth");
+      // Redirect to auth with event info for redirect after login
+      navigate(`/auth?redirect=/event/${eventId}&eventTitle=${event?.title || 'this event'}`);
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, eventId, event?.title]);
 
   useEffect(() => {
     if (eventId && user) {
@@ -138,15 +139,26 @@ const EventSafetyPage = () => {
         setEmergencyInfo(emergencyData);
       }
 
-      // Fetch code of conduct
-      const { data: cocData } = await supabase
+      // Fetch code of conduct - first try event-specific, then society-level
+      let { data: cocData } = await supabase
         .from("code_of_conduct")
         .select("content")
-        .eq("society_id", eventData.society_id)
+        .eq("event_id", eventId)
         .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+        .maybeSingle();
+
+      // If no event-specific CoC, get society-level CoC
+      if (!cocData) {
+        const { data: societyCocData } = await supabase
+          .from("code_of_conduct")
+          .select("content")
+          .eq("society_id", eventData.society_id)
+          .is("event_id", null)
+          .eq("is_active", true)
+          .maybeSingle();
+        
+        cocData = societyCocData;
+      }
 
       if (cocData) {
         setCodeOfConduct(cocData);
