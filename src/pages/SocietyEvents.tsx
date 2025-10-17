@@ -273,23 +273,26 @@ const SocietyEvents = () => {
                           Share
                         </Button>
                       </div>
-                      {getEventStatus(event.event_date) === 'past' ? (
+                      <div className="space-y-2">
                         <Button 
                           className="w-full" 
+                          variant="outline"
                           onClick={() => navigate(`/society/${slug}/events/${event.id}/summary`)}
                         >
                           <BarChart className="mr-2 h-4 w-4" />
                           Event Summary
                         </Button>
-                      ) : (
-                        <Button 
-                          className="w-full" 
-                          onClick={() => navigate(`/society/${slug}/events/${event.id}/edit`)}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Manage Event
-                        </Button>
-                      )}
+                        
+                        {getEventStatus(event.event_date) !== 'past' && (
+                          <Button 
+                            className="w-full" 
+                            onClick={() => navigate(`/society/${slug}/events/${event.id}/edit`)}
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Manage Event
+                          </Button>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 );
