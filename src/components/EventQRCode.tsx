@@ -2,6 +2,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Download, Printer } from "lucide-react";
 import { toast } from "sonner";
+import { getAppUrl } from "@/lib/constants";
 
 interface EventQRCodeProps {
   eventId: string;
@@ -10,7 +11,7 @@ interface EventQRCodeProps {
 }
 
 export const EventQRCode = ({ eventId, eventTitle, size = 256 }: EventQRCodeProps) => {
-  const eventUrl = `${window.location.origin}/event/${eventId}`;
+  const eventUrl = `${getAppUrl()}/event/${eventId}`;
 
   const downloadQRCode = () => {
     const svg = document.getElementById(`qr-${eventId}`);
