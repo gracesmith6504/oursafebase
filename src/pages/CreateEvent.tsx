@@ -378,7 +378,6 @@ const CreateEvent = () => {
           const { error: cocError } = await supabase
             .from("code_of_conduct")
             .insert({
-              society_id: society.id,
               event_id: eventData.id,
               content: selectedCoC.content,
               version: selectedCoC.version,

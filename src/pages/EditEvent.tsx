@@ -451,7 +451,6 @@ const EditEvent = () => {
           const { error: cocError } = await supabase
             .from("code_of_conduct")
             .insert({
-              society_id: society.id,
               event_id: eventId,
               content: selectedCoC.content,
               version: selectedCoC.version,
