@@ -178,3 +178,72 @@ export async function getAverageSafetyScore(societyId: string) {
   // Calculate AVG()
   return null;
 }
+
+/**
+ * Get CoC acceptance details for an event
+ * Returns all society members with their acceptance status
+ */
+export interface AttendeeAcceptance {
+  user_id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  role: 'committee' | 'attendee';
+  has_accepted: boolean;
+  accepted_at?: string;
+  accepted_version?: number;
+  code_of_conduct_id?: string;
+}
+
+export const getEventCoCAcceptances = async (eventId: string, societyId: string): Promise<AttendeeAcceptance[]> => {
+  // Fetch all society members with their profiles
+  const { data: membersData } = await supabase
+    .from("society_members")
+    .select(`
+      user_id,
+      role,
+      profiles!inner(display_name, avatar_url)
+    `)
+    .eq("society_id", societyId);
+
+  // Fetch code acceptances for this event
+  const { data: acceptancesData } = await supabase
+    .from("code_acceptances")
+    .select("user_id, accepted_at, accepted_version, code_of_conduct_id")
+    .eq("event_id", eventId);
+
+  // Create a map of acceptances by user_id
+  const acceptancesMap = new Map(
+    acceptancesData?.map(a => [a.user_id, a]) || []
+  );
+
+  // Merge members with their acceptance status
+  const attendeesWithStatus = membersData?.map(member => {
+    const acceptance = acceptancesMap.get(member.user_id);
+    return {
+      user_id: member.user_id,
+      display_name: (member.profiles as any)?.display_name || null,
+      avatar_url: (member.profiles as any)?.avatar_url || null,
+      role: member.role,
+      has_accepted: !!acceptance,
+      accepted_at: acceptance?.accepted_at,
+      accepted_version: acceptance?.accepted_version,
+      code_of_conduct_id: acceptance?.code_of_conduct_id,
+    };
+  }) || [];
+
+  // Sort: committee first, then by name
+  return attendeesWithStatus.sort((a, b) => {
+    if (a.role !== b.role) {
+      return a.role === 'committee' ? -1 : 1;
+    }
+    return (a.display_name || '').localeCompare(b.display_name || '');
+  });
+};
+
+/**
+ * Calculate acceptance rate percentage
+ */
+export const calculateAcceptanceRate = (total: number, accepted: number): number => {
+  if (total === 0) return 0;
+  return Math.round((accepted / total) * 100);
+};

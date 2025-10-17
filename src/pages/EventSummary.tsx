@@ -16,12 +16,15 @@ import { format } from "date-fns";
 import { 
   getEventDetailedMetrics, 
   getReportSeverityBreakdown, 
-  getFeedbackSafetyBreakdown 
+  getFeedbackSafetyBreakdown,
+  getEventCoCAcceptances,
+  AttendeeAcceptance
 } from "@/lib/reportAnalytics";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { CreateNoteDialog } from "@/components/CreateNoteDialog";
 import { NoteCard } from "@/components/NoteCard";
+import { EventCoCAcceptancesList } from "@/components/EventCoCAcceptancesList";
 
 interface Event {
   id: string;
@@ -71,6 +74,7 @@ const EventSummary = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateNote, setShowCreateNote] = useState(false);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [cocAcceptances, setCocAcceptances] = useState<AttendeeAcceptance[]>([]);
   const { isCommittee, loading: roleLoading } = useCommitteeRole(event?.society_id);
 
   useEffect(() => {
@@ -97,13 +101,15 @@ const EventSummary = () => {
       const metricsData = await getEventDetailedMetrics(eventId!);
       setMetrics(metricsData);
 
-      // Fetch chart data
-      const [severity, safety] = await Promise.all([
+      // Fetch chart data and CoC acceptances
+      const [severity, safety, acceptances] = await Promise.all([
         getReportSeverityBreakdown(eventId!),
         getFeedbackSafetyBreakdown(eventId!),
+        getEventCoCAcceptances(eventId!, eventData.society_id),
       ]);
       setSeverityData(severity);
       setSafetyData(safety);
+      setCocAcceptances(acceptances);
 
       // Fetch notes
       await fetchNotes();
@@ -353,6 +359,11 @@ const EventSummary = () => {
               </div>
             </section>
           )}
+
+          {/* CoC Acceptances */}
+          <section>
+            <EventCoCAcceptancesList attendees={cocAcceptances} loading={loading} />
+          </section>
 
           {/* Internal Notes */}
           <section>
