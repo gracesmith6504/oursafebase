@@ -8,7 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Calendar, CheckCircle2, AlertCircle, Search, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
+import { getEventStatus } from "@/lib/eventHelpers";
 
 interface Society {
   id: string;
@@ -39,6 +41,7 @@ const MyEvents = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSociety, setSelectedSociety] = useState<string>("all");
   const [societies, setSocieties] = useState<Society[]>([]);
+  const [dateFilter, setDateFilter] = useState<"all" | "upcoming" | "past">("upcoming");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -55,7 +58,7 @@ const MyEvents = () => {
   const fetchEvents = async () => {
     setLoading(true);
 
-    // Fetch events with society info and CoC acceptance status
+    // Fetch ALL events (past and upcoming)
     const { data: eventsData, error } = await supabase
       .from("events")
       .select(`
@@ -65,8 +68,7 @@ const MyEvents = () => {
         location,
         society:societies!inner(id, name, slug)
       `)
-      .gte("event_date", new Date().toISOString())
-      .order("event_date", { ascending: true });
+      .order("event_date", { ascending: false });
 
     if (error) {
       console.error("Error fetching events:", error);
@@ -140,7 +142,17 @@ const MyEvents = () => {
   const filteredEvents = events.filter((event) => {
     const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSociety = selectedSociety === "all" || event.society.id === selectedSociety;
-    return matchesSearch && matchesSociety;
+    
+    // Filter by date status
+    const eventStatus = getEventStatus(event.event_date);
+    let matchesDate = true;
+    if (dateFilter === "upcoming") {
+      matchesDate = eventStatus === "upcoming" || eventStatus === "ongoing";
+    } else if (dateFilter === "past") {
+      matchesDate = eventStatus === "past";
+    }
+    
+    return matchesSearch && matchesSociety && matchesDate;
   });
 
   if (authLoading || !user) {
@@ -165,6 +177,14 @@ const MyEvents = () => {
             Dashboard
           </Button>
         </div>
+
+        <Tabs value={dateFilter} onValueChange={(v) => setDateFilter(v as typeof dateFilter)} className="mb-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all">All Events</TabsTrigger>
+            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+            <TabsTrigger value="past">Past</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="relative flex-1">
@@ -216,52 +236,52 @@ const MyEvents = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredEvents.map((event) => {
               const cocStatus = getCoCStatus(event);
+              const eventStatus = getEventStatus(event.event_date);
+              const isPast = eventStatus === "past";
+              
               return (
-                <Card key={event.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-xl mb-2">{event.title}</CardTitle>
-                        <CardDescription className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary">{event.society.name}</Badge>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Calendar className="h-4 w-4" />
-                            {format(new Date(event.event_date), "PPP 'at' p")}
-                          </div>
-                          {event.location && (
-                            <div className="text-sm text-muted-foreground">
-                              📍 {event.location}
-                            </div>
-                          )}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      {cocStatus.label && (
-                        <div className="flex items-center gap-2">
-                          {cocStatus.accepted ? (
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
-                          ) : (
-                            <AlertCircle className="h-4 w-4 text-orange-600" />
-                          )}
-                          <span className={`text-sm ${cocStatus.accepted ? 'text-green-600' : 'text-orange-600'}`}>
-                            {cocStatus.label}
-                          </span>
+                <Card 
+                  key={event.id} 
+                  className={`hover:shadow-md transition-shadow cursor-pointer ${isPast ? 'opacity-75' : ''}`}
+                  onClick={() => navigate(`/event/${event.id}`)}
+                >
+                  <CardContent className="py-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold truncate">{event.title}</h3>
+                          <Badge variant={isPast ? "secondary" : "default"} className="shrink-0">
+                            {eventStatus === "ongoing" ? "Today" : eventStatus}
+                          </Badge>
                         </div>
-                      )}
-                      <Button
-                        onClick={() => navigate(`/event/${event.id}`)}
-                        className="ml-auto"
-                      >
-                        View Details →
-                      </Button>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {format(new Date(event.event_date), "MMM d, yyyy")}
+                          </span>
+                          <Badge variant="outline" className="text-xs">
+                            {event.society.name}
+                          </Badge>
+                          {event.location && (
+                            <span className="truncate">📍 {event.location}</span>
+                          )}
+                        </div>
+                        {cocStatus.label && !isPast && (
+                          <div className="flex items-center gap-1 mt-2">
+                            {cocStatus.accepted ? (
+                              <CheckCircle2 className="h-3 w-3 text-green-600" />
+                            ) : (
+                              <AlertCircle className="h-3 w-3 text-orange-600" />
+                            )}
+                            <span className={`text-xs ${cocStatus.accepted ? 'text-green-600' : 'text-orange-600'}`}>
+                              {cocStatus.accepted ? "CoC Accepted" : "CoC Required"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

@@ -6,11 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
-import { ArrowLeft, Plus, Calendar, FileText, MessageSquare, Eye, Shield, Share2, Edit, BarChart } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, FileText, MessageSquare, Eye, Shield, Share2, Edit, BarChart, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { getEventStatus } from "@/lib/eventHelpers";
 import { getAppUrl } from "@/lib/constants";
+import { EventQRCodeDialog } from "@/components/EventQRCodeDialog";
 
 interface Event {
   id: string;
@@ -38,6 +39,8 @@ const SocietyEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [metrics, setMetrics] = useState<Record<string, EventMetrics>>({});
   const [loading, setLoading] = useState(true);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const { isCommittee, loading: roleLoading } = useCommitteeRole(societyId || undefined);
 
   useEffect(() => {
@@ -252,14 +255,13 @@ const SocietyEvents = () => {
                           <span className="text-muted-foreground">Accepted</span>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-2">
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => navigate(`/event/${event.id}`)}
                         >
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Page
+                          <Eye className="h-4 w-4" />
                         </Button>
                         <Button 
                           variant="outline" 
@@ -269,8 +271,17 @@ const SocietyEvents = () => {
                             toast.success("Link copied to clipboard");
                           }}
                         >
-                          <Share2 className="mr-2 h-4 w-4" />
-                          Share
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setQrDialogOpen(true);
+                          }}
+                        >
+                          <QrCode className="h-4 w-4" />
                         </Button>
                       </div>
                       <div className="space-y-2">
@@ -300,6 +311,15 @@ const SocietyEvents = () => {
             </div>
           )}
         </main>
+
+        {selectedEvent && (
+          <EventQRCodeDialog
+            open={qrDialogOpen}
+            onOpenChange={setQrDialogOpen}
+            eventId={selectedEvent.id}
+            eventTitle={selectedEvent.title}
+          />
+        )}
       </div>
     </ProtectedRoute>
   );

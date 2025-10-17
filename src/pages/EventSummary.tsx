@@ -360,11 +360,6 @@ const EventSummary = () => {
             </section>
           )}
 
-          {/* CoC Acceptances */}
-          <section>
-            <EventCoCAcceptancesList attendees={cocAcceptances} loading={loading} />
-          </section>
-
           {/* Internal Notes */}
           <section>
             <div className="flex items-center justify-between mb-4">
@@ -435,6 +430,11 @@ const EventSummary = () => {
                 </Card>
               )}
             </div>
+          </section>
+
+          {/* CoC Acceptances */}
+          <section>
+            <EventCoCAcceptancesList attendees={cocAcceptances} loading={loading} />
           </section>
 
           {/* Quick Access */}
