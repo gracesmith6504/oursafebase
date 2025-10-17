@@ -89,26 +89,13 @@ const MyEvents = () => {
     // For each event, check if there's a CoC and if user has accepted it
     const eventsWithCoC = await Promise.all(
       eventsData.map(async (event) => {
-        // Check for event-level CoC first
-        let { data: coc } = await supabase
+        // Only check for event-level CoC (not society templates)
+        const { data: coc } = await supabase
           .from("code_of_conduct")
           .select("id, version")
           .eq("event_id", event.id)
           .eq("is_active", true)
           .maybeSingle();
-
-        // If no event-level CoC, check society-level
-        if (!coc) {
-          const { data: societyCoC } = await supabase
-            .from("code_of_conduct")
-            .select("id, version")
-            .eq("society_id", event.society.id)
-            .eq("is_active", true)
-            .order("version", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          coc = societyCoC;
-        }
 
         let userAcceptance = null;
         if (coc) {

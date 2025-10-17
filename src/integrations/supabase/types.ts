@@ -70,7 +70,7 @@ export type Database = {
           event_id: string | null
           id: string
           is_active: boolean | null
-          society_id: string
+          society_id: string | null
           version: number | null
         }
         Insert: {
@@ -80,7 +80,7 @@ export type Database = {
           event_id?: string | null
           id?: string
           is_active?: boolean | null
-          society_id: string
+          society_id?: string | null
           version?: number | null
         }
         Update: {
@@ -90,7 +90,7 @@ export type Database = {
           event_id?: string | null
           id?: string
           is_active?: boolean | null
-          society_id?: string
+          society_id?: string | null
           version?: number | null
         }
         Relationships: [
