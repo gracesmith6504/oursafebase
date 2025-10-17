@@ -66,6 +66,7 @@ const EventSafetyPage = () => {
   const [cocRequired, setCoCRequired] = useState(false);
   const [cocData, setCoCData] = useState<any>(null);
   const [showCoCDialog, setShowCoCDialog] = useState(false);
+  const [hasEventLevelCoC, setHasEventLevelCoC] = useState(false);
   
   const { isCommittee, loading: roleLoading } = useCommitteeRole(event?.society_id);
 
@@ -146,6 +147,9 @@ const EventSafetyPage = () => {
         .eq("event_id", eventId)
         .eq("is_active", true)
         .maybeSingle();
+
+      // Track if event has event-level CoC
+      setHasEventLevelCoC(!!cocData);
 
       // If no event-specific CoC, optionally show active template content for display only
       if (!cocData) {
@@ -414,7 +418,7 @@ const EventSafetyPage = () => {
             </CardHeader>
             <CardContent>
               <p className="whitespace-pre-wrap text-sm">{codeOfConduct.content}</p>
-              {!cocRequired && isCommittee && !cocData && (
+              {!hasEventLevelCoC && isCommittee && (
                 <div className="mt-4 p-3 bg-muted rounded-md">
                   <p className="text-sm text-muted-foreground">
                     This event doesn't have a Code of Conduct assigned yet.{" "}
