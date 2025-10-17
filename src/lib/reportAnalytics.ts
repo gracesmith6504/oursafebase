@@ -7,6 +7,81 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Get detailed metrics for a specific event
+export const getEventDetailedMetrics = async (eventId: string) => {
+  const [reports, feedback, pageViews, codeAcceptances] = await Promise.all([
+    supabase.from("reports").select("*").eq("event_id", eventId),
+    supabase.from("event_feedback").select("*").eq("event_id", eventId),
+    supabase.from("safety_page_views").select("id", { count: "exact", head: true }).eq("event_id", eventId),
+    supabase.from("code_acceptances").select("id", { count: "exact", head: true }).eq("event_id", eventId),
+  ]);
+
+  const totalReports = reports.data?.length || 0;
+  const totalFeedback = feedback.data?.length || 0;
+  const resolvedReports = reports.data?.filter(r => r.status === "resolved").length || 0;
+  
+  // Calculate average safety rating
+  const safetyRatings = feedback.data?.map(f => {
+    const ratings = { very_safe: 5, mostly_safe: 4, neutral: 3, somewhat_unsafe: 2, unsafe: 1 };
+    return ratings[f.felt_safe as keyof typeof ratings] || 0;
+  }) || [];
+  const avgSafetyRating = safetyRatings.length > 0 
+    ? (safetyRatings.reduce((a, b) => a + b, 0) / safetyRatings.length).toFixed(1)
+    : "N/A";
+
+  return {
+    reports: totalReports,
+    feedback: totalFeedback,
+    pageViews: pageViews.count || 0,
+    codeAcceptances: codeAcceptances.count || 0,
+    resolvedReports,
+    responseRate: totalReports > 0 ? ((resolvedReports / totalReports) * 100).toFixed(0) : "0",
+    avgSafetyRating,
+  };
+};
+
+// Get report severity breakdown for charts
+export const getReportSeverityBreakdown = async (eventId: string) => {
+  const { data: reports } = await supabase
+    .from("reports")
+    .select("severity")
+    .eq("event_id", eventId);
+
+  const breakdown = {
+    critical: reports?.filter(r => r.severity === "critical").length || 0,
+    high: reports?.filter(r => r.severity === "high").length || 0,
+    medium: reports?.filter(r => r.severity === "medium").length || 0,
+    low: reports?.filter(r => r.severity === "low").length || 0,
+  };
+
+  return Object.entries(breakdown)
+    .filter(([_, value]) => value > 0)
+    .map(([name, value]) => ({ name, value }));
+};
+
+// Get feedback safety ratings breakdown
+export const getFeedbackSafetyBreakdown = async (eventId: string) => {
+  const { data: feedback } = await supabase
+    .from("event_feedback")
+    .select("felt_safe")
+    .eq("event_id", eventId);
+
+  const breakdown = {
+    very_safe: feedback?.filter(f => f.felt_safe === "very_safe").length || 0,
+    mostly_safe: feedback?.filter(f => f.felt_safe === "mostly_safe").length || 0,
+    neutral: feedback?.filter(f => f.felt_safe === "neutral").length || 0,
+    somewhat_unsafe: feedback?.filter(f => f.felt_safe === "somewhat_unsafe").length || 0,
+    unsafe: feedback?.filter(f => f.felt_safe === "unsafe").length || 0,
+  };
+
+  return Object.entries(breakdown)
+    .filter(([_, value]) => value > 0)
+    .map(([name, value]) => ({ 
+      name: name.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '), 
+      value 
+    }));
+};
+
 /**
  * Get count of reports grouped by event
  * Future: Will return { event_id, event_title, count }[]
