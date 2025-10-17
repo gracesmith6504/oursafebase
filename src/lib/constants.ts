@@ -1,19 +1,10 @@
 export const PRODUCTION_URL = "https://oursafebase.com";
 
 export const getAppUrl = (): string => {
-  // Check if we're in production by looking at the current hostname
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    
-    // If we're on the production domain, use it
-    if (hostname === 'oursafebase.com' || hostname === 'www.oursafebase.com') {
-      return PRODUCTION_URL;
-    }
-    
-    // For preview/development, use the current origin
-    return window.location.origin;
+  const envUrl = (import.meta as any).env?.VITE_PUBLIC_APP_URL as string | undefined;
+  if (envUrl && typeof envUrl === "string") {
+    // Normalize by removing any trailing slash
+    return envUrl.replace(/\/$/, "");
   }
-  
-  // Fallback for SSR or other edge cases
   return PRODUCTION_URL;
 };
