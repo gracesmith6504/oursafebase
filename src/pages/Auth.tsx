@@ -14,23 +14,11 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [countryCode, setCountryCode] = useState("+353");
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  
-  const countryCodes = [
-    { code: "+353", country: "Ireland", flag: "🇮🇪" },
-    { code: "+44", country: "UK", flag: "🇬🇧" },
-    { code: "+1", country: "USA/Canada", flag: "🇺🇸" },
-    { code: "+61", country: "Australia", flag: "🇦🇺" },
-    { code: "+49", country: "Germany", flag: "🇩🇪" },
-    { code: "+33", country: "France", flag: "🇫🇷" },
-  ];
   
   const inviteCode = searchParams.get("invite");
   const redirectPath = searchParams.get("redirect");
@@ -47,36 +35,10 @@ const Auth = () => {
     }
   }, [user, navigate, inviteCode, redirectPath]);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file size (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("Image must be less than 2MB");
-        return;
-      }
-      
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast.error("Please select an image file");
-        return;
-      }
-      
-      setAvatarFile(file);
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password || !phoneNumber) {
+    if (!email || !password || !firstName || !lastName) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -84,16 +46,15 @@ const Auth = () => {
     setLoading(true);
     
     try {
-      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+      const displayName = `${firstName} ${lastName}`;
       
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
-            display_name: displayName || email.split("@")[0],
-            phone_number: fullPhoneNumber,
+            display_name: displayName,
           },
         },
       });
@@ -102,32 +63,6 @@ const Auth = () => {
         toast.error(error.message);
         setLoading(false);
         return;
-      }
-
-      // Upload avatar if provided
-      if (avatarFile && data.user) {
-        const fileExt = avatarFile.name.split('.').pop();
-        const filePath = `${data.user.id}.${fileExt}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(filePath, avatarFile, { upsert: true });
-
-        if (uploadError) {
-          console.error("Avatar upload error:", uploadError);
-          toast.error("Account created but avatar upload failed");
-        } else {
-          // Get public URL
-          const { data: { publicUrl } } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(filePath);
-
-          // Update profile with avatar URL
-          await supabase
-            .from('profiles')
-            .update({ avatar_url: publicUrl })
-            .eq('id', data.user.id);
-        }
       }
 
       toast.success("Account created! Please check your email to verify.");
@@ -214,37 +149,28 @@ const Auth = () => {
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name">Display Name (optional)</Label>
+                  <Label htmlFor="signup-firstname">First Name</Label>
                   <Input
-                    id="signup-name"
+                    id="signup-firstname"
                     type="text"
-                    placeholder="Your name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="First name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
                     disabled={loading}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-avatar">Profile Picture (optional)</Label>
-                  {avatarPreview && (
-                    <div className="mb-2 flex justify-center">
-                      <img 
-                        src={avatarPreview} 
-                        alt="Avatar preview" 
-                        className="h-20 w-20 rounded-full object-cover"
-                      />
-                    </div>
-                  )}
+                  <Label htmlFor="signup-lastname">Last Name</Label>
                   <Input
-                    id="signup-avatar"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
+                    id="signup-lastname"
+                    type="text"
+                    placeholder="Last name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
                     disabled={loading}
+                    required
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Max size: 2MB. Your photo will appear on event safety pages when you're listed as a contact.
-                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
@@ -268,32 +194,6 @@ const Auth = () => {
                     disabled={loading}
                     required
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-phone">Phone Number *</Label>
-                  <div className="flex gap-2">
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="w-32 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      disabled={loading}
-                    >
-                      {countryCodes.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.flag} {c.code}
-                        </option>
-                      ))}
-                    </select>
-                    <Input
-                      id="signup-phone"
-                      type="tel"
-                      placeholder="87 123 4567"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      disabled={loading}
-                      required
-                    />
-                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Creating account..." : "Create Account"}
