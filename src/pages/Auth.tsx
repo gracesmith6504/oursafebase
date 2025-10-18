@@ -16,6 +16,10 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [societyInfo, setSocietyInfo] = useState<{
+    name: string;
+    role: string;
+  } | null>(null);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
@@ -24,8 +28,28 @@ const Auth = () => {
   const redirectPath = searchParams.get("redirect");
 
   useEffect(() => {
-    if (user) {
+    const fetchSocietyInfo = async () => {
       if (inviteCode) {
+        const { data } = await supabase
+          .rpc("validate_invite_code", { invite_code: inviteCode });
+        
+        if (data && data.length > 0) {
+          setSocietyInfo({
+            name: data[0].society_name,
+            role: data[0].role_type
+          });
+        }
+      }
+    };
+    
+    fetchSocietyInfo();
+  }, [inviteCode]);
+
+  useEffect(() => {
+    if (user) {
+      if (inviteCode && societyInfo?.role === 'committee') {
+        navigate(`/onboarding?invite=${inviteCode}`);
+      } else if (inviteCode) {
         navigate(`/invite/${inviteCode}`);
       } else if (redirectPath) {
         navigate(redirectPath);
@@ -33,7 +57,7 @@ const Auth = () => {
         navigate("/dashboard");
       }
     }
-  }, [user, navigate, inviteCode, redirectPath]);
+  }, [user, navigate, inviteCode, redirectPath, societyInfo]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,10 +128,20 @@ const Auth = () => {
             <img src={logo} alt="OurSafeBase" className="h-16" />
           </div>
           <CardTitle className="text-2xl">Welcome to OurSafeBase</CardTitle>
-          <CardDescription>
-            {inviteCode 
-              ? "You're joining a society. Sign in or create an account to continue." 
-              : "Create safer events for your student society"}
+          <CardDescription className="space-y-2">
+            {inviteCode && societyInfo ? (
+              <div className="text-center">
+                <p className="mb-2">You have been invited to join</p>
+                <p className="font-bold text-lg text-foreground">{societyInfo.name}</p>
+                {societyInfo.role === 'committee' && (
+                  <p className="text-sm mt-1">as a committee member</p>
+                )}
+              </div>
+            ) : inviteCode ? (
+              "You're joining a society. Sign in or create an account to continue."
+            ) : (
+              "Create safer events for your student society"
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>

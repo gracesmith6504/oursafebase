@@ -15,13 +15,42 @@ const InviteJoin = () => {
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
-        // Redirect to auth with invite code
         navigate(`/auth?invite=${code}`);
       } else {
-        joinSociety();
+        checkOnboardingStatus();
       }
     }
   }, [user, authLoading, code]);
+
+  const checkOnboardingStatus = async () => {
+    if (!code || !user) return;
+    
+    const { data: validationResult } = await supabase
+      .rpc("validate_invite_code", { invite_code: code });
+
+    if (!validationResult || validationResult.length === 0) {
+      toast.error("Invalid invite code");
+      navigate("/dashboard");
+      return;
+    }
+
+    const role = validationResult[0].role_type;
+
+    if (role === 'committee') {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('phone_number')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.phone_number) {
+        navigate(`/onboarding?invite=${code}`);
+        return;
+      }
+    }
+
+    joinSociety();
+  };
 
   const joinSociety = async () => {
     if (!code || !user) return;

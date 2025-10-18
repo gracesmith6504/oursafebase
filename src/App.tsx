@@ -18,6 +18,7 @@ import EventSafetyPage from "./pages/EventSafetyPage";
 import SocietyReports from "./pages/SocietyReports";
 import SocietyCodesOfConduct from "./pages/SocietyCodesOfConduct";
 import InviteJoin from "./pages/InviteJoin";
+import CommitteeOnboarding from "./pages/CommitteeOnboarding";
 import EventSummary from "./pages/EventSummary";
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/my-events" element={<MyEvents />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/onboarding" element={<CommitteeOnboarding />} />
           <Route path="/invite/:code" element={<InviteJoin />} />
           <Route path="/invite/:type/:code" element={<InviteJoin />} />
           <Route path="/event/:eventId" element={<EventSafetyPage />} />
