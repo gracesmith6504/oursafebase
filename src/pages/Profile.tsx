@@ -213,13 +213,13 @@ const Profile = () => {
       <div className="min-h-screen bg-muted">
         <header className="border-b bg-background">
           <div className="container mx-auto flex items-center justify-between px-4 py-4">
-            <div className="flex items-center gap-3">
-              <img src={logo} alt="OurSafeBase" className="h-10" />
-              <h1 className="text-xl font-bold">OurSafeBase</h1>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <img src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
+              <h1 className="text-lg md:text-xl font-bold">OurSafeBase</h1>
             </div>
-            <Button variant="ghost" onClick={() => navigate("/dashboard")}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Back to Dashboard</span>
             </Button>
           </div>
         </header>

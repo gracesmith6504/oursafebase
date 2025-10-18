@@ -79,22 +79,22 @@ const Dashboard = () => {
       <div className="min-h-screen bg-muted">
         <header className="border-b bg-background">
           <div className="container mx-auto flex items-center justify-between px-4 py-4">
-            <div className="flex items-center gap-3">
-              <img src={logo} alt="OurSafeBase" className="h-10" />
-              <h1 className="text-xl font-bold">OurSafeBase</h1>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <img src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
+              <h1 className="text-lg md:text-xl font-bold">OurSafeBase</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => navigate("/my-events")}>
-                <Calendar className="mr-2 h-4 w-4" />
-                My Events
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate("/my-events")}>
+                <Calendar className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">My Events</span>
               </Button>
-              <Button variant="ghost" onClick={() => navigate("/profile")}>
-                <User className="mr-2 h-4 w-4" />
-                Profile
+              <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+                <User className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Profile</span>
               </Button>
-              <Button variant="ghost" onClick={handleSignOut}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Sign Out</span>
               </Button>
             </div>
           </div>
