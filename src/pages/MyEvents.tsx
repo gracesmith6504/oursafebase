@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, CheckCircle2, AlertCircle, Search, Loader2 } from "lucide-react";
+import { Calendar, CheckCircle2, AlertCircle, Search, Loader2, ArrowLeft } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
@@ -165,17 +166,25 @@ const MyEvents = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">My Events</h1>
-            <p className="text-muted-foreground mt-1">
-              View events from your societies
-            </p>
+      <header className="border-b bg-background">
+        <div className="container mx-auto flex items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <img src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
+            <h1 className="text-lg md:text-xl font-bold">OurSafeBase</h1>
           </div>
-          <Button variant="outline" onClick={() => navigate("/dashboard")}>
-            Dashboard
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Back to Dashboard</span>
           </Button>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground">My Events</h1>
+          <p className="text-muted-foreground mt-1">
+            View events from your societies
+          </p>
         </div>
 
         <Tabs value={dateFilter} onValueChange={(v) => setDateFilter(v as typeof dateFilter)} className="mb-6">
@@ -289,7 +298,7 @@ const MyEvents = () => {
             })}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };
