@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet";
 import { ReportDetailDialog } from "@/components/ReportDetailDialog";
 import { FeedbackDetailDialog } from "@/components/FeedbackDetailDialog";
-import { ArrowLeft, Search, Filter, AlertCircle } from "lucide-react";
+import { ArrowLeft, Search, Filter, AlertCircle, X } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 
@@ -91,6 +92,9 @@ export default function SocietyReports() {
   
   const [selectedFeedback, setSelectedFeedback] = useState<FeedbackWithEvent | null>(null);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+  
+  const [showReportFilters, setShowReportFilters] = useState(false);
+  const [showFeedbackFilters, setShowFeedbackFilters] = useState(false);
 
   useEffect(() => {
     if (user && slug) {
@@ -308,6 +312,94 @@ export default function SocietyReports() {
     setShowFeedbackDialog(true);
   };
 
+  const getActiveReportFiltersCount = () => {
+    let count = 0;
+    if (statusFilter !== "all") count++;
+    if (eventFilter !== "all") count++;
+    if (categoryFilter !== "all") count++;
+    if (searchQuery !== "") count++;
+    return count;
+  };
+
+  const getActiveFeedbackFiltersCount = () => {
+    let count = 0;
+    if (feedbackEventFilter !== "all") count++;
+    if (feedbackSafetyFilter !== "all") count++;
+    if (feedbackContactFilter !== "all") count++;
+    if (feedbackSearchQuery !== "") count++;
+    return count;
+  };
+
+  const getReportFilterBubbles = () => {
+    const bubbles = [];
+    
+    if (statusFilter !== "all") {
+      bubbles.push({
+        label: `Status: ${statusFilter.replace('_', ' ')}`,
+        onRemove: () => setStatusFilter("all")
+      });
+    }
+    
+    if (eventFilter !== "all") {
+      const event = events.find(e => e.id === eventFilter);
+      bubbles.push({
+        label: `Event: ${event?.title || eventFilter}`,
+        onRemove: () => setEventFilter("all")
+      });
+    }
+    
+    if (categoryFilter !== "all") {
+      bubbles.push({
+        label: `Category: ${CONCERN_TYPE_LABELS[categoryFilter]}`,
+        onRemove: () => setCategoryFilter("all")
+      });
+    }
+    
+    if (searchQuery !== "") {
+      bubbles.push({
+        label: `Search: "${searchQuery}"`,
+        onRemove: () => setSearchQuery("")
+      });
+    }
+    
+    return bubbles;
+  };
+
+  const getFeedbackFilterBubbles = () => {
+    const bubbles = [];
+    
+    if (feedbackEventFilter !== "all") {
+      const event = events.find(e => e.id === feedbackEventFilter);
+      bubbles.push({
+        label: `Event: ${event?.title || feedbackEventFilter}`,
+        onRemove: () => setFeedbackEventFilter("all")
+      });
+    }
+    
+    if (feedbackSafetyFilter !== "all") {
+      bubbles.push({
+        label: `Safety: ${getSafetyLabel(feedbackSafetyFilter)}`,
+        onRemove: () => setFeedbackSafetyFilter("all")
+      });
+    }
+    
+    if (feedbackContactFilter !== "all") {
+      bubbles.push({
+        label: `Contact: ${feedbackContactFilter === "with_contact" ? "With Contact" : "Anonymous"}`,
+        onRemove: () => setFeedbackContactFilter("all")
+      });
+    }
+    
+    if (feedbackSearchQuery !== "") {
+      bubbles.push({
+        label: `Search: "${feedbackSearchQuery}"`,
+        onRemove: () => setFeedbackSearchQuery("")
+      });
+    }
+    
+    return bubbles;
+  };
+
   if (loading || roleLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -361,81 +453,158 @@ export default function SocietyReports() {
           </TabsList>
 
           <TabsContent value="reports" className="space-y-6">
-            {/* Filters */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filters
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Status</label>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="new">New</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="under_review">Under Review</SelectItem>
-                        <SelectItem value="resolved">Resolved</SelectItem>
-                        <SelectItem value="closed">Closed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+            {/* Filter Button and Applied Filters */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Sheet open={showReportFilters} onOpenChange={setShowReportFilters}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Filter className="h-4 w-4" />
+                      Filters
+                      {getActiveReportFiltersCount() > 0 && (
+                        <Badge variant="secondary" className="ml-1 rounded-full h-5 w-5 p-0 flex items-center justify-center text-xs">
+                          {getActiveReportFiltersCount()}
+                        </Badge>
+                      )}
+                    </Button>
+                  </SheetTrigger>
+                  
+                  <SheetContent 
+                    side="right" 
+                    className="w-[90vw] sm:w-[400px] h-full overflow-y-auto flex flex-col"
+                  >
+                    <SheetHeader className="text-left">
+                      <SheetTitle className="flex items-center gap-2">
+                        <Filter className="h-5 w-5" />
+                        Filter Concerns
+                      </SheetTitle>
+                    </SheetHeader>
+                    
+                    <div className="flex-1 space-y-6 py-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Status</label>
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Statuses</SelectItem>
+                            <SelectItem value="new">New</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="under_review">Under Review</SelectItem>
+                            <SelectItem value="resolved">Resolved</SelectItem>
+                            <SelectItem value="closed">Closed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Event</label>
-                    <Select value={eventFilter} onValueChange={setEventFilter}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Events</SelectItem>
-                        {events.map(event => (
-                          <SelectItem key={event.id} value={event.id}>
-                            {event.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Event</label>
+                        <Select value={eventFilter} onValueChange={setEventFilter}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Events</SelectItem>
+                            {events.map(event => (
+                              <SelectItem key={event.id} value={event.id}>
+                                {event.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Category</label>
-                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        <SelectItem value="harassment">Harassment</SelectItem>
-                        <SelectItem value="safety">Safety Issue</SelectItem>
-                        <SelectItem value="code_violation">Code of Conduct</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Category</label>
+                        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Categories</SelectItem>
+                            <SelectItem value="harassment">Harassment</SelectItem>
+                            <SelectItem value="safety">Safety Issue</SelectItem>
+                            <SelectItem value="code_violation">Code of Conduct</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Search</label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search descriptions..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9"
-                      />
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Search</label>
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search descriptions..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-9"
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                    
+                    <SheetFooter className="flex-col sm:flex-col gap-2 mt-auto pt-6 border-t">
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => {
+                          setStatusFilter("all");
+                          setEventFilter("all");
+                          setCategoryFilter("all");
+                          setSearchQuery("");
+                        }}
+                      >
+                        Clear All Filters
+                      </Button>
+                      <Button 
+                        className="w-full"
+                        onClick={() => setShowReportFilters(false)}
+                      >
+                        Apply Filters
+                      </Button>
+                    </SheetFooter>
+                  </SheetContent>
+                </Sheet>
+              </div>
+              
+              {/* Applied Filter Bubbles */}
+              {getReportFilterBubbles().length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {getReportFilterBubbles().map((bubble, index) => (
+                    <Badge 
+                      key={index} 
+                      variant="secondary" 
+                      className="gap-2 pr-1 pl-3 py-1"
+                    >
+                      {bubble.label}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 hover:bg-transparent"
+                        onClick={bubble.onRemove}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  ))}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      setStatusFilter("all");
+                      setEventFilter("all");
+                      setCategoryFilter("all");
+                      setSearchQuery("");
+                    }}
+                  >
+                    Clear all
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
 
             {/* Reports List */}
             <div className="space-y-4">
@@ -503,79 +672,156 @@ export default function SocietyReports() {
           </TabsContent>
 
           <TabsContent value="feedback" className="space-y-6">
-            {/* Feedback Filters */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filters
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Event</label>
-                    <Select value={feedbackEventFilter} onValueChange={setFeedbackEventFilter}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Events</SelectItem>
-                        {events.map(event => (
-                          <SelectItem key={event.id} value={event.id}>
-                            {event.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+            {/* Filter Button and Applied Filters */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Sheet open={showFeedbackFilters} onOpenChange={setShowFeedbackFilters}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Filter className="h-4 w-4" />
+                      Filters
+                      {getActiveFeedbackFiltersCount() > 0 && (
+                        <Badge variant="secondary" className="ml-1 rounded-full h-5 w-5 p-0 flex items-center justify-center text-xs">
+                          {getActiveFeedbackFiltersCount()}
+                        </Badge>
+                      )}
+                    </Button>
+                  </SheetTrigger>
+                  
+                  <SheetContent 
+                    side="right" 
+                    className="w-[90vw] sm:w-[400px] h-full overflow-y-auto flex flex-col"
+                  >
+                    <SheetHeader className="text-left">
+                      <SheetTitle className="flex items-center gap-2">
+                        <Filter className="h-5 w-5" />
+                        Filter Feedback
+                      </SheetTitle>
+                    </SheetHeader>
+                    
+                    <div className="flex-1 space-y-6 py-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Event</label>
+                        <Select value={feedbackEventFilter} onValueChange={setFeedbackEventFilter}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Events</SelectItem>
+                            {events.map(event => (
+                              <SelectItem key={event.id} value={event.id}>
+                                {event.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Safety Rating</label>
-                    <Select value={feedbackSafetyFilter} onValueChange={setFeedbackSafetyFilter}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Ratings</SelectItem>
-                        <SelectItem value="very_safe">Very Safe 😊</SelectItem>
-                        <SelectItem value="mostly_safe">Mostly Safe 🙂</SelectItem>
-                        <SelectItem value="somewhat_safe">Somewhat Safe 😐</SelectItem>
-                        <SelectItem value="unsafe">Unsafe 😟</SelectItem>
-                        <SelectItem value="very_unsafe">Very Unsafe 😢</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Safety Rating</label>
+                        <Select value={feedbackSafetyFilter} onValueChange={setFeedbackSafetyFilter}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Ratings</SelectItem>
+                            <SelectItem value="very_safe">Very Safe 😊</SelectItem>
+                            <SelectItem value="mostly_safe">Mostly Safe 🙂</SelectItem>
+                            <SelectItem value="somewhat_safe">Somewhat Safe 😐</SelectItem>
+                            <SelectItem value="unsafe">Unsafe 😟</SelectItem>
+                            <SelectItem value="very_unsafe">Very Unsafe 😢</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Contact Status</label>
-                    <Select value={feedbackContactFilter} onValueChange={setFeedbackContactFilter}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Feedback</SelectItem>
-                        <SelectItem value="with_contact">With Contact</SelectItem>
-                        <SelectItem value="anonymous">Anonymous</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Contact Status</label>
+                        <Select value={feedbackContactFilter} onValueChange={setFeedbackContactFilter}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Feedback</SelectItem>
+                            <SelectItem value="with_contact">With Contact</SelectItem>
+                            <SelectItem value="anonymous">Anonymous</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Search</label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search suggestions..."
-                        value={feedbackSearchQuery}
-                        onChange={(e) => setFeedbackSearchQuery(e.target.value)}
-                        className="pl-9"
-                      />
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Search</label>
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search suggestions..."
+                            value={feedbackSearchQuery}
+                            onChange={(e) => setFeedbackSearchQuery(e.target.value)}
+                            className="pl-9"
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                    
+                    <SheetFooter className="flex-col sm:flex-col gap-2 mt-auto pt-6 border-t">
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => {
+                          setFeedbackEventFilter("all");
+                          setFeedbackSafetyFilter("all");
+                          setFeedbackContactFilter("all");
+                          setFeedbackSearchQuery("");
+                        }}
+                      >
+                        Clear All Filters
+                      </Button>
+                      <Button 
+                        className="w-full"
+                        onClick={() => setShowFeedbackFilters(false)}
+                      >
+                        Apply Filters
+                      </Button>
+                    </SheetFooter>
+                  </SheetContent>
+                </Sheet>
+              </div>
+              
+              {/* Applied Filter Bubbles */}
+              {getFeedbackFilterBubbles().length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {getFeedbackFilterBubbles().map((bubble, index) => (
+                    <Badge 
+                      key={index} 
+                      variant="secondary" 
+                      className="gap-2 pr-1 pl-3 py-1"
+                    >
+                      {bubble.label}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 hover:bg-transparent"
+                        onClick={bubble.onRemove}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  ))}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      setFeedbackEventFilter("all");
+                      setFeedbackSafetyFilter("all");
+                      setFeedbackContactFilter("all");
+                      setFeedbackSearchQuery("");
+                    }}
+                  >
+                    Clear all
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+              )}
+            </div>
 
             {/* Feedback List */}
             <div className="space-y-4">
