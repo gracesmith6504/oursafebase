@@ -194,21 +194,15 @@ const SocietyCodesOfConduct = () => {
     <ProtectedRoute>
       <div className="min-h-screen bg-muted">
         <header className="border-b bg-background">
-          <div className="container mx-auto flex items-center justify-between px-4 py-4">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate(`/society/${slug}/dashboard`)}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <img src={logo} alt="OurSafeBase" className="h-8" />
-              <div>
-                <h1 className="text-xl font-bold">{society?.name}</h1>
-                <p className="text-sm text-muted-foreground">Code of Conduct Templates</p>
-              </div>
-            </div>
-            <Button onClick={() => setCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create New
+          <div className="container mx-auto flex items-center gap-4 px-4 py-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/society/${slug}/dashboard`)}>
+              <ArrowLeft className="h-5 w-5" />
             </Button>
+            <img src={logo} alt="OurSafeBase" className="h-8" />
+            <div>
+              <h1 className="text-xl font-bold">{society?.name}</h1>
+              <p className="text-sm text-muted-foreground">Code of Conduct Templates</p>
+            </div>
           </div>
         </header>
 
@@ -278,6 +272,13 @@ const SocietyCodesOfConduct = () => {
                   </CardContent>
                 </Card>
               ))}
+              
+              <div className="flex justify-center pt-4">
+                <Button onClick={() => setCreateDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create New
+                </Button>
+              </div>
             </div>
           )}
         </main>
