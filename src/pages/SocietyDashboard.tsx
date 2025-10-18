@@ -153,39 +153,34 @@ const SocietyDashboard = () => {
         </header>
 
         <main className="container mx-auto px-4 py-8">
-          <div className="mb-8 grid gap-6 md:grid-cols-3">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.upcomingEvents}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Committee Members</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalMembers}</div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">New Reports</CardTitle>
-                <AlertCircle className="h-4 w-4 text-destructive" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-destructive">{stats.newReports}</div>
-              </CardContent>
-            </Card>
-          </div>
-
           <div className="grid gap-6 md:grid-cols-2">
+            <Card className="cursor-pointer transition-all hover:shadow-lg" onClick={() => navigate(`/society/${slug}/reports`)}>
+              <CardHeader className="relative">
+                <AlertCircle className="mb-2 h-10 w-10 text-primary" />
+                {stats.newReports > 0 && (
+                  <div className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full bg-destructive text-sm font-bold text-destructive-foreground">
+                    {stats.newReports}
+                  </div>
+                )}
+                <CardTitle>Reports</CardTitle>
+                <CardDescription>Review and manage concern reports</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full">View Reports</Button>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer transition-all hover:shadow-lg" onClick={() => navigate(`/society/${slug}/codes-of-conduct`)}>
+              <CardHeader>
+                <Shield className="mb-2 h-10 w-10 text-primary" />
+                <CardTitle>Codes of Conduct</CardTitle>
+                <CardDescription>Manage and create codes of conduct for your events</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full">Manage CoCs</Button>
+              </CardContent>
+            </Card>
+
             <Card className="cursor-pointer transition-all hover:shadow-lg" onClick={() => navigate(`/society/${slug}/events`)}>
               <CardHeader>
                 <Calendar className="mb-2 h-10 w-10 text-primary" />
@@ -205,28 +200,6 @@ const SocietyDashboard = () => {
               </CardHeader>
               <CardContent>
                 <Button className="w-full">View Members</Button>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer transition-all hover:shadow-lg" onClick={() => navigate(`/society/${slug}/reports`)}>
-              <CardHeader>
-                <AlertCircle className="mb-2 h-10 w-10 text-primary" />
-                <CardTitle>Reports</CardTitle>
-                <CardDescription>Review and manage concern reports</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full">View Reports</Button>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer transition-all hover:shadow-lg" onClick={() => navigate(`/society/${slug}/codes-of-conduct`)}>
-              <CardHeader>
-                <Shield className="mb-2 h-10 w-10 text-primary" />
-                <CardTitle>Codes of Conduct</CardTitle>
-                <CardDescription>Manage and create codes of conduct for your events</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full">Manage CoCs</Button>
               </CardContent>
             </Card>
           </div>
