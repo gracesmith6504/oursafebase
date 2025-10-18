@@ -20,6 +20,7 @@ const Auth = () => {
     name: string;
     role: string;
   } | null>(null);
+  const [loadingSocietyInfo, setLoadingSocietyInfo] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
@@ -30,6 +31,7 @@ const Auth = () => {
   useEffect(() => {
     const fetchSocietyInfo = async () => {
       if (inviteCode) {
+        setLoadingSocietyInfo(true);
         const { data } = await supabase
           .rpc("validate_invite_code", { invite_code: inviteCode });
         
@@ -39,6 +41,7 @@ const Auth = () => {
             role: data[0].role_type
           });
         }
+        setLoadingSocietyInfo(false);
       }
     };
     
@@ -46,7 +49,8 @@ const Auth = () => {
   }, [inviteCode]);
 
   useEffect(() => {
-    if (user) {
+    // Don't redirect until society info is loaded (if invite code exists)
+    if (user && (!inviteCode || !loadingSocietyInfo)) {
       if (inviteCode && societyInfo?.role === 'committee') {
         navigate(`/onboarding?invite=${inviteCode}`);
       } else if (inviteCode) {
@@ -57,7 +61,7 @@ const Auth = () => {
         navigate("/dashboard");
       }
     }
-  }, [user, navigate, inviteCode, redirectPath, societyInfo]);
+  }, [user, navigate, inviteCode, redirectPath, societyInfo, loadingSocietyInfo]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
