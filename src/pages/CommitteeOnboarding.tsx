@@ -159,24 +159,13 @@ const CommitteeOnboarding = () => {
               />
             </div>
 
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={() => navigate("/dashboard")}
-                disabled={loading}
-              >
-                Skip for now
-              </Button>
-              <Button
-                type="submit"
-                className="flex-1"
-                disabled={loading}
-              >
-                {loading ? "Saving..." : "Continue"}
-              </Button>
-            </div>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? "Saving..." : "Continue"}
+            </Button>
           </form>
         </CardContent>
       </Card>

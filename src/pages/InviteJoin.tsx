@@ -11,6 +11,8 @@ const InviteJoin = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [processing, setProcessing] = useState(true);
+  const [redirectAttempts, setRedirectAttempts] = useState(0);
+  const MAX_REDIRECT_ATTEMPTS = 3;
 
   useEffect(() => {
     if (!authLoading) {
@@ -44,6 +46,12 @@ const InviteJoin = () => {
         .single();
 
       if (!profile?.phone_number) {
+        if (redirectAttempts >= MAX_REDIRECT_ATTEMPTS) {
+          toast.error("Phone number is required for committee members. Please complete your profile.");
+          navigate("/dashboard");
+          return;
+        }
+        setRedirectAttempts(prev => prev + 1);
         navigate(`/onboarding?invite=${code}`);
         return;
       }

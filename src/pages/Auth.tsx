@@ -138,7 +138,12 @@ const Auth = () => {
                 <p className="mb-2">You have been invited to join</p>
                 <p className="font-bold text-lg text-foreground">{societyInfo.name}</p>
                 {societyInfo.role === 'committee' && (
-                  <p className="text-sm mt-1">as a committee member</p>
+                  <>
+                    <p className="text-sm mt-1">as a committee member</p>
+                    <p className="text-xs mt-2 text-muted-foreground">
+                      You'll be asked to provide your phone number for safety purposes
+                    </p>
+                  </>
                 )}
               </div>
             ) : inviteCode ? (
