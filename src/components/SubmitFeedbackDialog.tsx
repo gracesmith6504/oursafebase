@@ -141,12 +141,7 @@ export function SubmitFeedbackDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] p-0" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-        <style>{`
-          [data-radix-dialog-content] button.absolute.right-4.top-4 {
-            display: none !important;
-          }
-        `}</style>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] p-0 [&>button[aria-label='Close']]:hidden" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         {showSuccess ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4 px-6">
             <CheckCircle className="w-16 h-16 text-green-500" />
