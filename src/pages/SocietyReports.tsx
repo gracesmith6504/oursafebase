@@ -15,6 +15,7 @@ import { FeedbackDetailDialog } from "@/components/FeedbackDetailDialog";
 import { ArrowLeft, Search, Filter, AlertCircle, X } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
+import logo from "@/assets/logo.png";
 
 interface Report {
   id: string;
@@ -429,22 +430,23 @@ export default function SocietyReports() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(`/society/${slug}/dashboard`)}
-            className="mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Button>
-          <h1 className="text-3xl font-bold">{societyName}</h1>
-          <p className="text-muted-foreground">View and manage reported concerns</p>
+    <div className="min-h-screen bg-muted">
+      <header className="border-b bg-background">
+        <div className="container mx-auto flex items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/society/${slug}/dashboard`)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <img src={logo} alt="OurSafeBase" className="h-8" />
+            <div>
+              <h1 className="text-xl font-bold">{societyName}</h1>
+              <p className="text-sm text-muted-foreground">View and manage reported concerns</p>
+            </div>
+          </div>
         </div>
+      </header>
 
+      <main className="container mx-auto px-4 py-8 max-w-6xl">
         <Tabs defaultValue="reports" className="space-y-6">
           <TabsList>
             <TabsTrigger value="reports">Concerns</TabsTrigger>
@@ -928,7 +930,7 @@ export default function SocietyReports() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
 
       <ReportDetailDialog
         open={showDetailDialog}
