@@ -329,9 +329,9 @@ const Profile = () => {
                         key={membership.id}
                         className="flex items-center justify-between rounded-lg border p-4"
                       >
-                        <div>
-                          <h3 className="font-semibold">{membership.society.name}</h3>
-                          <p className="text-sm text-muted-foreground">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold break-words">{membership.society.name}</h3>
+                          <p className="text-sm text-muted-foreground break-words">
                             {membership.society.description || "No description"}
                           </p>
                         </div>
@@ -340,7 +340,6 @@ const Profile = () => {
                           size="sm"
                           onClick={() => setSocietyToLeave(membership.society)}
                         >
-                          <UserMinus className="mr-2 h-4 w-4" />
                           Leave
                         </Button>
                       </div>
