@@ -94,7 +94,7 @@ const Dashboard = () => {
               <h1 className="text-lg md:text-xl font-bold">OurSafeBase</h1>
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigate("/my-events")}>
+              <Button variant="ghost" size="sm" onClick={() => navigate("/my-events")}>
                 <Calendar className="h-4 w-4 md:mr-2" />
                 <span className="hidden md:inline">My Events</span>
               </Button>
