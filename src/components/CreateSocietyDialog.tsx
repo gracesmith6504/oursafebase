@@ -108,24 +108,13 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
             />
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="description">Description (optional)</Label>
-              <span className="text-sm text-muted-foreground">
-                {description.length}/150
-              </span>
-            </div>
+            <Label htmlFor="description">Description (optional)</Label>
             <Textarea
               id="description"
               value={description}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value.length <= 150) {
-                  setDescription(value);
-                }
-              }}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="Tell members what your society is about..."
               rows={3}
-              maxLength={150}
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
