@@ -154,9 +154,9 @@ const Dashboard = () => {
 
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {societies.map((membership) => (
-                  <Card
+                <Card
                     key={membership.society.id}
-                    className="cursor-pointer transition-all hover:shadow-lg"
+                    className="cursor-pointer transition-all hover:shadow-lg overflow-hidden"
                     onClick={() =>
                       navigate(
                         membership.role === "committee"
@@ -165,14 +165,14 @@ const Dashboard = () => {
                       )
                     }
                   >
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <CardTitle>{membership.society.name}</CardTitle>
-                        <Badge variant={membership.role === "committee" ? "default" : "secondary"}>
+                    <CardHeader className="min-w-0">
+                      <div className="flex items-start justify-between gap-2 min-w-0">
+                        <CardTitle className="break-words min-w-0 flex-1">{membership.society.name}</CardTitle>
+                        <Badge variant={membership.role === "committee" ? "default" : "secondary"} className="shrink-0">
                           {membership.role === "committee" ? "Committee" : "Attendee"}
                         </Badge>
                       </div>
-                <CardDescription className="break-words line-clamp-3">
+                <CardDescription className="break-words line-clamp-3 overflow-hidden">
                   {membership.society.description || "No description"}
                 </CardDescription>
                     </CardHeader>
