@@ -9,43 +9,32 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { ArrowLeft, Upload, UserMinus } from "lucide-react";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import logo from "@/assets/logo.png";
-
 interface Profile {
   display_name: string | null;
   phone_number: string | null;
   avatar_url: string | null;
 }
-
 interface Society {
   id: string;
   name: string;
   slug: string;
   description: string | null;
 }
-
 interface SocietyMembership {
   id: string;
   society: Society;
 }
-
 const Profile = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile>({
     display_name: "",
     phone_number: "",
-    avatar_url: null,
+    avatar_url: null
   });
   const [societies, setSocieties] = useState<SocietyMembership[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,21 +42,17 @@ const Profile = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [societyToLeave, setSocietyToLeave] = useState<Society | null>(null);
-
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchSocieties();
     }
   }, [user]);
-
   const fetchProfile = async () => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("display_name, phone_number, avatar_url")
-      .eq("id", user?.id)
-      .single();
-
+    const {
+      data,
+      error
+    } = await supabase.from("profiles").select("display_name, phone_number, avatar_url").eq("id", user?.id).single();
     if (error) {
       toast.error("Failed to load profile");
       console.error(error);
@@ -77,13 +62,11 @@ const Profile = () => {
     }
     setLoading(false);
   };
-
   const fetchSocieties = async () => {
-    const { data, error } = await supabase
-      .from("society_members")
-      .select("id, society:societies(*)")
-      .eq("user_id", user?.id);
-
+    const {
+      data,
+      error
+    } = await supabase.from("society_members").select("id, society:societies(*)").eq("user_id", user?.id);
     if (error) {
       toast.error("Failed to load societies");
       console.error(error);
@@ -91,7 +74,6 @@ const Profile = () => {
       setSocieties(data as any);
     }
   };
-
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -107,7 +89,6 @@ const Profile = () => {
       reader.readAsDataURL(file);
     }
   };
-
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
@@ -117,30 +98,27 @@ const Profile = () => {
       if (avatarFile && user) {
         const fileExt = avatarFile.name.split(".").pop();
         const fileName = `${user.id}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from("avatars")
-          .upload(fileName, avatarFile, { upsert: true });
-
+        const {
+          error: uploadError
+        } = await supabase.storage.from("avatars").upload(fileName, avatarFile, {
+          upsert: true
+        });
         if (uploadError) throw uploadError;
-
-        const { data: urlData } = supabase.storage
-          .from("avatars")
-          .getPublicUrl(fileName);
+        const {
+          data: urlData
+        } = supabase.storage.from("avatars").getPublicUrl(fileName);
         avatarUrl = urlData.publicUrl;
       }
 
       // Update profile
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          display_name: profile.display_name,
-          phone_number: profile.phone_number,
-          avatar_url: avatarUrl,
-        })
-        .eq("id", user?.id);
-
+      const {
+        error
+      } = await supabase.from("profiles").update({
+        display_name: profile.display_name,
+        phone_number: profile.phone_number,
+        avatar_url: avatarUrl
+      }).eq("id", user?.id);
       if (error) throw error;
-
       toast.success("Profile updated successfully");
       setAvatarFile(null);
     } catch (error) {
@@ -150,14 +128,11 @@ const Profile = () => {
       setSaving(false);
     }
   };
-
   const handleLeaveSociety = async (membershipId: string, societyName: string) => {
     try {
-      const { error } = await supabase
-        .from("society_members")
-        .delete()
-        .eq("id", membershipId);
-
+      const {
+        error
+      } = await supabase.from("society_members").delete().eq("id", membershipId);
       if (error) {
         console.error("Leave society error:", error);
         if (error.message.includes("policy")) {
@@ -167,13 +142,12 @@ const Profile = () => {
         }
         return;
       }
-
       toast.success(`Successfully left ${societyName}`);
-      
+
       // Refresh societies list
       await fetchSocieties();
       setSocietyToLeave(null);
-      
+
       // Navigate to dashboard if user left all societies
       const updatedSocieties = societies.filter(s => s.society.id !== societyToLeave?.id);
       if (updatedSocieties.length === 0) {
@@ -187,29 +161,18 @@ const Profile = () => {
       toast.error("An unexpected error occurred");
     }
   };
-
   const getInitials = (name: string | null) => {
     if (!name) return "U";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
-
   if (loading) {
-    return (
-      <ProtectedRoute>
+    return <ProtectedRoute>
         <div className="flex min-h-screen items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
         </div>
-      </ProtectedRoute>
-    );
+      </ProtectedRoute>;
   }
-
-  return (
-    <ProtectedRoute>
+  return <ProtectedRoute>
       <div className="min-h-screen bg-muted">
         <header className="border-b bg-background">
           <div className="container mx-auto flex items-center justify-between px-4 py-4">
@@ -266,41 +229,26 @@ const Profile = () => {
                         </p>
                       </div>
                     </Label>
-                    <Input
-                      id="avatar"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleAvatarChange}
-                    />
+                    <Input id="avatar" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                   </div>
                 </div>
 
                 {/* Display Name */}
                 <div className="space-y-2">
                   <Label htmlFor="display_name">Display Name</Label>
-                  <Input
-                    id="display_name"
-                    value={profile.display_name || ""}
-                    onChange={(e) =>
-                      setProfile({ ...profile, display_name: e.target.value })
-                    }
-                    placeholder="Enter your name"
-                  />
+                  <Input id="display_name" value={profile.display_name || ""} onChange={e => setProfile({
+                  ...profile,
+                  display_name: e.target.value
+                })} placeholder="Enter your name" />
                 </div>
 
                 {/* Phone Number */}
                 <div className="space-y-2">
                   <Label htmlFor="phone_number">Phone Number</Label>
-                  <Input
-                    id="phone_number"
-                    type="tel"
-                    value={profile.phone_number || ""}
-                    onChange={(e) =>
-                      setProfile({ ...profile, phone_number: e.target.value })
-                    }
-                    placeholder="Enter your phone number"
-                  />
+                  <Input id="phone_number" type="tel" value={profile.phone_number || ""} onChange={e => setProfile({
+                  ...profile,
+                  phone_number: e.target.value
+                })} placeholder="Enter your phone number" />
                 </div>
 
                 <Button onClick={handleSaveProfile} disabled={saving}>
@@ -318,44 +266,28 @@ const Profile = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {societies.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
+                {societies.length === 0 ? <p className="text-sm text-muted-foreground">
                     You are not a member of any societies yet.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {societies.map((membership) => (
-                      <div
-                        key={membership.id}
-                        className="flex items-center justify-between rounded-lg border p-4"
-                      >
+                  </p> : <div className="space-y-3">
+                    {societies.map(membership => <div key={membership.id} className="flex items-center justify-between rounded-lg border p-4">
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold break-words">{membership.society.name}</h3>
                           <p className="text-sm text-muted-foreground break-words">
                             {membership.society.description || "No description"}
                           </p>
                         </div>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => setSocietyToLeave(membership.society)}
-                        >
+                        <Button variant="destructive" size="sm" onClick={() => setSocietyToLeave(membership.society)} className="mx-[10px]">
                           Leave
                         </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      </div>)}
+                  </div>}
               </CardContent>
             </Card>
           </div>
         </main>
 
         {/* Leave Society Confirmation Dialog */}
-        <AlertDialog
-          open={!!societyToLeave}
-          onOpenChange={() => setSocietyToLeave(null)}
-        >
+        <AlertDialog open={!!societyToLeave} onOpenChange={() => setSocietyToLeave(null)}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Leave Society?</AlertDialogTitle>
@@ -366,24 +298,18 @@ const Profile = () => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  const membership = societies.find(
-                    (m) => m.society.id === societyToLeave?.id
-                  );
-                  if (membership && societyToLeave) {
-                    handleLeaveSociety(membership.id, societyToLeave.name);
-                  }
-                }}
-              >
+              <AlertDialogAction onClick={() => {
+              const membership = societies.find(m => m.society.id === societyToLeave?.id);
+              if (membership && societyToLeave) {
+                handleLeaveSociety(membership.id, societyToLeave.name);
+              }
+            }}>
                 Leave Society
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </ProtectedRoute>
-  );
+    </ProtectedRoute>;
 };
-
 export default Profile;
