@@ -475,6 +475,10 @@ const EventSafetyPage = () => {
         onOpenChange={setShowFeedbackDialog}
         eventId={eventId!}
         eventTitle={event?.title || ""}
+        onOpenReportDialog={() => {
+          setShowFeedbackDialog(false);
+          setShowReportDialog(true);
+        }}
       />
     </div>
   );

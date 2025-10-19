@@ -27,13 +27,12 @@ import { Label } from "@/components/ui/label";
 import { CheckCircle } from "lucide-react";
 
 const feedbackSchema = z.object({
-  feltSafe: z.enum([
-    "very_safe",
-    "mostly_safe",
-    "somewhat_safe",
-    "unsafe",
-    "very_unsafe"
-  ], { required_error: "Please select how safe you felt" }),
+  feltSafeComfortable: z.enum([
+    "yes_completely",
+    "mostly",
+    "few_issues",
+    "no"
+  ], { required_error: "Please select an option" }),
   improvements: z.string().trim().max(1000, "Improvements must be less than 1000 characters").optional().or(z.literal("")),
   isAnonymous: z.boolean(),
   name: z.string().trim().max(100, "Name must be less than 100 characters").optional().or(z.literal("")),
@@ -58,14 +57,14 @@ interface SubmitFeedbackDialogProps {
   onOpenChange: (open: boolean) => void;
   eventId: string;
   eventTitle: string;
+  onOpenReportDialog?: () => void;
 }
 
-const SAFETY_OPTIONS = [
-  { value: "very_safe", label: "Very Safe", emoji: "😊", color: "text-green-700" },
-  { value: "mostly_safe", label: "Mostly Safe", emoji: "🙂", color: "text-green-600" },
-  { value: "somewhat_safe", label: "Somewhat Safe", emoji: "😐", color: "text-yellow-600" },
-  { value: "unsafe", label: "Unsafe", emoji: "😟", color: "text-orange-600" },
-  { value: "very_unsafe", label: "Very Unsafe", emoji: "😢", color: "text-red-600" },
+const COMFORT_OPTIONS = [
+  { value: "yes_completely", label: "Yes, completely" },
+  { value: "mostly", label: "Mostly" },
+  { value: "few_issues", label: "A few issues" },
+  { value: "no", label: "No" },
 ];
 
 export function SubmitFeedbackDialog({
@@ -73,6 +72,7 @@ export function SubmitFeedbackDialog({
   onOpenChange,
   eventId,
   eventTitle,
+  onOpenReportDialog,
 }: SubmitFeedbackDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -81,7 +81,7 @@ export function SubmitFeedbackDialog({
   const form = useForm<FeedbackFormData>({
     resolver: zodResolver(feedbackSchema),
     defaultValues: {
-      feltSafe: undefined,
+      feltSafeComfortable: undefined,
       improvements: "",
       isAnonymous: true,
       name: "",
@@ -99,7 +99,7 @@ export function SubmitFeedbackDialog({
         .from("event_feedback")
         .insert({
           event_id: eventId,
-          felt_safe: data.feltSafe,
+          felt_safe: data.feltSafeComfortable,
           improvements: data.improvements || null,
           is_anonymous: data.isAnonymous,
           contact_name: data.isAnonymous ? null : (data.name || null),
@@ -154,35 +154,46 @@ export function SubmitFeedbackDialog({
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle>Share Your Feedback</DialogTitle>
-              <p className="text-sm text-muted-foreground mt-2">{eventTitle}</p>
+              <DialogTitle className="text-2xl font-bold">Event Feedback</DialogTitle>
+              <p className="text-sm text-muted-foreground mt-2">
+                Help us make future events even better. This isn't a safety report — if something serious happened, please use the{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenChange(false);
+                    onOpenReportDialog?.();
+                  }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Report an Incident form
+                </button>.
+              </p>
             </DialogHeader>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="feltSafe"
+                  name="feltSafeComfortable"
                   render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel className="text-base">How safe did you feel at this event? *</FormLabel>
+                    <FormItem className="space-y-2">
+                      <FormLabel className="text-base font-medium">Did you feel safe and comfortable during the event? *</FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
                           value={field.value}
-                          className="space-y-2"
+                          className="space-y-1.5"
                         >
-                          {SAFETY_OPTIONS.map((option) => (
+                          {COMFORT_OPTIONS.map((option) => (
                             <div
                               key={option.value}
-                              className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-accent cursor-pointer"
+                              className="flex items-center space-x-3 p-2.5 rounded-md border hover:bg-accent/50 cursor-pointer transition-colors"
                               onClick={() => field.onChange(option.value)}
                             >
                               <RadioGroupItem value={option.value} />
-                              <span className="text-2xl">{option.emoji}</span>
                               <Label
                                 htmlFor={option.value}
-                                className={`flex-1 cursor-pointer font-medium ${option.color}`}
+                                className="flex-1 cursor-pointer text-sm"
                               >
                                 {option.label}
                               </Label>
@@ -200,30 +211,24 @@ export function SubmitFeedbackDialog({
                   name="improvements"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>What could we improve? (Optional)</FormLabel>
+                      <FormLabel>Anything we could do better next time?</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Share your thoughts on what we could do better..."
-                          className="min-h-[100px]"
+                          placeholder="Share your thoughts..."
+                          className="min-h-[80px] resize-none"
                           {...field}
                         />
                       </FormControl>
-                      <p className="text-xs text-muted-foreground">
-                        {field.value?.length || 0} / 1000 characters
-                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="anonymous-toggle" className="text-base font-medium">
-                      Submit anonymously
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="space-y-0.5 flex-1 pr-4">
+                    <Label htmlFor="anonymous-toggle" className="text-sm font-medium">
+                      You can choose to stay anonymous — we just want your feedback.
                     </Label>
-                    <p className="text-sm text-muted-foreground">
-                      Turn off to provide contact information
-                    </p>
                   </div>
                   <FormField
                     control={form.control}
@@ -241,9 +246,9 @@ export function SubmitFeedbackDialog({
                 </div>
 
                 {!isAnonymous && (
-                  <div className="space-y-4 p-4 bg-muted rounded-lg">
+                  <div className="space-y-3 p-3 bg-muted rounded-lg">
                     <p className="text-sm font-medium">Contact Information</p>
-                    <p className="text-xs text-muted-foreground">Provide your email if you'd like us to follow up on your feedback.</p>
+                    <p className="text-xs text-muted-foreground">Please provide your email if you'd like us to follow up on your feedback.</p>
                     
                     <FormField
                       control={form.control}
@@ -275,7 +280,7 @@ export function SubmitFeedbackDialog({
                   </div>
                 )}
 
-                <div className="flex justify-end gap-3 pt-4">
+                <div className="flex justify-end gap-3 pt-2">
                   <Button
                     type="button"
                     variant="outline"
