@@ -430,7 +430,7 @@ export default function SocietyReports() {
   }
 
   return (
-    <div className="min-h-screen bg-muted">
+    <div className="min-h-screen bg-background">
       <header className="border-b bg-background">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-4">
@@ -440,7 +440,7 @@ export default function SocietyReports() {
             <img src={logo} alt="OurSafeBase" className="h-8" />
             <div>
               <h1 className="text-xl font-bold">{societyName}</h1>
-              <p className="text-sm text-muted-foreground">View and manage reported concerns</p>
+              <p className="text-sm text-muted-foreground">Manage reports</p>
             </div>
           </div>
         </div>
