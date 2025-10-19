@@ -59,7 +59,7 @@ export function FeedbackDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Feedback Details</DialogTitle>
         </DialogHeader>
@@ -145,9 +145,6 @@ export function FeedbackDetailDialog({
             </div>
           </div>
 
-          <div className="flex justify-end pt-4">
-            <Button onClick={() => onOpenChange(false)}>Close</Button>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
