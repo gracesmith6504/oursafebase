@@ -200,14 +200,14 @@ const Dashboard = () => {
         />
 
         <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-          <AlertDialogContent>
+          <AlertDialogContent className="mx-[10%] rounded-xl">
             <AlertDialogHeader>
               <AlertDialogTitle>Log out of your account?</AlertDialogTitle>
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
               <AlertDialogAction
                 onClick={handleSignOut}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 w-full"
+                className="w-full border border-input bg-background text-destructive hover:bg-accent hover:text-destructive"
               >
                 Log Out
               </AlertDialogAction>
