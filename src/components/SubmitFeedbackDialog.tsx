@@ -141,7 +141,12 @@ export function SubmitFeedbackDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] p-0">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] p-0" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+        <style>{`
+          button[aria-label="Close"] {
+            display: none !important;
+          }
+        `}</style>
         {showSuccess ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-4 px-6">
             <CheckCircle className="w-16 h-16 text-green-500" />
@@ -223,10 +228,10 @@ export function SubmitFeedbackDialog({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Anything we could do better next time?</FormLabel>
-                          <FormControl>
+                           <FormControl>
                             <Textarea
                               placeholder="Share your thoughts..."
-                              className="min-h-[80px] resize-none"
+                              className="min-h-[80px] resize-none mx-0.5"
                               {...field}
                             />
                           </FormControl>
@@ -235,31 +240,33 @@ export function SubmitFeedbackDialog({
                       )}
                     />
 
-                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg gap-3">
-                      <div className="space-y-0.5 flex-1">
-                        <Label htmlFor="anonymous-toggle" className="text-sm font-medium">
-                          Stay anonymous
-                        </Label>
-                      </div>
-                      <FormField
-                        control={form.control}
-                        name="isAnonymous"
-                        render={({ field }) => (
+                    <FormField
+                      control={form.control}
+                      name="isAnonymous"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">Submit Anonymously</FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              {field.value 
+                                ? "Your identity will not be shared" 
+                                : "Provide contact info for follow-up"}
+                            </div>
+                          </div>
                           <FormControl>
                             <Switch
-                              id="anonymous-toggle"
                               checked={field.value}
                               onCheckedChange={field.onChange}
                             />
                           </FormControl>
-                        )}
-                      />
-                    </div>
+                        </FormItem>
+                      )}
+                    />
 
                     {!isAnonymous && (
                       <div className="space-y-3 p-4 bg-muted rounded-lg">
                         <p className="text-sm font-medium">Contact Information</p>
-                        <p className="text-xs text-muted-foreground">We'll only use this to follow up on your feedback.</p>
+                        <p className="text-xs text-muted-foreground">We'll use this to follow up on your feedback.</p>
                         
                         <FormField
                           control={form.control}
@@ -295,15 +302,7 @@ export function SubmitFeedbackDialog({
               </div>
             </ScrollArea>
 
-            <div className="flex justify-end gap-3 p-6 pt-4 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
+            <div className="flex justify-center p-6 pt-4 border-t">
               <Button 
                 onClick={form.handleSubmit(onSubmit)} 
                 disabled={isSubmitting}
