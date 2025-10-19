@@ -5,6 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Plus, LogOut, User, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import CreateSocietyDialog from "@/components/CreateSocietyDialog";
@@ -28,6 +37,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -92,7 +102,7 @@ const Dashboard = () => {
                 <User className="h-4 w-4 md:mr-2" />
                 <span className="hidden md:inline">Profile</span>
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <Button variant="ghost" size="sm" onClick={() => setLogoutDialogOpen(true)}>
                 <LogOut className="h-4 w-4 md:mr-2" />
                 <span className="hidden md:inline">Sign Out</span>
               </Button>
@@ -188,6 +198,25 @@ const Dashboard = () => {
           onOpenChange={setJoinDialogOpen}
           onSuccess={fetchSocieties}
         />
+
+        <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Log out of your account?</AlertDialogTitle>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+              <AlertDialogAction
+                onClick={handleSignOut}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 w-full"
+              >
+                Log Out
+              </AlertDialogAction>
+              <AlertDialogCancel className="w-full mt-0">
+                Cancel
+              </AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </ProtectedRoute>
   );
