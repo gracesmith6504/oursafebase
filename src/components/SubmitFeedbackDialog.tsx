@@ -143,7 +143,7 @@ export function SubmitFeedbackDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] p-0" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
         <style>{`
-          button[aria-label="Close"] {
+          [data-radix-dialog-content] button.absolute.right-4.top-4 {
             display: none !important;
           }
         `}</style>
