@@ -200,7 +200,7 @@ const Dashboard = () => {
         />
 
         <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-          <AlertDialogContent className="mx-[10%] rounded-xl">
+          <AlertDialogContent className="max-w-[80%] rounded-xl">
             <AlertDialogHeader>
               <AlertDialogTitle>Log out of your account?</AlertDialogTitle>
             </AlertDialogHeader>
