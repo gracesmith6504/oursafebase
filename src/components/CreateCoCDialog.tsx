@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
@@ -26,10 +27,16 @@ export const CreateCoCDialog = ({
   societyId,
   onSuccess,
 }: CreateCoCDialogProps) => {
+  const [name, setName] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleCreate = async () => {
+    if (!name.trim()) {
+      toast.error("Please enter a template name");
+      return;
+    }
+
     if (!content.trim()) {
       toast.error("Please enter code of conduct content");
       return;
@@ -55,6 +62,7 @@ export const CreateCoCDialog = ({
       .insert({
         society_id: societyId,
         event_id: null,
+        name: name.trim(),
         content: content.trim(),
         version: nextVersion,
         is_active: false,
@@ -68,6 +76,7 @@ export const CreateCoCDialog = ({
     }
 
     toast.success("Code of Conduct created successfully");
+    setName("");
     setContent("");
     onOpenChange(false);
     onSuccess();
@@ -84,6 +93,16 @@ export const CreateCoCDialog = ({
         </DialogHeader>
 
         <div className="space-y-4">
+          <div>
+            <Label htmlFor="name">Template Name</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Standard Event CoC, Large Event CoC"
+              maxLength={100}
+            />
+          </div>
           <div>
             <Label htmlFor="content">Code of Conduct Content</Label>
             <Textarea

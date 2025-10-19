@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
@@ -17,6 +18,7 @@ interface CodeOfConduct {
   id: string;
   content: string;
   version: number;
+  name?: string;
 }
 
 interface EditCoCDialogProps {
@@ -32,14 +34,21 @@ export const EditCoCDialog = ({
   coc,
   onSuccess,
 }: EditCoCDialogProps) => {
+  const [name, setName] = useState(coc.name || "");
   const [content, setContent] = useState(coc.content);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setName(coc.name || "");
     setContent(coc.content);
   }, [coc]);
 
   const handleUpdate = async () => {
+    if (!name.trim()) {
+      toast.error("Please enter a template name");
+      return;
+    }
+
     if (!content.trim()) {
       toast.error("Please enter code of conduct content");
       return;
@@ -49,7 +58,10 @@ export const EditCoCDialog = ({
 
     const { error } = await supabase
       .from("code_of_conduct")
-      .update({ content: content.trim() })
+      .update({ 
+        name: name.trim(),
+        content: content.trim() 
+      })
       .eq("id", coc.id);
 
     setLoading(false);
@@ -75,6 +87,16 @@ export const EditCoCDialog = ({
         </DialogHeader>
 
         <div className="space-y-4">
+          <div>
+            <Label htmlFor="name">Template Name</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Standard Event CoC, Large Event CoC"
+              maxLength={100}
+            />
+          </div>
           <div>
             <Label htmlFor="content">Code of Conduct Content</Label>
             <Textarea

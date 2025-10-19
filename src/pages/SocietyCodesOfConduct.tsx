@@ -34,6 +34,7 @@ interface CodeOfConduct {
   version: number;
   is_active: boolean;
   created_at: string;
+  name?: string;
 }
 
 const SocietyCodesOfConduct = () => {
@@ -229,7 +230,7 @@ const SocietyCodesOfConduct = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
                           <CardTitle className="text-lg">
-                            Template v{coc.version}
+                            {coc.name || `Template v${coc.version}`}
                           </CardTitle>
                           {coc.is_active && (
                             <Badge variant="default">Active</Badge>
