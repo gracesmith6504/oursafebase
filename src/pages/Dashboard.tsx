@@ -172,9 +172,9 @@ const Dashboard = () => {
                           {membership.role === "committee" ? "Committee" : "Attendee"}
                         </Badge>
                       </div>
-                <CardDescription className="break-words line-clamp-3">
-                  {membership.society.description || "No description"}
-                </CardDescription>
+                      <CardDescription>
+                        {membership.society.description || "No description"}
+                      </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <Button className="w-full">
