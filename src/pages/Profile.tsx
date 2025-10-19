@@ -252,16 +252,18 @@ const Profile = () => {
                   </Avatar>
                   <div className="flex-1">
                     <Label htmlFor="avatar" className="cursor-pointer">
-                      <div className="flex items-center gap-2">
-                        <Button type="button" variant="outline" size="sm" asChild>
-                          <span>
-                            <Upload className="mr-2 h-4 w-4" />
-                            Upload Photo
-                          </span>
-                        </Button>
-                        <span className="text-sm text-muted-foreground">
+                      <div className="space-y-1">
+                        <div>
+                          <Button type="button" variant="outline" size="sm" asChild>
+                            <span>
+                              <Upload className="mr-2 h-4 w-4" />
+                              Upload Photo
+                            </span>
+                          </Button>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
                           Max 2MB
-                        </span>
+                        </p>
                       </div>
                     </Label>
                     <Input
