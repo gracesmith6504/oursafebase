@@ -79,7 +79,15 @@ const SocietyCodesOfConduct = () => {
       .order("created_at", { ascending: false });
 
     if (!cocsError && cocsData) {
-      setCocs(cocsData);
+      // Sort to put active CoC at the top, then by created_at descending
+      const sortedCocs = cocsData.sort((a, b) => {
+        // Active CoC always comes first
+        if (a.is_active && !b.is_active) return -1;
+        if (!a.is_active && b.is_active) return 1;
+        // If both active or both inactive, maintain created_at order
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      setCocs(sortedCocs);
     }
 
     setLoading(false);
