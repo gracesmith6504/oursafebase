@@ -21,11 +21,32 @@ const CommitteeOnboarding = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [checkingProfile, setCheckingProfile] = useState(true);
 
   useEffect(() => {
-    if (!user || !inviteCode) {
-      navigate("/dashboard");
-    }
+    const checkProfile = async () => {
+      if (!user || !inviteCode) {
+        navigate("/dashboard");
+        return;
+      }
+
+      // Check if user already has phone number
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('phone_number, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profile?.phone_number) {
+        // User already has phone number, skip to joining society
+        navigate(`/invite/${inviteCode}`);
+      } else {
+        // User needs to complete onboarding
+        setCheckingProfile(false);
+      }
+    };
+
+    checkProfile();
   }, [user, inviteCode, navigate]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,6 +120,14 @@ const CommitteeOnboarding = () => {
   const getInitials = () => {
     return user?.user_metadata?.display_name?.charAt(0).toUpperCase() || "?";
   };
+
+  if (checkingProfile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted p-4">
