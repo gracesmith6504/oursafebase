@@ -12,7 +12,7 @@ import logo from "@/assets/logo.png";
 import { Upload } from "lucide-react";
 
 const CommitteeOnboarding = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const inviteCode = searchParams.get("invite");
@@ -25,12 +25,14 @@ const CommitteeOnboarding = () => {
 
   useEffect(() => {
     const checkProfile = async () => {
+      // Wait for auth state to resolve to avoid redirecting prematurely
+      if (authLoading) return;
+
       if (!user || !inviteCode) {
         navigate("/dashboard");
         return;
       }
 
-      // Check if user already has phone number
       const { data: profile } = await supabase
         .from('profiles')
         .select('phone_number, avatar_url')
@@ -38,16 +40,14 @@ const CommitteeOnboarding = () => {
         .maybeSingle();
 
       if (profile?.phone_number) {
-        // User already has phone number, skip to joining society
         navigate(`/invite/${inviteCode}`);
       } else {
-        // User needs to complete onboarding
         setCheckingProfile(false);
       }
     };
 
     checkProfile();
-  }, [user, inviteCode, navigate]);
+  }, [user, inviteCode, navigate, authLoading]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
