@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Copy, CheckCircle2 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const reportSchema = z.object({
   concernType: z.enum(["harassment", "safety", "code_violation", "other"], {
@@ -157,145 +158,154 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Report a Concern</DialogTitle>
-          <DialogDescription>
-            Share any safety concerns or issues. Your report will be reviewed by the committee.
-          </DialogDescription>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="concernType"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Type of Concern</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] p-0">
+        <div className="p-6 pb-4">
+          <DialogHeader>
+            <DialogTitle>Report a Concern</DialogTitle>
+            <DialogDescription>
+              Share any safety concerns or issues. Your report will be reviewed by the committee.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
+        <ScrollArea className="max-h-[calc(90vh-180px)] px-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-4">
+              <FormField
+                control={form.control}
+                name="concernType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type of Concern</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="harassment">Harassment</SelectItem>
+                        <SelectItem value="safety">Safety Issue</SelectItem>
+                        <SelectItem value="code_violation">Code of Conduct Violation</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
+                      <Textarea
+                        placeholder="Please describe your concern in detail..."
+                        className="min-h-[100px]"
+                        {...field}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="harassment">Harassment</SelectItem>
-                      <SelectItem value="safety">Safety Issue</SelectItem>
-                      <SelectItem value="code_violation">Code of Conduct Violation</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Please describe your concern in detail..."
-                      className="min-h-[100px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="isAnonymous"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Submit Anonymously</FormLabel>
-                    <div className="text-sm text-muted-foreground">
-                      {field.value 
-                        ? "Your identity will not be shared" 
-                        : "Provide contact info for follow-up"}
+              <FormField
+                control={form.control}
+                name="isAnonymous"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Submit Anonymously</FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        {field.value 
+                          ? "Your identity will not be shared" 
+                          : "Provide contact info for follow-up"}
+                      </div>
                     </div>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {!isAnonymous && (
+                <div className="space-y-4 p-4 bg-muted rounded-lg">
+                  <p className="text-sm font-medium">Contact Information</p>
+                  <p className="text-xs text-muted-foreground">Provide at least an email or phone number so we can follow up with you.</p>
+                  
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email (optional)</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="your.email@example.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone (optional)</FormLabel>
+                        <FormControl>
+                          <Input type="tel" placeholder="+353 12 345 6789" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               )}
-            />
+            </form>
+          </Form>
+        </ScrollArea>
 
-            {!isAnonymous && (
-              <div className="space-y-4 p-4 bg-muted rounded-lg">
-                <p className="text-sm font-medium">Contact Information</p>
-                <p className="text-xs text-muted-foreground">Provide at least an email or phone number so we can follow up with you.</p>
-                
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Your name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email (optional)</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="your.email@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone (optional)</FormLabel>
-                      <FormControl>
-                        <Input type="tel" placeholder="+353 12 345 6789" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="flex-1"
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" className="flex-1" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit Report"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <div className="flex gap-3 p-6 pt-4 border-t">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={form.handleSubmit(onSubmit)} 
+            className="flex-1" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Submitting..." : "Submit Report"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
