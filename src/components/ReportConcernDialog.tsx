@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Copy, CheckCircle2 } from "lucide-react";
+import { Copy, CheckCircle2, ArrowLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const reportSchema = z.object({
@@ -158,19 +158,28 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] p-0">
-        <div className="p-6 pb-4">
-          <DialogHeader>
-            <DialogTitle>Report a Concern</DialogTitle>
-            <DialogDescription>
-              Share any safety concerns or issues. Your report will be reviewed by the committee.
-            </DialogDescription>
-          </DialogHeader>
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] p-0 [&>button[aria-label='Close']]:hidden">
+        <div className="flex items-center justify-between p-6 pb-4 border-b">
+          <h2 className="text-2xl font-bold">Report a Concern</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+            className="h-8 w-8"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
         </div>
 
         <ScrollArea className="max-h-[calc(90vh-180px)] px-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-4">
+          <div className="space-y-4 pb-4">
+            <p className="text-sm text-muted-foreground">
+              Share any safety concerns or issues. Your report will be reviewed by the committee.
+            </p>
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="concernType"
@@ -284,23 +293,14 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
                   />
                 </div>
               )}
-            </form>
-          </Form>
+              </form>
+            </Form>
+          </div>
         </ScrollArea>
 
-        <div className="flex gap-3 p-6 pt-4 border-t">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="flex-1"
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
+        <div className="flex justify-center p-6 pt-4 border-t">
           <Button 
             onClick={form.handleSubmit(onSubmit)} 
-            className="flex-1" 
             disabled={isSubmitting}
           >
             {isSubmitting ? "Submitting..." : "Submit Report"}
