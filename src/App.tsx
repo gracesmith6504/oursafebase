@@ -38,6 +38,7 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/onboarding" element={<CommitteeOnboarding />} />
           <Route path="/invite/:code" element={<InviteJoin />} />
+          <Route path="/invite/:type/:code" element={<InviteJoin />} />
           <Route path="/event/:eventId" element={<EventSafetyPage />} />
           <Route path="/society/:slug" element={<SocietyAttendee />} />
           <Route path="/society/:slug/dashboard" element={<SocietyDashboard />} />

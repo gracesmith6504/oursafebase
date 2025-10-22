@@ -17,6 +17,7 @@ const CommitteeOnboarding = () => {
   const [searchParams] = useSearchParams();
   const inviteCode = searchParams.get("invite");
   
+  const [displayName, setDisplayName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
@@ -42,13 +43,15 @@ const CommitteeOnboarding = () => {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('phone_number, avatar_url')
+        .select('phone_number, display_name, avatar_url')
         .eq('id', user.id)
         .maybeSingle();
 
-      if (profile?.phone_number) {
+      if (profile?.phone_number && profile?.display_name) {
         navigate(`/invite/${inviteCode}`);
       } else {
+        // Pre-fill display name from user metadata if available
+        setDisplayName(user.user_metadata?.display_name || "");
         setCheckingProfile(false);
       }
     };
@@ -71,8 +74,8 @@ const CommitteeOnboarding = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!phoneNumber) {
-      toast.error("Please provide your phone number");
+    if (!displayName || !phoneNumber) {
+      toast.error("Please provide your display name and phone number");
       return;
     }
 
@@ -105,6 +108,7 @@ const CommitteeOnboarding = () => {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
+          display_name: displayName,
           phone_number: phoneNumber,
           ...(avatarUrl && { avatar_url: avatarUrl })
         })
@@ -125,7 +129,8 @@ const CommitteeOnboarding = () => {
   };
 
   const getInitials = () => {
-    return user?.user_metadata?.display_name?.charAt(0).toUpperCase() || "?";
+    const name = displayName || user?.user_metadata?.display_name || "?";
+    return name.charAt(0).toUpperCase();
   };
 
   if (checkingProfile) {
@@ -152,6 +157,19 @@ const CommitteeOnboarding = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Display Name *</Label>
+              <Input
+                id="displayName"
+                type="text"
+                placeholder="Your full name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+
             <div className="space-y-2">
               <Label>Profile Picture</Label>
               <div className="flex items-center gap-4">

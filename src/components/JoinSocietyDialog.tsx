@@ -53,6 +53,14 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
     };
     const role = validationResult[0].role_type;
 
+    // If committee member, redirect to onboarding first
+    if (role === 'committee') {
+      setLoading(false);
+      onOpenChange(false);
+      navigate(`/onboarding?invite=${inviteCode.trim()}`);
+      return;
+    }
+
     // Check if already a member
     const { data: existing } = await supabase
       .from("society_members")
