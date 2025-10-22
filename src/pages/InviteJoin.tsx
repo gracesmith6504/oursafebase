@@ -37,9 +37,23 @@ const InviteJoin = () => {
 
     const role = validationResult[0].role_type;
 
-    // If committee member, redirect to onboarding first
+    // If committee member, check if profile is complete
     if (role === 'committee') {
-      navigate(`/onboarding?invite=${code}`);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('phone_number, display_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const needsOnboarding = !profile || !profile.phone_number || !profile.display_name;
+
+      if (needsOnboarding) {
+        navigate(`/onboarding?invite=${code}`);
+        return;
+      }
+
+      // Profile complete - proceed to join
+      joinSociety();
       return;
     }
 
