@@ -23,6 +23,7 @@ const CommitteeOnboarding = () => {
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [checkingProfile, setCheckingProfile] = useState(true);
+  const [societyName, setSocietyName] = useState<string>("");
 
   useEffect(() => {
     const checkProfile = async () => {
@@ -39,6 +40,14 @@ const CommitteeOnboarding = () => {
       if (!inviteCode) {
         navigate("/dashboard");
         return;
+      }
+
+      // Fetch society name from invite code
+      const { data: validationResult } = await supabase
+        .rpc("validate_invite_code", { invite_code: inviteCode });
+      
+      if (validationResult && validationResult.length > 0) {
+        setSocietyName(validationResult[0].society_name);
       }
 
       const { data: profile } = await supabase
@@ -149,39 +158,24 @@ const CommitteeOnboarding = () => {
             <img src={logo} alt="OurSafeBase" className="h-16" />
           </div>
           <CardTitle className="text-2xl">Welcome to OurSafeBase</CardTitle>
-          <CardDescription className="text-left mt-4">
-            As a committee member, please provide your contact information. 
-            These details will be visible to attendees in the society and 
-            should be your primary phone number during events.
+          <CardDescription className="text-center mt-4">
+            Please add your contact info and profile picture. These will be visible to attendees of {societyName || "the society"}.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="displayName">Display Name *</Label>
-              <Input
-                id="displayName"
-                type="text"
-                placeholder="Your full name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                disabled={loading}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Profile Picture</Label>
-              <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20">
+              <Label className="text-center block">Profile Picture</Label>
+              <div className="flex flex-col items-center gap-4">
+                <Avatar className="h-24 w-24 sm:h-20 sm:w-20">
                   <AvatarImage src={avatarPreview} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-3xl sm:text-2xl">
                     {getInitials()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
+                <div className="w-full text-center">
                   <Label htmlFor="avatar" className="cursor-pointer">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    <div className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                       <Upload className="h-4 w-4" />
                       {avatarFile ? avatarFile.name : "Upload photo"}
                     </div>
@@ -198,6 +192,19 @@ const CommitteeOnboarding = () => {
                   </p>
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Display Name *</Label>
+              <Input
+                id="displayName"
+                type="text"
+                placeholder="Your full name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                disabled={loading}
+                required
+              />
             </div>
 
             <div className="space-y-2">

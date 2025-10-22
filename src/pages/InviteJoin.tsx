@@ -111,8 +111,31 @@ const InviteJoin = () => {
       });
 
     if (memberError) {
+      console.error("Member insert error:", memberError);
+      
+      // Check if user was actually added despite error
+      const { data: checkMember } = await supabase
+        .from("society_members")
+        .select("id, role")
+        .eq("society_id", society.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      if (checkMember) {
+        // User was added successfully, proceed with success message
+        toast.success(role === 'committee'
+          ? `Welcome to ${society.name} committee!`
+          : `Welcome to ${society.name}! You can now view events.`);
+        
+        const destination = role === 'committee' 
+          ? `/society/${society.slug}/dashboard` 
+          : '/dashboard';
+        navigate(destination);
+        return;
+      }
+      
+      // Actually failed
       toast.error("Failed to join society");
-      console.error(memberError);
       navigate("/dashboard");
       return;
     }
