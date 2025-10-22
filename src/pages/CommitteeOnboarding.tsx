@@ -28,7 +28,14 @@ const CommitteeOnboarding = () => {
       // Wait for auth state to resolve to avoid redirecting prematurely
       if (authLoading) return;
 
-      if (!user || !inviteCode) {
+      // Redirect to auth if no user
+      if (!user) {
+        navigate(`/auth?invite=${inviteCode}`);
+        return;
+      }
+
+      // Redirect to dashboard if no invite code
+      if (!inviteCode) {
         navigate("/dashboard");
         return;
       }

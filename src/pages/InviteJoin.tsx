@@ -11,8 +11,6 @@ const InviteJoin = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [processing, setProcessing] = useState(true);
-  const [redirectAttempts, setRedirectAttempts] = useState(0);
-  const MAX_REDIRECT_ATTEMPTS = 3;
 
   useEffect(() => {
     if (!authLoading) {
@@ -27,10 +25,11 @@ const InviteJoin = () => {
   const checkOnboardingStatus = async () => {
     if (!code || !user) return;
     
-    const { data: validationResult } = await supabase
+    const { data: validationResult, error: validationError } = await supabase
       .rpc("validate_invite_code", { invite_code: code });
 
-    if (!validationResult || validationResult.length === 0) {
+    if (validationError || !validationResult || validationResult.length === 0) {
+      console.error("Invite validation failed:", validationError);
       toast.error("Invalid invite code");
       navigate("/dashboard");
       return;
@@ -38,25 +37,13 @@ const InviteJoin = () => {
 
     const role = validationResult[0].role_type;
 
+    // If committee member, redirect to onboarding first
     if (role === 'committee') {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('phone_number')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile?.phone_number) {
-        if (redirectAttempts >= MAX_REDIRECT_ATTEMPTS) {
-          toast.error("Phone number is required for committee members. Please complete your profile.");
-          navigate("/dashboard");
-          return;
-        }
-        setRedirectAttempts(prev => prev + 1);
-        navigate(`/onboarding?invite=${code}`);
-        return;
-      }
+      navigate(`/onboarding?invite=${code}`);
+      return;
     }
 
+    // For attendees, join directly
     joinSociety();
   };
 
