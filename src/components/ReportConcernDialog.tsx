@@ -144,7 +144,7 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
   if (showSuccess) {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md w-[calc(100%-2rem)]">
           <DialogHeader>
             <div className="flex items-center justify-center mb-4">
               <CheckCircle2 className="h-16 w-16 text-green-600" />
@@ -184,21 +184,21 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] p-0 [&>button[aria-label='Close']]:hidden">
-        <div className="flex items-center justify-between p-6 pb-4 border-b">
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] p-0 [&>button[aria-label='Close']]:hidden">
+        <div className="flex items-center justify-between p-4 pb-3 border-b sm:p-6 sm:pb-4">
           <h2 className="text-2xl font-bold">Report a Concern</h2>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
-            className="h-8 w-8"
+            className="h-10 w-10 sm:h-8 sm:w-8"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </div>
 
-        <ScrollArea className="max-h-[calc(90vh-180px)] px-6">
+        <ScrollArea className="max-h-[calc(85vh-200px)] px-4 sm:px-6">
           <div className="space-y-4 pb-4">
             <p className="text-sm text-muted-foreground">
               Share any safety concerns or issues. Your report will be reviewed by the committee.
@@ -324,7 +324,7 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
           </div>
         </ScrollArea>
 
-        <div className="flex justify-center p-6 pt-4 border-t">
+        <div className="flex justify-center p-4 pt-3 border-t sm:p-6 sm:pt-4">
           <Button 
             onClick={form.handleSubmit(onSubmit)} 
             disabled={isSubmitting}

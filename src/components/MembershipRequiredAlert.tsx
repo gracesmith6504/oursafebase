@@ -20,7 +20,7 @@ export function MembershipRequiredAlert({
 }: MembershipRequiredAlertProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-[425px] rounded-xl">
+      <AlertDialogContent className="sm:max-w-[425px] rounded-xl w-[calc(100%-2rem)]">
         <AlertDialogHeader className="flex flex-col items-center text-center">
           <div className="mb-4 rounded-full bg-primary/10 p-3">
             <Shield className="h-8 w-8 text-primary" />

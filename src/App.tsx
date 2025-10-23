@@ -21,6 +21,7 @@ import InviteJoin from "./pages/InviteJoin";
 import CommitteeOnboarding from "./pages/CommitteeOnboarding";
 import EventSummary from "./pages/EventSummary";
 import NotFound from "./pages/NotFound";
+import { ScrollToTop } from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
