@@ -68,14 +68,14 @@ const CONCERN_TYPE_LABELS: Record<string, string> = {
 export default function SocietyReports() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   const [societyId, setSocietyId] = useState<string | null>(null);
   const [societyName, setSocietyName] = useState("");
   const [reports, setReports] = useState<ReportWithEvent[]>([]);
   const [feedback, setFeedback] = useState<FeedbackWithEvent[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [eventFilter, setEventFilter] = useState<string>("all");
@@ -98,10 +98,21 @@ export default function SocietyReports() {
   const [showFeedbackFilters, setShowFeedbackFilters] = useState(false);
 
   useEffect(() => {
+    // If auth is still loading, wait
+    if (authLoading) return;
+    
+    // If not authenticated, redirect to login with current path
+    if (!user && !authLoading) {
+      const currentPath = `/society/${slug}/reports`;
+      navigate(`/auth?redirect=${encodeURIComponent(currentPath)}`);
+      return;
+    }
+    
+    // If authenticated and slug exists, fetch data
     if (user && slug) {
       fetchSocietyAndReports();
     }
-  }, [user, slug]);
+  }, [user, authLoading, slug, navigate]);
 
   const fetchSocietyAndReports = async () => {
     try {
@@ -156,7 +167,7 @@ export default function SocietyReports() {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setDataLoading(false);
     }
   };
 
@@ -401,7 +412,7 @@ export default function SocietyReports() {
     return bubbles;
   };
 
-  if (loading || roleLoading) {
+  if (roleLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-muted-foreground">Loading reports...</div>
