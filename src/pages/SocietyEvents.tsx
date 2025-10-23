@@ -36,6 +36,7 @@ const SocietyEvents = () => {
   const { user } = useAuth();
   const [societyId, setSocietyId] = useState<string | null>(null);
   const [societyName, setSocietyName] = useState("");
+  const [societySlug, setSocietySlug] = useState("");
   const [events, setEvents] = useState<Event[]>([]);
   const [metrics, setMetrics] = useState<Record<string, EventMetrics>>({});
   const [loading, setLoading] = useState(true);
@@ -52,7 +53,7 @@ const SocietyEvents = () => {
       // Fetch society details
       const { data: societyData, error: societyError } = await supabase
         .from("societies")
-        .select("id, name")
+        .select("id, name, slug")
         .eq("slug", slug)
         .single();
 
@@ -60,6 +61,7 @@ const SocietyEvents = () => {
       
       setSocietyId(societyData.id);
       setSocietyName(societyData.name);
+      setSocietySlug(societyData.slug);
 
       // Check membership
       const { data: { user } } = await supabase.auth.getUser();
@@ -259,7 +261,7 @@ const SocietyEvents = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => navigate(`/event/${event.id}`)}
+                          onClick={() => navigate(`/${societySlug}/${event.slug}`)}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -267,7 +269,7 @@ const SocietyEvents = () => {
                           variant="outline" 
                           size="sm"
                           onClick={() => {
-                            navigator.clipboard.writeText(`${getAppUrl()}/event/${event.id}`);
+                            navigator.clipboard.writeText(`${getAppUrl()}/${societySlug}/${event.slug}`);
                             toast.success("Link copied to clipboard");
                           }}
                         >
@@ -318,6 +320,8 @@ const SocietyEvents = () => {
             onOpenChange={setQrDialogOpen}
             eventId={selectedEvent.id}
             eventTitle={selectedEvent.title}
+            societySlug={societySlug}
+            eventSlug={selectedEvent.slug}
           />
         )}
       </div>

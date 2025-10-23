@@ -547,10 +547,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_invite_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_invite_code: { Args: never; Returns: string }
       get_society_basic_info: {
         Args: { society_id: string }
         Returns: {

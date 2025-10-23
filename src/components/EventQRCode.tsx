@@ -7,11 +7,13 @@ import { getAppUrl } from "@/lib/constants";
 interface EventQRCodeProps {
   eventId: string;
   eventTitle: string;
+  societySlug: string;
+  eventSlug: string;
   size?: number;
 }
 
-export const EventQRCode = ({ eventId, eventTitle, size = 256 }: EventQRCodeProps) => {
-  const eventUrl = `${getAppUrl()}/event/${eventId}`;
+export const EventQRCode = ({ eventId, eventTitle, societySlug, eventSlug, size = 256 }: EventQRCodeProps) => {
+  const eventUrl = `${getAppUrl()}/${societySlug}/${eventSlug}`;
 
   const downloadQRCode = () => {
     const svg = document.getElementById(`qr-${eventId}`);

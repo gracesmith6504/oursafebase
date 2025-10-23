@@ -39,6 +39,9 @@ const App = () => (
           <Route path="/onboarding" element={<CommitteeOnboarding />} />
           <Route path="/invite/:code" element={<InviteJoin />} />
           <Route path="/invite/:type/:code" element={<InviteJoin />} />
+          {/* New slug-based route for pretty URLs */}
+          <Route path="/:societySlug/:eventSlug" element={<EventSafetyPage />} />
+          {/* Keep old UUID route for backwards compatibility */}
           <Route path="/event/:eventId" element={<EventSafetyPage />} />
           <Route path="/society/:slug" element={<SocietyAttendee />} />
           <Route path="/society/:slug/dashboard" element={<SocietyDashboard />} />

@@ -52,7 +52,7 @@ interface CodeOfConduct {
 }
 
 const EventSafetyPage = () => {
-  const { eventId } = useParams();
+  const { eventId, societySlug, eventSlug } = useParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
@@ -73,27 +73,54 @@ const EventSafetyPage = () => {
   useEffect(() => {
     if (!authLoading && !user) {
       // Redirect to auth with event info for redirect after login
-      navigate(`/auth?redirect=/event/${eventId}&eventTitle=${event?.title || 'this event'}`);
+      const redirectPath = societySlug && eventSlug 
+        ? `/${societySlug}/${eventSlug}`
+        : `/event/${eventId}`;
+      navigate(`/auth?redirect=${redirectPath}&eventTitle=${event?.title || 'this event'}`);
     }
-  }, [user, authLoading, navigate, eventId, event?.title]);
+  }, [user, authLoading, navigate, eventId, societySlug, eventSlug, event?.title]);
 
   useEffect(() => {
-    if (eventId && user) {
+    if ((eventId || (societySlug && eventSlug)) && user) {
       fetchEventData();
+    }
+  }, [eventId, societySlug, eventSlug, user]);
+
+  useEffect(() => {
+    if (event) {
       trackPageView();
     }
-  }, [eventId, user]);
+  }, [event]);
 
   const fetchEventData = async () => {
     try {
-      // Fetch event
-      const { data: eventData, error: eventError } = await supabase
-        .from("events")
-        .select("*")
-        .eq("id", eventId)
-        .single();
+      // Fetch event - try slug-based query first, fall back to UUID
+      let eventData;
+      let eventError;
+      
+      if (societySlug && eventSlug) {
+        // Query by slugs (new pretty URL format)
+        const { data, error } = await supabase
+          .from("events")
+          .select("*, societies!inner(slug)")
+          .eq("slug", eventSlug)
+          .eq("societies.slug", societySlug)
+          .single();
+        eventData = data;
+        eventError = error;
+      } else if (eventId) {
+        // Query by UUID (backwards compatibility)
+        const { data, error } = await supabase
+          .from("events")
+          .select("*")
+          .eq("id", eventId)
+          .single();
+        eventData = data;
+        eventError = error;
+      }
 
       if (eventError) throw eventError;
+      if (!eventData) throw new Error("Event not found");
       setEvent(eventData);
 
       // Fetch society to get slug
@@ -111,7 +138,7 @@ const EventSafetyPage = () => {
       const { data: contactsData, error: contactsError } = await supabase
         .from("event_contacts")
         .select("id, role, contact_name, contact_phone, contact_avatar_url, display_order")
-        .eq("event_id", eventId)
+        .eq("event_id", eventData.id)
         .order("display_order");
 
       if (contactsError) {
@@ -133,7 +160,7 @@ const EventSafetyPage = () => {
       const { data: emergencyData } = await supabase
         .from("emergency_info")
         .select("*")
-        .eq("event_id", eventId)
+        .eq("event_id", eventData.id)
         .single();
 
       if (emergencyData) {
@@ -144,7 +171,7 @@ const EventSafetyPage = () => {
       let { data: cocData } = await supabase
         .from("code_of_conduct")
         .select("content")
-        .eq("event_id", eventId)
+        .eq("event_id", eventData.id)
         .eq("is_active", true)
         .maybeSingle();
 
@@ -192,7 +219,7 @@ const EventSafetyPage = () => {
     const { data: coc } = await supabase
       .from("code_of_conduct")
       .select("*")
-      .eq("event_id", eventId)
+      .eq("event_id", eventData.id)
       .eq("is_active", true)
       .maybeSingle();
 
@@ -224,9 +251,10 @@ const EventSafetyPage = () => {
   };
 
   const trackPageView = async () => {
+    if (!event?.id) return;
     try {
       await supabase.from("safety_page_views").insert({
-        event_id: eventId,
+        event_id: event.id,
         ip_address: null,
         user_agent: navigator.userAgent,
       });
@@ -248,7 +276,7 @@ const EventSafetyPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <CoCAcceptanceDialog
-          eventId={eventId!}
+          eventId={event?.id || eventId!}
           eventTitle={event?.title || "Event"}
           cocId={cocData.id}
           cocVersion={cocData.version}
@@ -467,13 +495,13 @@ const EventSafetyPage = () => {
       <ReportConcernDialog
         open={showReportDialog}
         onOpenChange={setShowReportDialog}
-        eventId={eventId!}
+        eventId={event?.id || eventId!}
       />
 
       <SubmitFeedbackDialog
         open={showFeedbackDialog}
         onOpenChange={setShowFeedbackDialog}
-        eventId={eventId!}
+        eventId={event?.id || eventId!}
         eventTitle={event?.title || ""}
         onOpenReportDialog={() => {
           setShowFeedbackDialog(false);

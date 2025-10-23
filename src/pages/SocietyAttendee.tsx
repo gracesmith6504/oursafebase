@@ -13,6 +13,7 @@ import { getEventStatus } from "@/lib/eventHelpers";
 interface Event {
   id: string;
   title: string;
+  slug: string;
   event_date: string;
   location: string | null;
   description: string | null;
@@ -22,7 +23,7 @@ const SocietyAttendee = () => {
   const { slug } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [society, setSociety] = useState<{ id: string; name: string } | null>(null);
+  const [society, setSociety] = useState<{ id: string; name: string; slug: string } | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +37,7 @@ const SocietyAttendee = () => {
     // Fetch society
     const { data: societyData, error: societyError } = await supabase
       .from("societies")
-      .select("id, name")
+      .select("id, name, slug")
       .eq("slug", slug)
       .single();
 
@@ -65,7 +66,7 @@ const SocietyAttendee = () => {
     // Fetch upcoming events
     const { data: eventsData, error: eventsError } = await supabase
       .from("events")
-      .select("id, title, event_date, location, description")
+      .select("id, title, slug, event_date, location, description")
       .eq("society_id", societyData.id)
       .gte("event_date", new Date().toISOString())
       .order("event_date", { ascending: true });
@@ -134,7 +135,7 @@ const SocietyAttendee = () => {
                       </CardHeader>
                       <CardContent>
                         <Button
-                          onClick={() => navigate(`/event/${event.id}`)}
+                          onClick={() => navigate(`/${society?.slug}/${event.slug}`)}
                           className="w-full"
                         >
                           View Safety Page →

@@ -12,6 +12,8 @@ interface EventQRCodeDialogProps {
   onOpenChange: (open: boolean) => void;
   eventId: string;
   eventTitle: string;
+  societySlug: string;
+  eventSlug: string;
 }
 
 export const EventQRCodeDialog = ({
@@ -19,6 +21,8 @@ export const EventQRCodeDialog = ({
   onOpenChange,
   eventId,
   eventTitle,
+  societySlug,
+  eventSlug,
 }: EventQRCodeDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -30,7 +34,13 @@ export const EventQRCodeDialog = ({
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-center py-4">
-          <EventQRCode eventId={eventId} eventTitle={eventTitle} size={280} />
+          <EventQRCode 
+            eventId={eventId} 
+            eventTitle={eventTitle} 
+            societySlug={societySlug}
+            eventSlug={eventSlug}
+            size={280} 
+          />
         </div>
       </DialogContent>
     </Dialog>
