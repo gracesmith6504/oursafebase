@@ -93,70 +93,72 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    console.log(`Sending emails to ${committeeEmails.length} unique committee members`);
-    console.log("Committee email addresses:", committeeEmails);
+    console.log(`Sending email to ${committeeEmails.length} unique committee members using BCC`);
+    console.log(`From: ${FROM_NAME} <${FROM_EMAIL}>`);
+    console.log(`BCC recipients: ${committeeEmails.length}`);
 
-    // Send email to all committee members with detailed logging
-    const emailResults = [];
-    
-    for (const email of committeeEmails) {
-      try {
-        const result = await resend.emails.send({
-          from: `${FROM_NAME} <${FROM_EMAIL}>`,
-          to: [email],
-          subject: `New ${concernType} Report - ${event.title}`,
-          html: `
-            <h1>New Report Submitted</h1>
-            <p>A new ${isAnonymous ? "anonymous" : ""} report has been submitted for your event.</p>
-            
-            <h2>Event Details:</h2>
-            <ul>
-              <li><strong>Event:</strong> ${event.title}</li>
-              <li><strong>Society:</strong> ${societyName}</li>
-              <li><strong>Report Type:</strong> ${concernType}</li>
-              <li><strong>Anonymous:</strong> ${isAnonymous ? "Yes" : "No"}</li>
-            </ul>
-            
-            <p>Please log in to your dashboard to review this report and take appropriate action.</p>
-            
-            <p>
-              <a href="${Deno.env.get("VITE_PUBLIC_APP_URL") || "https://oursafebase.com"}" 
-                 style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                View Report
-              </a>
-            </p>
-            
-            <p style="color: #666; font-size: 12px; margin-top: 20px;">
-              This is an automated notification from SafeBase. Please do not reply to this email.
-            </p>
-          `,
+    // Filter out the FROM_EMAIL from BCC to avoid duplicate
+    const safeBcc = committeeEmails.filter(e => e.toLowerCase() !== FROM_EMAIL.toLowerCase());
+
+    // Send a single email with BCC to all committee members (avoids rate limits)
+    try {
+      const result = await resend.emails.send({
+        from: `${FROM_NAME} <${FROM_EMAIL}>`,
+        to: [FROM_EMAIL], // Required by Resend; sends a copy to the sender
+        bcc: safeBcc,
+        subject: `New ${concernType} Report - ${event.title}`,
+        html: `
+          <h1>New Report Submitted</h1>
+          <p>A new ${isAnonymous ? "anonymous" : ""} report has been submitted for your event.</p>
+          
+          <h2>Event Details:</h2>
+          <ul>
+            <li><strong>Event:</strong> ${event.title}</li>
+            <li><strong>Society:</strong> ${societyName}</li>
+            <li><strong>Report Type:</strong> ${concernType}</li>
+            <li><strong>Anonymous:</strong> ${isAnonymous ? "Yes" : "No"}</li>
+          </ul>
+          
+          <p>Please log in to your dashboard to review this report and take appropriate action.</p>
+          
+          <p>
+            <a href="${Deno.env.get("VITE_PUBLIC_APP_URL") || "https://oursafebase.com"}" 
+               style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              View Report
+            </a>
+          </p>
+          
+          <p style="color: #666; font-size: 12px; margin-top: 20px;">
+            This is an automated notification from SafeBase. Please do not reply to this email.
+          </p>
+        `,
+      });
+
+      if (result.data) {
+        console.log(`✓ Email sent successfully (ID: ${result.data.id})`);
+        console.log(`Delivered to ${committeeEmails.length} committee members`);
+      } else {
+        console.error(`✗ Failed to send email:`, result.error);
+        return new Response(JSON.stringify({ error: "Failed to send email", details: result.error }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
-        
-        if (result.data) {
-          console.log(`✓ Sent to ${email} (ID: ${result.data.id})`);
-          emailResults.push({ email, success: true, id: result.data.id });
-        } else {
-          console.error(`✗ Failed to send to ${email}:`, result.error);
-          emailResults.push({ email, success: false, error: result.error });
-        }
-      } catch (error: any) {
-        console.error(`✗ Error sending to ${email}:`, error.message);
-        emailResults.push({ email, success: false, error: error.message });
       }
+    } catch (error: any) {
+      console.error(`✗ Error sending email:`, error.message);
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
-
-    const successCount = emailResults.filter(r => r.success).length;
-    const failureCount = emailResults.filter(r => !r.success).length;
-
-    console.log(`Email results: ${successCount} sent, ${failureCount} failed`);
     
     console.log(`Email notification completed for report ${reportId}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        emailsSent: successCount,
-        emailsFailed: failureCount,
+        emailsSent: committeeEmails.length,
+        emailsFailed: 0,
       }),
       {
         status: 200,
