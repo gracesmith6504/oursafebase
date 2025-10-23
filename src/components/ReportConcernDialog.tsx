@@ -65,7 +65,7 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
     setIsSubmitting(true);
     try {
       // User is always authenticated; is_anonymous controls contact visibility
-      const { error } = await supabase
+      const { data: insertedReport, error } = await supabase
         .from("reports")
         .insert({
           event_id: eventId,
@@ -77,9 +77,26 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
           reporter_phone: data.isAnonymous ? null : (data.phone || null),
           status: "new",
           severity: "medium",
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Send email notification to committee members
+      try {
+        await supabase.functions.invoke("send-report-notification", {
+          body: {
+            eventId: eventId,
+            reportId: insertedReport.id,
+            concernType: data.concernType,
+            isAnonymous: data.isAnonymous,
+          },
+        });
+      } catch (emailError) {
+        console.error("Failed to send email notification:", emailError);
+        // Don't fail the whole submission if email fails
+      }
 
       // Generate reference ID from timestamp (unique enough for user reference)
       const timestamp = Date.now().toString(36).toUpperCase();
