@@ -88,6 +88,13 @@ const Profile = () => {
   };
 
   const handleNotificationToggle = async (membershipId: string, enabled: boolean) => {
+    // Optimistic update: Update UI immediately
+    setSocieties(prev => prev.map(m => 
+      m.id === membershipId 
+        ? { ...m, email_notifications_enabled: enabled }
+        : m
+    ));
+
     const { error } = await supabase
       .from("society_members")
       .update({ email_notifications_enabled: enabled })
@@ -96,9 +103,10 @@ const Profile = () => {
     if (error) {
       toast.error("Failed to update notification preferences");
       console.error(error);
+      // Revert on error
+      await fetchSocieties();
     } else {
       toast.success(enabled ? "Notifications enabled" : "Notifications disabled");
-      await fetchSocieties();
     }
   };
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
