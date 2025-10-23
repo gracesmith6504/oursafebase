@@ -29,7 +29,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { eventId, reportId, concernType, isAnonymous }: ReportNotificationRequest = await req.json();
 
-    console.log("Processing report notification:", { eventId, reportId, concernType });
+    console.log("Processing report notification:", {
+      eventId,
+      reportId,
+      concernType,
+      isAnonymous,
+    });
 
     // Get event and society details
     const { data: event, error: eventError } = await supabaseClient
@@ -83,6 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log(`Sending emails to ${committeeEmails.length} committee members`);
+    console.log("Committee email addresses:", committeeEmails);
 
     // Send email to all committee members
     const emailPromises = committeeEmails.map((email) =>
@@ -124,6 +130,13 @@ const handler = async (req: Request): Promise<Response> => {
     const failureCount = results.filter((r) => r.status === "rejected").length;
 
     console.log(`Email results: ${successCount} sent, ${failureCount} failed`);
+    
+    if (failureCount > 0) {
+      const failedResults = results.filter((r) => r.status === "rejected");
+      console.error("Failed email details:", failedResults.map((r: any) => r.reason));
+    }
+    
+    console.log(`Email notification completed for report ${reportId}`);
 
     return new Response(
       JSON.stringify({

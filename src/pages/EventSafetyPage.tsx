@@ -11,6 +11,7 @@ import logo from "@/assets/logo.png";
 import { ReportConcernDialog } from "@/components/ReportConcernDialog";
 import { SubmitFeedbackDialog } from "@/components/SubmitFeedbackDialog";
 import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
+import { MembershipRequiredAlert } from "@/components/MembershipRequiredAlert";
 import { useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
 
@@ -63,10 +64,13 @@ const EventSafetyPage = () => {
   const [loading, setLoading] = useState(true);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+  const [showMembershipAlert, setShowMembershipAlert] = useState(false);
   const [cocRequired, setCoCRequired] = useState(false);
   const [cocData, setCoCData] = useState<any>(null);
   const [showCoCDialog, setShowCoCDialog] = useState(false);
   const [hasEventLevelCoC, setHasEventLevelCoC] = useState(false);
+  const [isSocietyMember, setIsSocietyMember] = useState(false);
+  const [membershipLoading, setMembershipLoading] = useState(true);
   
   const { isCommittee, loading: roleLoading } = useCommitteeRole(event?.society_id);
 
@@ -195,15 +199,34 @@ const EventSafetyPage = () => {
         setCodeOfConduct(cocData);
       }
 
-      // Check CoC acceptance after fetching event
+      // Check CoC acceptance and membership after fetching event
       if (eventData && user) {
         await checkCoCAcceptance(eventData);
+        await checkMembership();
       }
     } catch (error) {
       console.error("Error fetching event data:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const checkMembership = async () => {
+    if (!user || !event?.society_id) {
+      setIsSocietyMember(false);
+      setMembershipLoading(false);
+      return;
+    }
+
+    const { data } = await supabase
+      .from("society_members")
+      .select("id")
+      .eq("society_id", event.society_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    setIsSocietyMember(!!data);
+    setMembershipLoading(false);
   };
 
   const checkCoCAcceptance = async (eventData: Event) => {
@@ -471,7 +494,14 @@ const EventSafetyPage = () => {
             size="lg" 
             className="w-full" 
             variant="destructive"
-            onClick={() => setShowReportDialog(true)}
+            onClick={() => {
+              if (!isSocietyMember) {
+                setShowMembershipAlert(true);
+              } else {
+                setShowReportDialog(true);
+              }
+            }}
+            disabled={membershipLoading}
           >
             <FileText className="mr-2 h-5 w-5" />
             Report a Concern
@@ -507,6 +537,11 @@ const EventSafetyPage = () => {
           setShowFeedbackDialog(false);
           setShowReportDialog(true);
         }}
+      />
+
+      <MembershipRequiredAlert
+        open={showMembershipAlert}
+        onOpenChange={setShowMembershipAlert}
       />
     </div>
   );
