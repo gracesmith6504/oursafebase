@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Copy, Check } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Copy, Check, Bell } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
 import { getAppUrl } from "@/lib/constants";
@@ -23,8 +24,10 @@ interface Society {
 
 interface Member {
   id: string;
+  user_id: string;
   joined_at: string;
   role: 'committee' | 'attendee';
+  email_notifications_enabled: boolean;
   profiles: {
     id: string;
     display_name: string | null;
@@ -97,8 +100,10 @@ const SocietyMembers = () => {
       .from("society_members")
       .select(`
         id,
+        user_id,
         joined_at,
         role,
+        email_notifications_enabled,
         profiles!inner(id, display_name, avatar_url, phone_number)
       `)
       .eq("society_id", society.id)
@@ -124,6 +129,21 @@ const SocietyMembers = () => {
     setCopiedAttendee(true);
     toast.success("Attendee invite link copied!");
     setTimeout(() => setCopiedAttendee(false), 2000);
+  };
+
+  const handleNotificationToggle = async (memberId: string, enabled: boolean) => {
+    const { error } = await supabase
+      .from("society_members")
+      .update({ email_notifications_enabled: enabled })
+      .eq("id", memberId);
+
+    if (error) {
+      toast.error("Failed to update notification preferences");
+      console.error(error);
+    } else {
+      toast.success(enabled ? "Notifications enabled" : "Notifications disabled");
+      await fetchMembers();
+    }
   };
 
   if (loading) {
@@ -227,7 +247,7 @@ const SocietyMembers = () => {
                         {(member.profiles?.display_name || "?").charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <p className="font-medium">
                         {member.profiles?.display_name || "Anonymous Member"}
                       </p>
@@ -235,7 +255,16 @@ const SocietyMembers = () => {
                         Joined {new Date(member.joined_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <Badge variant="default">Committee</Badge>
+                    <Badge variant="default" className="shrink-0">Committee</Badge>
+                    {member.user_id === user?.id && (
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Bell className="h-4 w-4 text-muted-foreground" />
+                        <Switch
+                          checked={member.email_notifications_enabled}
+                          onCheckedChange={(checked) => handleNotificationToggle(member.id, checked)}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
-import { ArrowLeft, Upload, UserMinus } from "lucide-react";
+import { ArrowLeft, Upload, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import logo from "@/assets/logo.png";
@@ -24,6 +25,8 @@ interface Society {
 }
 interface SocietyMembership {
   id: string;
+  role: 'committee' | 'attendee';
+  email_notifications_enabled: boolean;
   society: Society;
 }
 const Profile = () => {
@@ -42,12 +45,21 @@ const Profile = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [societyToLeave, setSocietyToLeave] = useState<Society | null>(null);
+  const [userEmail, setUserEmail] = useState<string>("");
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchSocieties();
+      fetchUserEmail();
     }
   }, [user]);
+
+  const fetchUserEmail = async () => {
+    const { data } = await supabase.auth.getUser();
+    if (data?.user?.email) {
+      setUserEmail(data.user.email);
+    }
+  };
   const fetchProfile = async () => {
     const {
       data,
@@ -66,12 +78,27 @@ const Profile = () => {
     const {
       data,
       error
-    } = await supabase.from("society_members").select("id, society:societies(*)").eq("user_id", user?.id);
+    } = await supabase.from("society_members").select("id, role, email_notifications_enabled, society:societies(*)").eq("user_id", user?.id);
     if (error) {
       toast.error("Failed to load societies");
       console.error(error);
     } else {
       setSocieties(data as any);
+    }
+  };
+
+  const handleNotificationToggle = async (membershipId: string, enabled: boolean) => {
+    const { error } = await supabase
+      .from("society_members")
+      .update({ email_notifications_enabled: enabled })
+      .eq("id", membershipId);
+
+    if (error) {
+      toast.error("Failed to update notification preferences");
+      console.error(error);
+    } else {
+      toast.success(enabled ? "Notifications enabled" : "Notifications disabled");
+      await fetchSocieties();
     }
   };
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,6 +269,22 @@ const Profile = () => {
                 })} placeholder="Enter your name" />
                 </div>
 
+                {/* Email Address (read-only) */}
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={userEmail} 
+                    readOnly 
+                    disabled
+                    className="bg-muted"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Email cannot be changed. Contact support if needed.
+                  </p>
+                </div>
+
                 {/* Phone Number */}
                 <div className="space-y-2">
                   <Label htmlFor="phone_number">Phone Number</Label>
@@ -256,6 +299,39 @@ const Profile = () => {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Notification Preferences */}
+            {societies.some(m => m.role === 'committee') && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Notification Preferences</CardTitle>
+                  <CardDescription>
+                    Manage email notifications for societies where you're a committee member
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {societies.filter(m => m.role === 'committee').map(membership => (
+                      <div key={membership.id} className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <Bell className="h-5 w-5 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium break-words">{membership.society.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Report email notifications
+                            </p>
+                          </div>
+                        </div>
+                        <Switch
+                          checked={membership.email_notifications_enabled}
+                          onCheckedChange={(checked) => handleNotificationToggle(membership.id, checked)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Society Memberships */}
             <Card>

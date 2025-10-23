@@ -59,7 +59,27 @@ const MyEvents = () => {
   const fetchEvents = async () => {
     setLoading(true);
 
-    // Fetch ALL events (past and upcoming)
+    // First, get societies the user is a member of
+    const { data: membershipData, error: membershipError } = await supabase
+      .from("society_members")
+      .select("society_id")
+      .eq("user_id", user!.id);
+
+    if (membershipError) {
+      console.error("Error fetching memberships:", membershipError);
+      setLoading(false);
+      return;
+    }
+
+    if (!membershipData || membershipData.length === 0) {
+      setEvents([]);
+      setLoading(false);
+      return;
+    }
+
+    const societyIds = membershipData.map(m => m.society_id);
+
+    // Fetch events only from societies user is a member of
     const { data: eventsData, error } = await supabase
       .from("events")
       .select(`
@@ -69,6 +89,7 @@ const MyEvents = () => {
         location,
         society:societies!inner(id, name, slug)
       `)
+      .in("society_id", societyIds)
       .order("event_date", { ascending: false });
 
     if (error) {
@@ -230,16 +251,16 @@ const MyEvents = () => {
               <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
                 {events.length === 0
-                  ? "No upcoming events. Check back soon!"
+                  ? "No events from your societies yet."
                   : "No events match your search."}
               </p>
-              {events.length === 0 && societies.length === 0 && (
+              {events.length === 0 && (
                 <Button
                   variant="outline"
                   onClick={() => navigate("/dashboard")}
                   className="mt-4"
                 >
-                  Join a Society
+                  View Dashboard
                 </Button>
               )}
             </CardContent>

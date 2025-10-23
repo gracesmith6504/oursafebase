@@ -505,6 +505,7 @@ export type Database = {
       }
       society_members: {
         Row: {
+          email_notifications_enabled: boolean
           id: string
           joined_at: string | null
           role: Database["public"]["Enums"]["society_member_role"]
@@ -512,6 +513,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          email_notifications_enabled?: boolean
           id?: string
           joined_at?: string | null
           role?: Database["public"]["Enums"]["society_member_role"]
@@ -519,6 +521,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          email_notifications_enabled?: boolean
           id?: string
           joined_at?: string | null
           role?: Database["public"]["Enums"]["society_member_role"]
