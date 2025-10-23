@@ -24,7 +24,7 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
     const { eventId, reportId, concernType, isAnonymous }: ReportNotificationRequest = await req.json();
@@ -40,10 +40,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (eventError || !event) {
       console.error("Error fetching event:", eventError);
-      return new Response(
-        JSON.stringify({ error: "Event not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Event not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const societyName = (event.societies as any)?.name || "Your society";
@@ -57,10 +57,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (membersError || !committeeMembers || committeeMembers.length === 0) {
       console.error("Error fetching committee members:", membersError);
-      return new Response(
-        JSON.stringify({ error: "No committee members found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "No committee members found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log(`Found ${committeeMembers.length} committee members`);
@@ -76,30 +76,30 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (committeeEmails.length === 0) {
       console.error("No committee member emails found");
-      return new Response(
-        JSON.stringify({ error: "No committee member emails found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "No committee member emails found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log(`Sending emails to ${committeeEmails.length} committee members`);
 
     // Send email to all committee members
-    const emailPromises = committeeEmails.map(email =>
+    const emailPromises = committeeEmails.map((email) =>
       resend.emails.send({
-        from: "SafeBase Notifications <onboarding@resend.dev>",
+        from: "SafeBase Notifications <notifications@oursafebase.com>",
         to: [email],
         subject: `New ${concernType} Report - ${event.title}`,
         html: `
           <h1>New Report Submitted</h1>
-          <p>A new ${isAnonymous ? 'anonymous' : ''} report has been submitted for your event.</p>
+          <p>A new ${isAnonymous ? "anonymous" : ""} report has been submitted for your event.</p>
           
           <h2>Event Details:</h2>
           <ul>
             <li><strong>Event:</strong> ${event.title}</li>
             <li><strong>Society:</strong> ${societyName}</li>
             <li><strong>Report Type:</strong> ${concernType}</li>
-            <li><strong>Anonymous:</strong> ${isAnonymous ? 'Yes' : 'No'}</li>
+            <li><strong>Anonymous:</strong> ${isAnonymous ? "Yes" : "No"}</li>
           </ul>
           
           <p>Please log in to your dashboard to review this report and take appropriate action.</p>
@@ -115,36 +115,33 @@ const handler = async (req: Request): Promise<Response> => {
             This is an automated notification from SafeBase. Please do not reply to this email.
           </p>
         `,
-      })
+      }),
     );
 
     const results = await Promise.allSettled(emailPromises);
-    
-    const successCount = results.filter(r => r.status === 'fulfilled').length;
-    const failureCount = results.filter(r => r.status === 'rejected').length;
+
+    const successCount = results.filter((r) => r.status === "fulfilled").length;
+    const failureCount = results.filter((r) => r.status === "rejected").length;
 
     console.log(`Email results: ${successCount} sent, ${failureCount} failed`);
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         emailsSent: successCount,
-        emailsFailed: failureCount 
+        emailsFailed: failureCount,
       }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error: any) {
     console.error("Error in send-report-notification function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 };
 
