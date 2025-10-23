@@ -202,7 +202,7 @@ const EventSafetyPage = () => {
       // Check CoC acceptance and membership after fetching event
       if (eventData && user) {
         await checkCoCAcceptance(eventData);
-        await checkMembership();
+        await checkMembership(eventData.society_id);
       }
     } catch (error) {
       console.error("Error fetching event data:", error);
@@ -211,8 +211,8 @@ const EventSafetyPage = () => {
     }
   };
 
-  const checkMembership = async () => {
-    if (!user || !event?.society_id) {
+  const checkMembership = async (societyId: string) => {
+    if (!user || !societyId) {
       setIsSocietyMember(false);
       setMembershipLoading(false);
       return;
@@ -221,7 +221,7 @@ const EventSafetyPage = () => {
     const { data } = await supabase
       .from("society_members")
       .select("id")
-      .eq("society_id", event.society_id)
+      .eq("society_id", societyId)
       .eq("user_id", user.id)
       .maybeSingle();
 
