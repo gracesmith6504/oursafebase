@@ -87,7 +87,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send email to all committee members
     const emailPromises = committeeEmails.map((email) =>
       resend.emails.send({
-        from: "SafeBase Notifications <notifications@oursafebase.com>",
+        from: "SafeBase Notifications <info@notifications.oursafebase.com>",
         to: [email],
         subject: `New ${concernType} Report - ${event.title}`,
         html: `
