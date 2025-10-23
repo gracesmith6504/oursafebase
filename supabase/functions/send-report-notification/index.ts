@@ -4,6 +4,10 @@ import { Resend } from "https://esm.sh/resend@4.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
+// Email sender configuration with fallback to verified Resend test sender
+const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") || "onboarding@resend.dev";
+const FROM_NAME = Deno.env.get("RESEND_FROM_NAME") || "SafeBase Notifications";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -70,14 +74,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Found ${committeeMembers.length} committee members`);
 
-    // Get emails for committee members
-    const committeeEmails: string[] = [];
+    // Get emails for committee members and de-duplicate
+    const committeeEmailsSet = new Set<string>();
     for (const member of committeeMembers) {
       const { data: userData } = await supabaseClient.auth.admin.getUserById(member.user_id);
       if (userData?.user?.email) {
-        committeeEmails.push(userData.user.email);
+        committeeEmailsSet.add(userData.user.email);
       }
     }
+
+    const committeeEmails = Array.from(committeeEmailsSet);
 
     if (committeeEmails.length === 0) {
       console.error("No committee member emails found");
@@ -87,54 +93,62 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    console.log(`Sending emails to ${committeeEmails.length} committee members`);
+    console.log(`Sending emails to ${committeeEmails.length} unique committee members`);
     console.log("Committee email addresses:", committeeEmails);
 
-    // Send email to all committee members
-    const emailPromises = committeeEmails.map((email) =>
-      resend.emails.send({
-        from: "SafeBase Notifications <info@notifications.oursafebase.com>",
-        to: [email],
-        subject: `New ${concernType} Report - ${event.title}`,
-        html: `
-          <h1>New Report Submitted</h1>
-          <p>A new ${isAnonymous ? "anonymous" : ""} report has been submitted for your event.</p>
-          
-          <h2>Event Details:</h2>
-          <ul>
-            <li><strong>Event:</strong> ${event.title}</li>
-            <li><strong>Society:</strong> ${societyName}</li>
-            <li><strong>Report Type:</strong> ${concernType}</li>
-            <li><strong>Anonymous:</strong> ${isAnonymous ? "Yes" : "No"}</li>
-          </ul>
-          
-          <p>Please log in to your dashboard to review this report and take appropriate action.</p>
-          
-          <p>
-            <a href="${Deno.env.get("VITE_PUBLIC_APP_URL") || "https://oursafebase.com"}" 
-               style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              View Report
-            </a>
-          </p>
-          
-          <p style="color: #666; font-size: 12px; margin-top: 20px;">
-            This is an automated notification from SafeBase. Please do not reply to this email.
-          </p>
-        `,
-      }),
-    );
+    // Send email to all committee members with detailed logging
+    const emailResults = [];
+    
+    for (const email of committeeEmails) {
+      try {
+        const result = await resend.emails.send({
+          from: `${FROM_NAME} <${FROM_EMAIL}>`,
+          to: [email],
+          subject: `New ${concernType} Report - ${event.title}`,
+          html: `
+            <h1>New Report Submitted</h1>
+            <p>A new ${isAnonymous ? "anonymous" : ""} report has been submitted for your event.</p>
+            
+            <h2>Event Details:</h2>
+            <ul>
+              <li><strong>Event:</strong> ${event.title}</li>
+              <li><strong>Society:</strong> ${societyName}</li>
+              <li><strong>Report Type:</strong> ${concernType}</li>
+              <li><strong>Anonymous:</strong> ${isAnonymous ? "Yes" : "No"}</li>
+            </ul>
+            
+            <p>Please log in to your dashboard to review this report and take appropriate action.</p>
+            
+            <p>
+              <a href="${Deno.env.get("VITE_PUBLIC_APP_URL") || "https://oursafebase.com"}" 
+                 style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                View Report
+              </a>
+            </p>
+            
+            <p style="color: #666; font-size: 12px; margin-top: 20px;">
+              This is an automated notification from SafeBase. Please do not reply to this email.
+            </p>
+          `,
+        });
+        
+        if (result.data) {
+          console.log(`✓ Sent to ${email} (ID: ${result.data.id})`);
+          emailResults.push({ email, success: true, id: result.data.id });
+        } else {
+          console.error(`✗ Failed to send to ${email}:`, result.error);
+          emailResults.push({ email, success: false, error: result.error });
+        }
+      } catch (error: any) {
+        console.error(`✗ Error sending to ${email}:`, error.message);
+        emailResults.push({ email, success: false, error: error.message });
+      }
+    }
 
-    const results = await Promise.allSettled(emailPromises);
-
-    const successCount = results.filter((r) => r.status === "fulfilled").length;
-    const failureCount = results.filter((r) => r.status === "rejected").length;
+    const successCount = emailResults.filter(r => r.success).length;
+    const failureCount = emailResults.filter(r => !r.success).length;
 
     console.log(`Email results: ${successCount} sent, ${failureCount} failed`);
-    
-    if (failureCount > 0) {
-      const failedResults = results.filter((r) => r.status === "rejected");
-      console.error("Failed email details:", failedResults.map((r: any) => r.reason));
-    }
     
     console.log(`Email notification completed for report ${reportId}`);
 

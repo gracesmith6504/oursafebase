@@ -85,7 +85,7 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
 
       // Send email notification to committee members
       try {
-        await supabase.functions.invoke("send-report-notification", {
+        const notificationResponse = await supabase.functions.invoke("send-report-notification", {
           body: {
             eventId: eventId,
             reportId: insertedReport.id,
@@ -93,6 +93,15 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
             isAnonymous: data.isAnonymous,
           },
         });
+        
+        console.log("Email notification response:", notificationResponse);
+        
+        if (notificationResponse.data?.emailsSent > 0) {
+          toast({
+            title: "Report submitted",
+            description: "Your report was submitted and the committee has been notified.",
+          });
+        }
       } catch (emailError) {
         console.error("Failed to send email notification:", emailError);
         // Don't fail the whole submission if email fails
