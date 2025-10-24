@@ -15,6 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { FileText, Download } from "lucide-react";
 import { getFileExtension } from "@/lib/fileUtils";
+import { PDFViewer } from "@/components/PDFViewer";
 
 interface CoCAcceptanceDialogProps {
   eventId: string;
@@ -41,31 +42,23 @@ const CoCAcceptanceDialog = ({
   const [scrolledToBottom, setScrolledToBottom] = useState(false);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const handleScroll = () => {
     if (scrollRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-      // Consider "scrolled to bottom" when within 10px of bottom
-      const isBottom = scrollTop + clientHeight >= scrollHeight - 10;
+      // Consider "scrolled to bottom" when within 20px of bottom
+      const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
       setScrolledToBottom(isBottom);
     }
   };
 
   useEffect(() => {
-    // For file-based CoCs, require viewing time
+    // For file-based CoCs (non-PDF), allow immediate acceptance
     if (cocFileUrl) {
       const fileExt = getFileExtension(cocFileUrl);
       
-      // For PDFs, require minimum viewing time
-      if (fileExt === 'pdf') {
-        const timer = setTimeout(() => {
-          setScrolledToBottom(true);
-        }, 3000); // 3 seconds minimum viewing time
-        
-        return () => clearTimeout(timer);
-      } else {
-        // For images and other files, allow immediate acceptance
+      // For images and other non-PDF files, allow immediate acceptance
+      if (fileExt !== 'pdf') {
         setScrolledToBottom(true);
       }
     } else if (scrollRef.current) {
@@ -84,13 +77,23 @@ const CoCAcceptanceDialog = ({
     
     if (fileExt === 'pdf') {
       return (
-        <iframe 
-          ref={iframeRef}
-          src={`${cocFileUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH&zoom=page-width`}
-          className="w-full h-full min-h-[60vh] sm:min-h-[70vh] border-0"
-          title="Code of Conduct PDF"
-          style={{ colorScheme: 'light' }}
-        />
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto px-2 sm:px-4 py-4"
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y',
+            overscrollBehavior: 'contain',
+          }}
+        >
+          <PDFViewer
+            src={cocFileUrl}
+            onLoadSuccess={(numPages) => {
+              console.log(`Loaded PDF with ${numPages} pages`);
+            }}
+          />
+        </div>
       );
     }
     
