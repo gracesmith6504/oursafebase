@@ -308,6 +308,7 @@ const EventSafetyPage = () => {
           cocId={cocData.id}
           cocVersion={cocData.version}
           cocContent={cocData.content}
+          cocFileUrl={cocData.file_url}
           cocContentType={cocData.content_type || "text"}
           onAccepted={() => {
             setShowCoCDialog(false);
@@ -473,42 +474,20 @@ const EventSafetyPage = () => {
             </CardHeader>
             <CardContent>
               {codeOfConduct.file_url ? (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {codeOfConduct.name && (
-                    <p className="text-sm font-medium mb-2">{codeOfConduct.name}</p>
+                    <p className="text-sm font-medium">{codeOfConduct.name}</p>
                   )}
-                  
-                  {/* Inline viewer for PDFs/Images */}
-                  {codeOfConduct.file_url.toLowerCase().endsWith('.pdf') ? (
-                    <div className="w-full h-[60vh] md:h-[70vh] border rounded-md">
-                      <iframe 
-                        src={codeOfConduct.file_url} 
-                        className="w-full h-full rounded-md"
-                        title="Code of Conduct"
-                      />
-                    </div>
-                  ) : (codeOfConduct.file_url.toLowerCase().endsWith('.jpg') || 
-                        codeOfConduct.file_url.toLowerCase().endsWith('.jpeg') || 
-                        codeOfConduct.file_url.toLowerCase().endsWith('.png') || 
-                        codeOfConduct.file_url.toLowerCase().endsWith('.gif')) ? (
-                    <img 
-                      src={codeOfConduct.file_url} 
-                      alt="Code of Conduct" 
-                      className="w-full h-auto rounded-md border"
-                    />
-                  ) : (
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Click below to download and view the document.
-                    </p>
-                  )}
-                  
+                  <p className="text-sm text-muted-foreground">
+                    View the Code of Conduct document for this event.
+                  </p>
                   <Button 
                     variant="outline"
                     onClick={() => window.open(codeOfConduct.file_url, '_blank')}
                     className="w-full sm:w-auto"
                   >
                     <FileText className="mr-2 h-4 w-4" />
-                    Open in New Tab
+                    View Code of Conduct
                   </Button>
                 </div>
               ) : (
