@@ -61,7 +61,7 @@ const CoCAcceptanceDialog = ({
       if (fileExt === 'pdf') {
         const timer = setTimeout(() => {
           setScrolledToBottom(true);
-        }, 10000); // 10 seconds minimum viewing time
+        }, 3000); // 3 seconds minimum viewing time
         
         return () => clearTimeout(timer);
       } else {
@@ -153,7 +153,7 @@ const CoCAcceptanceDialog = ({
 
   return (
     <Dialog open={true} onOpenChange={() => {}}>
-      <DialogContent hideClose className="max-w-6xl w-[95vw] max-h-[95vh] flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-6xl w-[95vw] max-h-[95vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>Code of Conduct Required</DialogTitle>
           <DialogDescription>
@@ -206,11 +206,11 @@ const CoCAcceptanceDialog = ({
           )}
         </div>
 
-        <div className="border-t bg-background px-4 py-3 space-y-2">
+        <div className="border-t bg-background px-6 py-4 space-y-4">
           {!scrolledToBottom && cocFileUrl && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              Please review the full document
+              Please take a moment to review the document above
             </div>
           )}
           
@@ -220,22 +220,25 @@ const CoCAcceptanceDialog = ({
               checked={agreed}
               onCheckedChange={(checked) => setAgreed(checked as boolean)}
             />
-            <Label htmlFor="agree" className="cursor-pointer text-sm">
-              I agree to this Code of Conduct
+            <Label htmlFor="agree" className="cursor-pointer">
+              I have read and agree to this Code of Conduct
             </Label>
           </div>
 
-          {scrolledToBottom && (
-            <div className="flex justify-end">
-              <Button
-                onClick={handleAccept}
-                disabled={!agreed || loading}
-                className="w-full sm:w-auto"
-              >
-                {loading ? "Accepting..." : "Accept"}
-              </Button>
-            </div>
-          )}
+          <div className="flex justify-end">
+            <Button
+              onClick={handleAccept}
+              disabled={!agreed || !scrolledToBottom || loading}
+              className="w-full sm:w-auto min-w-[200px]"
+            >
+              {loading 
+                ? "Accepting..." 
+                : !scrolledToBottom && cocFileUrl
+                ? "Please read the full document"
+                : "Accept Code of Conduct"
+              }
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
