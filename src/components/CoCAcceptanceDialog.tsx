@@ -86,8 +86,8 @@ const CoCAcceptanceDialog = ({
       return (
         <iframe 
           ref={iframeRef}
-          src={`${cocFileUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
-          className="w-full h-full min-h-[70vh] border-0"
+          src={`${cocFileUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH&zoom=page-width`}
+          className="w-full h-full min-h-[60vh] sm:min-h-[70vh] border-0"
           title="Code of Conduct PDF"
           style={{ colorScheme: 'light' }}
         />
@@ -96,11 +96,11 @@ const CoCAcceptanceDialog = ({
     
     if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
       return (
-        <div className="w-full p-4">
+        <div className="w-full flex items-center justify-center py-2 sm:py-4">
           <img 
             src={cocFileUrl} 
             alt="Code of Conduct" 
-            className="w-full h-auto"
+            className="w-full h-auto max-w-full object-contain"
           />
         </div>
       );
@@ -108,20 +108,21 @@ const CoCAcceptanceDialog = ({
     
     // For other file types (DOC, DOCX, TXT)
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-6 space-y-4 min-h-[40vh]">
-        <FileText className="h-16 w-16 text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center py-8 sm:py-12 px-4 sm:px-6 space-y-3 sm:space-y-4 min-h-[40vh]">
+        <FileText className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
         <div className="text-center max-w-md">
-          <p className="font-medium mb-2">Code of Conduct Document</p>
-          <p className="text-sm text-muted-foreground mb-4">
-            This file type cannot be previewed in the browser. Please download it to view the Code of Conduct.
+          <p className="font-medium text-sm sm:text-base mb-2">Cannot Preview</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
+            Download to view this document
           </p>
         </div>
         <Button 
           onClick={() => window.open(cocFileUrl, '_blank')}
-          size="lg"
+          size="sm"
+          className="text-xs sm:text-sm"
         >
-          <Download className="mr-2 h-4 w-4" />
-          Download Code of Conduct ({fileExt.toUpperCase()})
+          <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+          Download ({fileExt.toUpperCase()})
         </Button>
       </div>
     );
@@ -153,14 +154,12 @@ const CoCAcceptanceDialog = ({
 
   return (
     <Dialog open={true} onOpenChange={() => {}}>
-      <DialogContent className="max-w-6xl w-[95vw] max-h-[95vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <DialogTitle>Code of Conduct Required</DialogTitle>
-          <DialogDescription>
-            Before viewing the event safety information, please read and accept
-            our Code of Conduct.
+      <DialogContent hideClose className="max-w-6xl w-[95vw] max-h-[95vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b">
+          <DialogTitle className="text-base sm:text-lg">Code of Conduct</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
+            Please review and accept to continue
           </DialogDescription>
-          <p className="text-sm font-medium pt-2">Event: {eventTitle}</p>
         </DialogHeader>
 
         <div className="flex-1 min-h-0 overflow-auto">
@@ -170,7 +169,7 @@ const CoCAcceptanceDialog = ({
             <ScrollArea
               ref={scrollRef}
               onScroll={handleScroll}
-              className="h-full px-6 py-4"
+              className="h-full px-4 sm:px-6 py-3 sm:py-4"
             >
               <div className="prose prose-sm max-w-none dark:prose-invert">
                 {cocContent?.split("\n").map((line, i) => {
@@ -206,11 +205,12 @@ const CoCAcceptanceDialog = ({
           )}
         </div>
 
-        <div className="border-t bg-background px-6 py-4 space-y-4">
+        <div className="border-t bg-background px-3 sm:px-6 py-2 sm:py-4 space-y-2 sm:space-y-3">
           {!scrolledToBottom && cocFileUrl && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              Please take a moment to review the document above
+              <span className="hidden sm:inline">Please review the document</span>
+              <span className="sm:hidden">Review document</span>
             </div>
           )}
           
@@ -219,9 +219,11 @@ const CoCAcceptanceDialog = ({
               id="agree"
               checked={agreed}
               onCheckedChange={(checked) => setAgreed(checked as boolean)}
+              className="h-4 w-4 sm:h-5 sm:w-5"
             />
-            <Label htmlFor="agree" className="cursor-pointer">
-              I have read and agree to this Code of Conduct
+            <Label htmlFor="agree" className="cursor-pointer text-xs sm:text-sm leading-tight">
+              <span className="hidden sm:inline">I have read and agree to this Code of Conduct</span>
+              <span className="sm:hidden">I agree to this Code of Conduct</span>
             </Label>
           </div>
 
@@ -229,13 +231,23 @@ const CoCAcceptanceDialog = ({
             <Button
               onClick={handleAccept}
               disabled={!agreed || !scrolledToBottom || loading}
-              className="w-full sm:w-auto min-w-[200px]"
+              className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10"
             >
               {loading 
                 ? "Accepting..." 
                 : !scrolledToBottom && cocFileUrl
-                ? "Please read the full document"
-                : "Accept Code of Conduct"
+                ? (
+                  <>
+                    <span className="hidden sm:inline">Please read the full document</span>
+                    <span className="sm:hidden">Read document</span>
+                  </>
+                )
+                : (
+                  <>
+                    <span className="hidden sm:inline">Accept Code of Conduct</span>
+                    <span className="sm:hidden">Accept</span>
+                  </>
+                )
               }
             </Button>
           </div>
