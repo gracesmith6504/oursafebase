@@ -86,12 +86,12 @@ const Dashboard = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-muted">
-        <header className="border-b bg-background">
-          <div className="container mx-auto flex items-center justify-between px-4 py-4">
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
+        <header className="bg-card/80 backdrop-blur-sm shadow-md border-b border-border/50 rounded-b-3xl sticky top-0 z-50">
+          <div className="container mx-auto flex items-center justify-between px-4 py-5">
             <div className="flex items-center gap-2 sm:gap-3">
               <img src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
-              <h1 className="text-lg md:text-xl font-bold">OurSafeBase</h1>
+              <h1 className="text-lg md:text-xl font-heading font-bold text-foreground">OurSafeBase</h1>
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
               <Button variant="ghost" size="sm" onClick={() => navigate("/my-events")}>
@@ -112,8 +112,8 @@ const Dashboard = () => {
 
         <main className="container mx-auto px-4 py-8">
           <div className="mb-8">
-            <h2 className="mb-2 text-3xl font-bold">Your Societies</h2>
-            <p className="text-muted-foreground">
+            <h2 className="mb-2 text-3xl font-heading font-bold text-foreground">Your Societies</h2>
+            <p className="text-muted-foreground text-base">
               Select a society to manage events or create a new one
             </p>
           </div>

@@ -77,6 +77,12 @@ export default {
         'md': 'var(--shadow-md)',
         'lg': 'var(--shadow-lg)',
       },
+      backgroundImage: {
+        'gradient-subtle': 'var(--gradient-subtle)',
+        'gradient-card': 'var(--gradient-card)',
+        'gradient-primary': 'var(--gradient-primary)',
+        'gradient-accent': 'var(--gradient-accent)',
+      },
       keyframes: {
         "accordion-down": {
           from: {
