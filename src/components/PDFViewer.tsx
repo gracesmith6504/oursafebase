@@ -22,7 +22,19 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
-        setPageWidth(containerRef.current.clientWidth);
+        const containerWidth = containerRef.current.clientWidth;
+        
+        // On mobile (< 640px), use a minimum width for readability
+        // On larger screens, fit to container
+        const minMobileWidth = 650;
+        
+        if (containerWidth < 640) {
+          // Mobile: use larger fixed width, allow horizontal scroll
+          setPageWidth(minMobileWidth);
+        } else {
+          // Desktop/tablet: fit to container
+          setPageWidth(containerWidth);
+        }
       }
     };
 
@@ -61,7 +73,7 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
   }
 
   return (
-    <div ref={containerRef} className="w-full">
+    <div ref={containerRef} className="w-full overflow-x-auto">
       <Document
         file={src}
         onLoadSuccess={handleLoadSuccess}
