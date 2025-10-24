@@ -32,7 +32,7 @@ const Landing = () => {
             <span className="text-primary">Made Safer Together.</span>
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed">
-            Connect welfare support, report concerns, and build trust—all in one place.
+            Connect welfare support, report concerns, and build trust, all in one place.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Button onClick={() => navigate("/auth")} size="lg" className="text-base md:text-lg rounded-xl w-full sm:w-auto">
@@ -61,7 +61,7 @@ const Landing = () => {
                 </li>
                 <li className="flex gap-3">
                   <span className="text-success">✓</span>
-                  <span>Report concerns privately and safely - your way</span>
+                  <span>Report concerns anonymously or with your contact info, safely and privately</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-success">✓</span>
@@ -69,7 +69,11 @@ const Landing = () => {
                 </li>
                 <li className="flex gap-3">
                   <span className="text-success">✓</span>
-                  <span>No account needed - just care and community</span>
+                  <span>Access all your event safety pages in one place from your personal dashboard</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-success">✓</span>
+                  <span>No account needed, just care and community</span>
                 </li>
               </ul>
               <Button onClick={scrollToAttendee} variant="outline" className="w-full mt-6 border-success/30 hover:border-success rounded-xl">
@@ -137,13 +141,26 @@ const Landing = () => {
                           <Phone className="h-3 w-3" />
                           Important Contacts
                         </p>
-                        <div className="flex gap-2 items-center">
-                          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                            <span className="text-xs font-bold text-primary">SM</span>
+                        <div className="space-y-2">
+                          <div className="flex gap-2 items-center">
+                            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                              <span className="text-xs font-bold text-primary">SM</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium">Sarah Miller</p>
+                              <p className="text-xs text-muted-foreground truncate">Sober Driver</p>
+                              <p className="text-xs text-muted-foreground">+353 87 234 5678</p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium">Sarah Miller</p>
-                            <p className="text-xs text-muted-foreground truncate">Welfare Officer</p>
+                          <div className="flex gap-2 items-center">
+                            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                              <span className="text-xs font-bold text-primary">JO</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium">James O'Brien</p>
+                              <p className="text-xs text-muted-foreground truncate">Sober Driver</p>
+                              <p className="text-xs text-muted-foreground">+353 86 912 3456</p>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -164,6 +181,10 @@ const Landing = () => {
                           <MessageSquare className="h-3 w-3" />
                           Report Concern
                         </div>
+                        <div className="bg-success/10 text-success rounded-lg py-2 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
+                          <Heart className="h-3 w-3" />
+                          Give Feedback
+                        </div>
                         <div className="bg-muted rounded-lg py-2 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
                           <Shield className="h-3 w-3" />
                           Code of Conduct
@@ -179,7 +200,7 @@ const Landing = () => {
             <div className="md:col-span-3 space-y-6">
               <h3 className="text-3xl md:text-4xl font-heading font-bold">Every Event Gets Its Own Safety Page</h3>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Attendees scan a QR code or click a link to instantly access welfare contacts, emergency info, and reporting options. No app download. No account required.
+                Attendees scan a QR code or click a link to instantly access welfare contacts, emergency info, and reporting options.
               </p>
               <ul className="space-y-3">
                 <li className="flex gap-3 items-start">
@@ -231,7 +252,7 @@ const Landing = () => {
                 </div>
                 <h4 className="text-lg font-heading font-semibold">Your Way, Your Voice</h4>
                 <p className="text-sm text-muted-foreground">
-                  Anonymous or identified—you choose how to communicate
+                  Anonymous or identified, you choose how to communicate
                 </p>
               </CardContent>
             </Card>
@@ -313,7 +334,7 @@ const Landing = () => {
               </div>
               <h4 className="text-xl font-heading font-semibold">Attendees Access Support Instantly</h4>
               <p className="text-muted-foreground">
-                Every event gets a unique link. Attendees can view contacts, find emergency info, and accept the code of conduct - no account needed.
+                Every event gets a unique link. Attendees can view contacts, find emergency info, and accept the code of conduct, no account needed. Optionally create an account to access all your events from a personal dashboard.
               </p>
             </div>
 
