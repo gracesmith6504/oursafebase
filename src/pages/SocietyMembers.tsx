@@ -250,37 +250,41 @@ const SocietyMembers = () => {
                   return (
                     <div
                       key={member.id}
-                      className="flex items-center gap-4 rounded-lg border p-4"
+                      className="rounded-lg border p-4"
                     >
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={member.profiles?.avatar_url || undefined} alt={member.profiles?.display_name || "Member"} />
-                        <AvatarFallback className="bg-primary text-primary-foreground">
-                          {(member.profiles?.display_name || "?").charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium">
-                          {member.profiles?.display_name || "Anonymous Member"}
-                          {isCurrentUser && (
-                            <span className="text-muted-foreground ml-2">(You)</span>
-                          )}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Joined {new Date(member.joined_at).toLocaleDateString()}
-                        </p>
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={member.profiles?.avatar_url || undefined} alt={member.profiles?.display_name || "Member"} />
+                          <AvatarFallback className="bg-primary text-primary-foreground">
+                            {(member.profiles?.display_name || "?").charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium">
+                            {member.profiles?.display_name || "Anonymous Member"}
+                            {isCurrentUser && (
+                              <span className="text-muted-foreground ml-2">(You)</span>
+                            )}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Joined {new Date(member.joined_at).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
-                      <Badge variant="default" className="shrink-0">Committee</Badge>
-                      <div className={`flex items-center gap-2 shrink-0 ${!isCurrentUser ? 'opacity-50' : ''}`}>
-                        <Bell className="h-4 w-4 text-muted-foreground" />
-                        <Switch
-                          checked={member.email_notifications_enabled}
-                          disabled={!isCurrentUser}
-                          onCheckedChange={(checked) => {
-                            if (isCurrentUser) {
-                              handleNotificationToggle(member.id, checked);
-                            }
-                          }}
-                        />
+                      <div className="flex items-center justify-between gap-4 mt-3">
+                        <Badge variant="default" className="shrink-0">Committee</Badge>
+                        <div className={`flex items-center gap-2 shrink-0 ${!isCurrentUser ? 'opacity-50' : ''}`}>
+                          <Bell className="h-4 w-4 text-muted-foreground" />
+                          <Switch
+                            checked={member.email_notifications_enabled}
+                            disabled={!isCurrentUser}
+                            onCheckedChange={(checked) => {
+                              if (isCurrentUser) {
+                                handleNotificationToggle(member.id, checked);
+                              }
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
                   );

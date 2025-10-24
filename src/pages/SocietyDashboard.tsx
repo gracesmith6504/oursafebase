@@ -170,17 +170,6 @@ const SocietyDashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="cursor-pointer transition-all hover:shadow-lg" onClick={() => navigate(`/society/${slug}/codes-of-conduct`)}>
-              <CardHeader>
-                <Shield className="mb-2 h-10 w-10 text-primary" />
-                <CardTitle>Codes of Conduct</CardTitle>
-                <CardDescription>Manage and create codes of conduct for your events</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button className="w-full">Manage CoCs</Button>
-              </CardContent>
-            </Card>
-
             <Card className="cursor-pointer transition-all hover:shadow-lg" onClick={() => navigate(`/society/${slug}/events`)}>
               <CardHeader>
                 <Calendar className="mb-2 h-10 w-10 text-primary" />
@@ -200,6 +189,17 @@ const SocietyDashboard = () => {
               </CardHeader>
               <CardContent>
                 <Button className="w-full">View Members</Button>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer transition-all hover:shadow-lg" onClick={() => navigate(`/society/${slug}/codes-of-conduct`)}>
+              <CardHeader>
+                <Shield className="mb-2 h-10 w-10 text-primary" />
+                <CardTitle>Codes of Conduct</CardTitle>
+                <CardDescription>Manage and create codes of conduct for your events</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full">Manage CoCs</Button>
               </CardContent>
             </Card>
           </div>
