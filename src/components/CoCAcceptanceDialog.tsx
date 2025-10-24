@@ -157,8 +157,8 @@ const CoCAcceptanceDialog = ({
 
   return (
     <Dialog open={true} onOpenChange={() => {}}>
-      <DialogContent hideClose className="max-w-6xl w-[95vw] max-h-[95vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b">
+      <DialogContent hideClose className="max-w-6xl w-[95vw] h-[85vh] sm:max-h-[95vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 sm:pb-4 border-b shrink-0">
           <DialogTitle className="text-base sm:text-lg">Code of Conduct</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
             Please review and accept to continue
@@ -208,7 +208,7 @@ const CoCAcceptanceDialog = ({
           )}
         </div>
 
-        <div className="border-t bg-background px-3 sm:px-6 py-2 sm:py-4 space-y-2 sm:space-y-3">
+        <div className="border-t bg-background px-4 sm:px-6 py-4 sm:py-4 space-y-3 sm:space-y-3 shrink-0">
           <div className="flex items-center space-x-2">
             <Checkbox
               id="agree"
