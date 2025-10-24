@@ -110,9 +110,9 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-8">
-          <div className="mb-8">
-            <h2 className="mb-2 text-3xl font-heading font-bold text-foreground">Your Societies</h2>
+        <main className="container mx-auto px-4 py-12 relative">
+          <div className="mb-10">
+            <h2 className="mb-3 text-3xl font-heading font-bold text-foreground">Your Societies</h2>
             <p className="text-muted-foreground text-base">
               Select a society to manage events or create a new one
             </p>
@@ -123,14 +123,14 @@ const Dashboard = () => {
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
             </div>
           ) : societies.length === 0 ? (
-            <Card className="mx-auto max-w-2xl">
-              <CardHeader>
-                <CardTitle>Get Started</CardTitle>
+            <Card className="mx-auto max-w-2xl bg-gradient-card">
+              <CardHeader className="space-y-2 pb-6">
+                <CardTitle className="font-heading">Get Started</CardTitle>
                 <CardDescription>
                   You're not a member of any societies yet. Create one or join with an invite code.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex flex-col gap-4 sm:flex-row">
+              <CardContent className="flex flex-col gap-4 sm:flex-row pt-2">
                 <Button onClick={() => setCreateDialogOpen(true)} className="flex-1">
                   <Plus className="mr-2 h-4 w-4" />
                   Create Society
@@ -142,7 +142,7 @@ const Dashboard = () => {
             </Card>
           ) : (
             <>
-              <div className="mb-6 flex gap-4">
+              <div className="mb-8 flex gap-4">
                 <Button onClick={() => setCreateDialogOpen(true)}>
                   <Plus className="mr-2 h-4 w-4" />
                   Create Society
@@ -156,7 +156,7 @@ const Dashboard = () => {
                 {societies.map((membership) => (
                 <Card
                     key={membership.society.id}
-                    className="cursor-pointer transition-all hover:shadow-lg overflow-hidden"
+                    className="cursor-pointer transition-all hover:shadow-lg overflow-hidden bg-gradient-card hover:scale-[1.02] active:scale-[0.99]"
                     onClick={() =>
                       navigate(
                         membership.role === "committee"
@@ -165,19 +165,19 @@ const Dashboard = () => {
                       )
                     }
                   >
-                    <CardHeader className="min-w-0">
-                      <div className="flex items-start justify-between gap-2 min-w-0">
-                        <CardTitle className="break-words min-w-0 flex-1">{membership.society.name}</CardTitle>
-                        <Badge variant={membership.role === "committee" ? "default" : "secondary"} className="shrink-0">
+                    <CardHeader className="min-w-0 pb-4">
+                      <div className="flex items-start justify-between gap-3 min-w-0">
+                        <CardTitle className="break-words min-w-0 flex-1 font-heading">{membership.society.name}</CardTitle>
+                        <Badge variant={membership.role === "committee" ? "default" : "secondary"} className="shrink-0 shadow-sm">
                           {membership.role === "committee" ? "Committee" : "Attendee"}
                         </Badge>
                       </div>
-                <CardDescription className="break-words line-clamp-3 overflow-hidden">
+                <CardDescription className="break-words line-clamp-3 overflow-hidden mt-2">
                   {membership.society.description || "No description"}
                 </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <Button className="w-full">
+                    <CardContent className="pt-0">
+                      <Button className="w-full" variant="elevated">
                         {membership.role === "committee" ? "View Dashboard" : "View Society"}
                       </Button>
                     </CardContent>

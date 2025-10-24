@@ -63,6 +63,11 @@ All colors MUST be HSL.
     --gradient-card: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--accent) / 0.1) 100%);
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(185 49% 30%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(var(--accent)) 0%, hsl(var(--secondary)) 100%);
+    
+    /* Background patterns */
+    --pattern-dots: radial-gradient(circle, hsl(var(--primary) / 0.04) 1px, transparent 1px);
+    --pattern-grid: linear-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px),
+                    linear-gradient(90deg, hsl(var(--border) / 0.3) 1px, transparent 1px);
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 176 21% 14%;
@@ -124,6 +129,41 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    background-image: var(--pattern-dots);
+    background-size: 24px 24px;
+    background-position: 0 0;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Utility classes for patterns */
+@layer utilities {
+  .bg-pattern-dots {
+    background-image: var(--pattern-dots);
+    background-size: 24px 24px;
+  }
+  
+  .bg-pattern-grid {
+    background-image: var(--pattern-grid);
+    background-size: 32px 32px;
+  }
+  
+  .bg-pattern-subtle {
+    position: relative;
+  }
+  
+  .bg-pattern-subtle::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--pattern-dots);
+    background-size: 20px 20px;
+    opacity: 0.5;
+    pointer-events: none;
   }
 }
 
@@ -134,18 +174,32 @@ All colors MUST be HSL.
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 24px;
   cursor: pointer;
   border: 2px dashed hsl(var(--input));
   background-color: hsl(var(--background));
-  padding: 1.5rem;
-  border-radius: 10px;
+  padding: 2rem;
+  border-radius: 1.5rem;
   transition: all 0.3s ease;
+  position: relative;
+}
+
+.file-upload-area::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--pattern-dots);
+  background-size: 16px 16px;
+  opacity: 0.3;
+  border-radius: 1.5rem;
+  pointer-events: none;
 }
 
 .file-upload-area:hover {
   border-color: hsl(var(--primary));
   background-color: hsl(var(--accent) / 0.1);
+  transform: translateY(-2px);
+  shadow: var(--shadow-md);
 }
 
 .file-upload-area .icon {
