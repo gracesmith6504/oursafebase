@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
-import { ArrowLeft, Upload, Bell, LogOut } from "lucide-react";
+import { ArrowLeft, Upload, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import logo from "@/assets/logo.png";
@@ -46,7 +46,6 @@ const Profile = () => {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [societyToLeave, setSocietyToLeave] = useState<Society | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   useEffect(() => {
     if (user) {
       fetchProfile();
@@ -197,12 +196,6 @@ const Profile = () => {
       toast.error("An unexpected error occurred");
     }
   };
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
-    toast.success("Signed out successfully");
-  };
-
   const getInitials = (name: string | null) => {
     if (!name) return "U";
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
@@ -222,16 +215,10 @@ const Profile = () => {
               <img src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
               <h1 className="text-lg md:text-xl font-bold">OurSafeBase</h1>
             </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-                <ArrowLeft className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Back to Dashboard</span>
-              </Button>
-              <Button variant="destructive" size="sm" onClick={() => setLogoutDialogOpen(true)}>
-                <LogOut className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Log Out</span>
-              </Button>
-            </div>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Back to Dashboard</span>
+            </Button>
           </div>
         </header>
 
@@ -402,24 +389,6 @@ const Profile = () => {
               }
             }}>
                 Leave Society
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-
-        {/* Logout Confirmation Dialog */}
-        <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Sign Out</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to sign out?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleSignOut}>
-                Sign Out
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
