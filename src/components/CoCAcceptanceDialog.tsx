@@ -71,42 +71,24 @@ const CoCAcceptanceDialog = ({
     
     if (fileExt === 'pdf') {
       return (
-        <div className="space-y-4">
-          <embed 
+        <div className="w-full h-[60vh] md:h-[70vh]">
+          <iframe 
             src={cocFileUrl} 
-            type="application/pdf" 
-            width="100%" 
-            height="500px"
-            className="rounded-md"
+            className="w-full h-full rounded-md border-0"
+            title="Code of Conduct PDF"
           />
-          <Button 
-            variant="outline" 
-            onClick={() => window.open(cocFileUrl, '_blank')}
-            className="w-full"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Download PDF
-          </Button>
         </div>
       );
     }
     
     if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
       return (
-        <div className="space-y-4">
+        <div className="w-full">
           <img 
             src={cocFileUrl} 
             alt="Code of Conduct" 
-            className="max-w-full rounded-md"
+            className="w-full h-auto rounded-md"
           />
-          <Button 
-            variant="outline" 
-            onClick={() => window.open(cocFileUrl, '_blank')}
-            className="w-full"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Download Image
-          </Button>
         </div>
       );
     }
