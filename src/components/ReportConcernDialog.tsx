@@ -13,40 +13,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Copy, CheckCircle2, ArrowLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
 const reportSchema = z.object({
   concernType: z.enum(["harassment", "safety", "code_violation", "other"], {
-    required_error: "Please select a concern type",
+    required_error: "Please select a concern type"
   }),
-  description: z.string()
-    .trim()
-    .min(1, "Please provide a description")
-    .max(1000, "Description must be less than 1000 characters"),
+  description: z.string().trim().min(1, "Please provide a description").max(1000, "Description must be less than 1000 characters"),
   isAnonymous: z.boolean(),
   name: z.string().trim().max(100).optional().or(z.literal("")),
   email: z.string().trim().email("Invalid email address").max(255).optional().or(z.literal("")),
-  phone: z.string().trim().max(20).optional().or(z.literal("")),
-}).refine(
-  data => data.isAnonymous || data.email || data.phone,
-  { 
-    message: "Please provide at least an email or phone number if not submitting anonymously",
-    path: ["email"]
-  }
-);
-
+  phone: z.string().trim().max(20).optional().or(z.literal(""))
+}).refine(data => data.isAnonymous || data.email || data.phone, {
+  message: "Please provide at least an email or phone number if not submitting anonymously",
+  path: ["email"]
+});
 type ReportFormData = z.infer<typeof reportSchema>;
-
 interface ReportConcernDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   eventId: string;
 }
-
-export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConcernDialogProps) {
+export function ReportConcernDialog({
+  open,
+  onOpenChange,
+  eventId
+}: ReportConcernDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [referenceId, setReferenceId] = useState("");
-
   const form = useForm<ReportFormData>({
     resolver: zodResolver(reportSchema),
     defaultValues: {
@@ -55,32 +48,28 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
       isAnonymous: true,
       name: "",
       email: "",
-      phone: "",
-    },
+      phone: ""
+    }
   });
-
   const isAnonymous = form.watch("isAnonymous");
-
   const onSubmit = async (data: ReportFormData) => {
     setIsSubmitting(true);
     try {
       // User is always authenticated; is_anonymous controls contact visibility
-      const { data: insertedReport, error } = await supabase
-        .from("reports")
-        .insert({
-          event_id: eventId,
-          concern_type: data.concernType,
-          description: data.description,
-          is_anonymous: data.isAnonymous,
-          reporter_name: data.isAnonymous ? null : (data.name || null),
-          reporter_email: data.isAnonymous ? null : (data.email || null),
-          reporter_phone: data.isAnonymous ? null : (data.phone || null),
-          status: "new",
-          severity: "medium",
-        })
-        .select()
-        .single();
-
+      const {
+        data: insertedReport,
+        error
+      } = await supabase.from("reports").insert({
+        event_id: eventId,
+        concern_type: data.concernType,
+        description: data.description,
+        is_anonymous: data.isAnonymous,
+        reporter_name: data.isAnonymous ? null : data.name || null,
+        reporter_email: data.isAnonymous ? null : data.email || null,
+        reporter_phone: data.isAnonymous ? null : data.phone || null,
+        status: "new",
+        severity: "medium"
+      }).select().single();
       if (error) throw error;
 
       // Send email notification to committee members
@@ -90,16 +79,14 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
             eventId: eventId,
             reportId: insertedReport.id,
             concernType: data.concernType,
-            isAnonymous: data.isAnonymous,
-          },
+            isAnonymous: data.isAnonymous
+          }
         });
-        
         console.log("Email notification response:", notificationResponse);
-        
         if (notificationResponse.data?.emailsSent > 0) {
           toast({
             title: "Report submitted",
-            description: "Your report was submitted and the committee has been notified.",
+            description: "Your report was submitted and the committee has been notified."
           });
         }
       } catch (emailError) {
@@ -119,31 +106,27 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
       toast({
         title: "Error",
         description: "Failed to submit your concern. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
   const copyReferenceId = () => {
     navigator.clipboard.writeText(referenceId);
     toast({
       title: "Copied!",
-      description: "Reference ID copied to clipboard",
+      description: "Reference ID copied to clipboard"
     });
   };
-
   const handleClose = () => {
     setShowSuccess(false);
     setReferenceId("");
     form.reset();
     onOpenChange(false);
   };
-
   if (showSuccess) {
-    return (
-      <Dialog open={open} onOpenChange={handleClose}>
+    return <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md w-[calc(100%-2rem)]">
           <DialogHeader>
             <div className="flex items-center justify-center mb-4">
@@ -161,11 +144,7 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
                 <code className="flex-1 bg-background px-3 py-2 rounded font-mono text-sm">
                   {referenceId}
                 </code>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={copyReferenceId}
-                >
+                <Button variant="outline" size="icon" onClick={copyReferenceId}>
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
@@ -178,24 +157,13 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
             </Button>
           </div>
         </DialogContent>
-      </Dialog>
-    );
+      </Dialog>;
   }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[85vh] p-0 [&>button[aria-label='Close']]:hidden">
         <div className="flex items-center justify-between p-4 pb-3 border-b sm:p-6 sm:pb-4">
           <h2 className="text-2xl font-bold">Report a Concern</h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-            className="h-10 w-10 sm:h-8 sm:w-8"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          
         </div>
 
         <ScrollArea className="max-h-[calc(85vh-200px)] px-4 sm:px-6">
@@ -206,11 +174,9 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
 
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="concernType"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="concernType" render={({
+                field
+              }) => <FormItem>
                     <FormLabel>Type of Concern</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
@@ -226,113 +192,76 @@ export function ReportConcernDialog({ open, onOpenChange, eventId }: ReportConce
                       </SelectContent>
                     </Select>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
+              <FormField control={form.control} name="description" render={({
+                field
+              }) => <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Please describe your concern in detail..."
-                        className="min-h-[100px]"
-                        {...field}
-                      />
+                      <Textarea placeholder="Please describe your concern in detail..." className="min-h-[100px]" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
 
-              <FormField
-                control={form.control}
-                name="isAnonymous"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between rounded-lg border p-4">
+              <FormField control={form.control} name="isAnonymous" render={({
+                field
+              }) => <FormItem className="flex items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Submit Anonymously</FormLabel>
                       <div className="text-sm text-muted-foreground">
-                        {field.value 
-                          ? "Your identity will not be shared" 
-                          : "Provide contact info for follow-up"}
+                        {field.value ? "Your identity will not be shared" : "Provide contact info for follow-up"}
                       </div>
                     </div>
                     <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
-                  </FormItem>
-                )}
-              />
+                  </FormItem>} />
 
-              {!isAnonymous && (
-                <div className="space-y-4 p-4 bg-muted rounded-lg">
+              {!isAnonymous && <div className="space-y-4 p-4 bg-muted rounded-lg">
                   <p className="text-sm font-medium">Contact Information</p>
                   <p className="text-xs text-muted-foreground">Provide at least an email or phone number so we can follow up with you.</p>
                   
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
+                  <FormField control={form.control} name="name" render={({
+                  field
+                }) => <FormItem>
                         <FormLabel>Name</FormLabel>
                         <FormControl>
                           <Input placeholder="Your name" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
 
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
+                  <FormField control={form.control} name="email" render={({
+                  field
+                }) => <FormItem>
                         <FormLabel>Email (optional)</FormLabel>
                         <FormControl>
                           <Input type="email" placeholder="your.email@example.com" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
 
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
+                  <FormField control={form.control} name="phone" render={({
+                  field
+                }) => <FormItem>
                         <FormLabel>Phone (optional)</FormLabel>
                         <FormControl>
                           <Input type="tel" placeholder="+353 12 345 6789" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              )}
+                      </FormItem>} />
+                </div>}
               </form>
             </Form>
           </div>
         </ScrollArea>
 
         <div className="flex justify-center p-4 pt-3 border-t sm:p-6 sm:pt-4">
-          <Button 
-            onClick={form.handleSubmit(onSubmit)} 
-            disabled={isSubmitting}
-          >
+          <Button onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting}>
             {isSubmitting ? "Submitting..." : "Submit Report"}
           </Button>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
