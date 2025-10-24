@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -61,6 +62,7 @@ export function SubmitFeedbackDialog({
 }: SubmitFeedbackDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const { user } = useAuth();
   const {
     toast
   } = useToast();
@@ -71,10 +73,16 @@ export function SubmitFeedbackDialog({
       improvements: "",
       isAnonymous: true,
       name: "",
-      email: ""
+      email: user?.email || ""
     }
   });
   const isAnonymous = form.watch("isAnonymous");
+
+  useEffect(() => {
+    if (!isAnonymous && user?.email) {
+      form.setValue("email", user.email);
+    }
+  }, [isAnonymous, user?.email, form]);
   const onSubmit = async (data: FeedbackFormData) => {
     setIsSubmitting(true);
     try {
@@ -189,7 +197,6 @@ export function SubmitFeedbackDialog({
 
                     {!isAnonymous && <div className="space-y-3 p-4 bg-muted rounded-lg">
                         <p className="text-sm font-medium">Contact Information</p>
-                        <p className="text-xs text-muted-foreground">We'll use this to follow up on your feedback.</p>
                         
                         <FormField control={form.control} name="name" render={({
                     field
@@ -204,9 +211,15 @@ export function SubmitFeedbackDialog({
                         <FormField control={form.control} name="email" render={({
                     field
                   }) => <FormItem>
-                              <FormLabel>Email *</FormLabel>
+                              <FormLabel>Email</FormLabel>
                               <FormControl>
-                                <Input type="email" placeholder="your.email@example.com" {...field} />
+                                <Input 
+                                  type="email" 
+                                  placeholder="your.email@example.com"
+                                  disabled={true}
+                                  className="bg-muted cursor-not-allowed"
+                                  {...field} 
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>} />

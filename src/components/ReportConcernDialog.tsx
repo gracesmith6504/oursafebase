@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -22,8 +23,8 @@ const reportSchema = z.object({
   name: z.string().trim().max(100).optional().or(z.literal("")),
   email: z.string().trim().email("Invalid email address").max(255).optional().or(z.literal("")),
   phone: z.string().trim().max(20).optional().or(z.literal(""))
-}).refine(data => data.isAnonymous || data.email || data.phone, {
-  message: "Please provide at least an email or phone number if not submitting anonymously",
+}).refine(data => data.isAnonymous || (data.email && data.email.length > 0), {
+  message: "Email is required when not submitting anonymously",
   path: ["email"]
 });
 type ReportFormData = z.infer<typeof reportSchema>;
@@ -40,6 +41,8 @@ export function ReportConcernDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [referenceId, setReferenceId] = useState("");
+  const { user } = useAuth();
+  
   const form = useForm<ReportFormData>({
     resolver: zodResolver(reportSchema),
     defaultValues: {
@@ -47,11 +50,17 @@ export function ReportConcernDialog({
       description: "",
       isAnonymous: true,
       name: "",
-      email: "",
+      email: user?.email || "",
       phone: ""
     }
   });
   const isAnonymous = form.watch("isAnonymous");
+
+  useEffect(() => {
+    if (!isAnonymous && user?.email) {
+      form.setValue("email", user.email);
+    }
+  }, [isAnonymous, user?.email, form]);
   const onSubmit = async (data: ReportFormData) => {
     setIsSubmitting(true);
     try {
@@ -220,7 +229,6 @@ export function ReportConcernDialog({
 
               {!isAnonymous && <div className="space-y-4 p-4 bg-muted rounded-lg">
                   <p className="text-sm font-medium">Contact Information</p>
-                  <p className="text-xs text-muted-foreground">Provide at least an email or phone number so we can follow up with you.</p>
                   
                   <FormField control={form.control} name="name" render={({
                   field
@@ -235,9 +243,15 @@ export function ReportConcernDialog({
                   <FormField control={form.control} name="email" render={({
                   field
                 }) => <FormItem>
-                        <FormLabel>Email (optional)</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="your.email@example.com" {...field} />
+                          <Input 
+                            type="email" 
+                            placeholder="your.email@example.com" 
+                            disabled={true}
+                            className="bg-muted cursor-not-allowed"
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>} />
