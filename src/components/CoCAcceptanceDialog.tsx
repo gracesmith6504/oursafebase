@@ -41,6 +41,7 @@ const CoCAcceptanceDialog = ({
   const [scrolledToBottom, setScrolledToBottom] = useState(false);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const handleScroll = () => {
     if (scrollRef.current) {
@@ -52,11 +53,23 @@ const CoCAcceptanceDialog = ({
   };
 
   useEffect(() => {
-    // Check if content is short enough to not require scrolling
-    // For files, allow scrolling to be optional
+    // For file-based CoCs, require viewing time
     if (cocFileUrl) {
-      setScrolledToBottom(true);
+      const fileExt = getFileExtension(cocFileUrl);
+      
+      // For PDFs, require minimum viewing time
+      if (fileExt === 'pdf') {
+        const timer = setTimeout(() => {
+          setScrolledToBottom(true);
+        }, 3000); // 3 seconds minimum viewing time
+        
+        return () => clearTimeout(timer);
+      } else {
+        // For images and other files, allow immediate acceptance
+        setScrolledToBottom(true);
+      }
     } else if (scrollRef.current) {
+      // For text content, check actual scroll position
       const { scrollHeight, clientHeight } = scrollRef.current;
       if (scrollHeight <= clientHeight) {
         setScrolledToBottom(true);
@@ -72,9 +85,11 @@ const CoCAcceptanceDialog = ({
     if (fileExt === 'pdf') {
       return (
         <iframe 
-          src={`${cocFileUrl}#view=FitH`}
-          className="w-full h-full min-h-[60vh] border-0"
+          ref={iframeRef}
+          src={`${cocFileUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
+          className="w-full h-full min-h-[70vh] border-0"
           title="Code of Conduct PDF"
+          style={{ colorScheme: 'light' }}
         />
       );
     }
@@ -138,7 +153,7 @@ const CoCAcceptanceDialog = ({
 
   return (
     <Dialog open={true} onOpenChange={() => {}}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-6xl w-[95vw] max-h-[95vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>Code of Conduct Required</DialogTitle>
           <DialogDescription>
@@ -192,6 +207,13 @@ const CoCAcceptanceDialog = ({
         </div>
 
         <div className="border-t bg-background px-6 py-4 space-y-4">
+          {!scrolledToBottom && cocFileUrl && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              Please take a moment to review the document above
+            </div>
+          )}
+          
           <div className="flex items-center space-x-2">
             <Checkbox
               id="agree"
@@ -206,10 +228,15 @@ const CoCAcceptanceDialog = ({
           <div className="flex justify-end">
             <Button
               onClick={handleAccept}
-              disabled={!agreed || loading}
-              className="min-w-[200px]"
+              disabled={!agreed || !scrolledToBottom || loading}
+              className="w-full sm:w-auto min-w-[200px]"
             >
-              {loading ? "Accepting..." : "Accept Code of Conduct"}
+              {loading 
+                ? "Accepting..." 
+                : !scrolledToBottom && cocFileUrl
+                ? "Please read the full document"
+                : "Accept Code of Conduct"
+              }
             </Button>
           </div>
         </div>
