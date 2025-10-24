@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, AlertCircle, BarChart3, Users, Heart, UserCheck, MessageSquare, Calendar, MessageCircle, TrendingUp, Lock, Zap, GraduationCap, Sparkles, Smartphone } from "lucide-react";
+import { Shield, AlertCircle, BarChart3, Users, Heart, UserCheck, MessageSquare, Calendar, MessageCircle, TrendingUp, Lock, Zap, GraduationCap, Sparkles, Smartphone, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
@@ -26,20 +26,20 @@ const Landing = () => {
         </header>
 
         {/* Hero Section */}
-        <section className="py-20 text-center max-w-5xl mx-auto space-y-8">
-          <h2 className="mb-6 text-5xl font-heading font-bold md:text-7xl leading-tight">
-            Feel Safe. Connect Confidently.{" "}
-            <span className="text-primary">Create Better Events Together.</span>
+        <section className="py-12 md:py-20 text-center max-w-4xl mx-auto space-y-6">
+          <h2 className="mb-4 text-3xl font-heading font-bold md:text-5xl lg:text-6xl leading-tight">
+            Student Events.{" "}
+            <span className="text-primary">Made Safer Together.</span>
           </h2>
-          <p className="mx-auto mb-10 max-w-3xl text-xl text-muted-foreground leading-relaxed">
-            OurSafeBase brings attendees and committees together to make every student event a space where everyone feels supported, heard, and valued.
+          <p className="mx-auto mb-8 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed">
+            Connect welfare support, report concerns, and build trust—all in one place.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button onClick={scrollToAttendee} size="lg" variant="secondary" className="text-lg rounded-xl">
-              Explore as an Attendee
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <Button onClick={() => navigate("/auth")} size="lg" className="text-base md:text-lg rounded-xl w-full sm:w-auto">
+              Get Started
             </Button>
-            <Button onClick={() => navigate("/auth")} size="lg" className="text-lg rounded-xl">
-              Start as a Committee
+            <Button onClick={scrollToAttendee} size="lg" variant="outline" className="text-base md:text-lg rounded-xl w-full sm:w-auto">
+              See How It Works
             </Button>
           </div>
         </section>
@@ -73,7 +73,7 @@ const Landing = () => {
                 </li>
               </ul>
               <Button onClick={scrollToAttendee} variant="outline" className="w-full mt-6 border-success/30 hover:border-success rounded-xl">
-                See How It Helps You
+                Learn More
               </Button>
             </CardContent>
           </Card>
@@ -111,99 +111,179 @@ const Landing = () => {
           </Card>
         </section>
 
-        {/* Features Showcase - For Attendees */}
-        <section id="attendee-features" className="py-20 space-y-24 max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <div className="h-16 w-16 rounded-full bg-success/10 flex items-center justify-center">
-                <Shield className="h-10 w-10 text-success" />
-              </div>
-              <h3 className="text-4xl font-heading font-bold">Safety Information, Always Within Reach</h3>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Every event has a dedicated safety page. Find welfare contacts, emergency numbers, and the code of conduct - all in one place, no login required.
-              </p>
-            </div>
-            <div className="bg-accent/20 rounded-3xl p-8 h-64 flex items-center justify-center border border-accent/30">
-              <Shield className="h-32 w-32 text-accent opacity-40" />
-            </div>
-          </div>
+        {/* Phone Mockup Section */}
+        <section className="py-20 max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-5 gap-12 items-center">
+            {/* Phone Mockup */}
+            <div className="md:col-span-2 flex justify-center">
+              <div className="relative">
+                {/* Phone Frame */}
+                <div className="relative w-[280px] h-[560px] bg-gradient-to-br from-card to-card/80 rounded-[3rem] border-8 border-foreground/10 shadow-2xl overflow-hidden">
+                  {/* Notch */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-foreground/10 rounded-b-2xl z-10"></div>
+                  
+                  {/* Screen Content */}
+                  <div className="absolute inset-4 mt-8 bg-background rounded-[2rem] overflow-hidden">
+                    <div className="p-4 space-y-3">
+                      {/* Event Header */}
+                      <div className="pb-3 border-b">
+                        <h3 className="font-bold text-sm">Summer Social</h3>
+                        <p className="text-xs text-muted-foreground">June 15, 2024 • Student Union</p>
+                      </div>
+                      
+                      {/* Welfare Contact Card */}
+                      <div className="bg-muted/50 rounded-lg p-3 border">
+                        <p className="text-xs font-semibold mb-2 flex items-center gap-1">
+                          <Phone className="h-3 w-3" />
+                          Important Contacts
+                        </p>
+                        <div className="flex gap-2 items-center">
+                          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
+                            <span className="text-xs font-bold text-primary">SM</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium">Sarah Miller</p>
+                            <p className="text-xs text-muted-foreground truncate">Welfare Officer</p>
+                          </div>
+                        </div>
+                      </div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="bg-accent/20 rounded-3xl p-8 h-64 flex items-center justify-center border border-accent/30 order-2 md:order-1">
-              <MessageSquare className="h-32 w-32 text-accent opacity-40" />
-            </div>
-            <div className="space-y-6 order-1 md:order-2">
-              <div className="h-16 w-16 rounded-full bg-success/10 flex items-center justify-center">
-                <AlertCircle className="h-10 w-10 text-success" />
-              </div>
-              <h3 className="text-4xl font-heading font-bold">Speak Up Safely, On Your Terms</h3>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Something not right? Report concerns anonymously or share your contact info for follow-up. You choose how to communicate - we make sure you're heard.
-              </p>
-            </div>
-          </div>
+                      {/* Emergency Info Card */}
+                      <div className="bg-muted/50 rounded-lg p-3 border">
+                        <p className="text-xs font-semibold mb-1 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3 text-destructive" />
+                          Emergency Info
+                        </p>
+                        <p className="text-xs text-muted-foreground">St. Mary's Hospital</p>
+                        <p className="text-xs text-muted-foreground">Emergency: 999</p>
+                      </div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <div className="h-16 w-16 rounded-full bg-success/10 flex items-center justify-center">
-                <Heart className="h-10 w-10 text-success" />
+                      {/* Action Buttons */}
+                      <div className="space-y-2 pt-2">
+                        <div className="bg-primary/10 text-primary rounded-lg py-2 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
+                          <MessageSquare className="h-3 w-3" />
+                          Report Concern
+                        </div>
+                        <div className="bg-muted rounded-lg py-2 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
+                          <Shield className="h-3 w-3" />
+                          Code of Conduct
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-4xl font-heading font-bold">Your Voice Shapes Future Events</h3>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Share what made you feel safe and what could be better. Your honest feedback helps committees create even more welcoming events.
-              </p>
             </div>
-            <div className="bg-accent/20 rounded-3xl p-8 h-64 flex items-center justify-center border border-accent/30">
-              <Heart className="h-32 w-32 text-accent opacity-40" />
+
+            {/* Content Block */}
+            <div className="md:col-span-3 space-y-6">
+              <h3 className="text-3xl md:text-4xl font-heading font-bold">Every Event Gets Its Own Safety Page</h3>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Attendees scan a QR code or click a link to instantly access welfare contacts, emergency info, and reporting options. No app download. No account required.
+              </p>
+              <ul className="space-y-3">
+                <li className="flex gap-3 items-start">
+                  <span className="text-primary font-bold">✓</span>
+                  <span className="text-muted-foreground">Instant access via link or QR code</span>
+                </li>
+                <li className="flex gap-3 items-start">
+                  <span className="text-primary font-bold">✓</span>
+                  <span className="text-muted-foreground">Works on any device</span>
+                </li>
+                <li className="flex gap-3 items-start">
+                  <span className="text-primary font-bold">✓</span>
+                  <span className="text-muted-foreground">Always up-to-date information</span>
+                </li>
+                <li className="flex gap-3 items-start">
+                  <span className="text-primary font-bold">✓</span>
+                  <span className="text-muted-foreground">Anonymous reporting available</span>
+                </li>
+              </ul>
             </div>
           </div>
         </section>
 
-        {/* Features Showcase - For Committees */}
-        <section className="py-20 space-y-24 max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="bg-accent/20 rounded-3xl p-8 h-64 flex items-center justify-center border border-accent/30 order-2 md:order-1">
-              <Calendar className="h-32 w-32 text-accent opacity-40" />
-            </div>
-            <div className="space-y-6 order-1 md:order-2">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <Calendar className="h-10 w-10 text-primary" />
-              </div>
-              <h3 className="text-4xl font-heading font-bold">Organize with Care and Confidence</h3>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Build safety pages in minutes. Assign welfare officers, add emergency contacts, and share your code of conduct. Everything your attendees need to feel secure.
-              </p>
-            </div>
+        {/* Features Grid */}
+        <section id="attendee-features" className="py-20 max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h3 className="text-4xl font-heading font-bold mb-4">Everything You Need for Safer Events</h3>
+            <p className="text-lg text-muted-foreground">Whether you're attending or organizing</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <MessageCircle className="h-10 w-10 text-primary" />
-              </div>
-              <h3 className="text-4xl font-heading font-bold">Respond with Empathy and Action</h3>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Review every concern with your team. Track status, add notes, and follow up thoughtfully. Show your community that their wellbeing matters.
-              </p>
-            </div>
-            <div className="bg-accent/20 rounded-3xl p-8 h-64 flex items-center justify-center border border-accent/30">
-              <MessageCircle className="h-32 w-32 text-accent opacity-40" />
-            </div>
-          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Attendee Features */}
+            <Card className="bg-gradient-card hover:scale-[1.02] transition-all duration-300 border-success/20">
+              <CardContent className="pt-6 text-center space-y-4">
+                <div className="h-12 w-12 mx-auto rounded-full bg-success/10 flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-success" />
+                </div>
+                <h4 className="text-lg font-heading font-semibold">Always Within Reach</h4>
+                <p className="text-sm text-muted-foreground">
+                  Welfare contacts and emergency numbers at your fingertips
+                </p>
+              </CardContent>
+            </Card>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="bg-accent/20 rounded-3xl p-8 h-64 flex items-center justify-center border border-accent/30 order-2 md:order-1">
-              <TrendingUp className="h-32 w-32 text-accent opacity-40" />
-            </div>
-            <div className="space-y-6 order-1 md:order-2">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <BarChart3 className="h-10 w-10 text-primary" />
-              </div>
-              <h3 className="text-4xl font-heading font-bold">Learn and Improve Together</h3>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                See what's working. Track safety page views, feedback trends, and code of conduct acceptance. Use insights to make each event better than the last.
-              </p>
-            </div>
+            <Card className="bg-gradient-card hover:scale-[1.02] transition-all duration-300 border-success/20">
+              <CardContent className="pt-6 text-center space-y-4">
+                <div className="h-12 w-12 mx-auto rounded-full bg-success/10 flex items-center justify-center">
+                  <AlertCircle className="h-6 w-6 text-success" />
+                </div>
+                <h4 className="text-lg font-heading font-semibold">Your Way, Your Voice</h4>
+                <p className="text-sm text-muted-foreground">
+                  Anonymous or identified—you choose how to communicate
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-card hover:scale-[1.02] transition-all duration-300 border-success/20">
+              <CardContent className="pt-6 text-center space-y-4">
+                <div className="h-12 w-12 mx-auto rounded-full bg-success/10 flex items-center justify-center">
+                  <Heart className="h-6 w-6 text-success" />
+                </div>
+                <h4 className="text-lg font-heading font-semibold">Feedback That Matters</h4>
+                <p className="text-sm text-muted-foreground">
+                  Your input helps create better experiences
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Committee Features */}
+            <Card className="bg-gradient-card hover:scale-[1.02] transition-all duration-300 border-primary/20">
+              <CardContent className="pt-6 text-center space-y-4">
+                <div className="h-12 w-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                  <Calendar className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="text-lg font-heading font-semibold">Ready in Minutes</h4>
+                <p className="text-sm text-muted-foreground">
+                  Build comprehensive safety pages for every event
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-card hover:scale-[1.02] transition-all duration-300 border-primary/20">
+              <CardContent className="pt-6 text-center space-y-4">
+                <div className="h-12 w-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                  <MessageCircle className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="text-lg font-heading font-semibold">Track & Follow Up</h4>
+                <p className="text-sm text-muted-foreground">
+                  Review concerns with care and accountability
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-card hover:scale-[1.02] transition-all duration-300 border-primary/20">
+              <CardContent className="pt-6 text-center space-y-4">
+                <div className="h-12 w-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                </div>
+                <h4 className="text-lg font-heading font-semibold">Insights That Improve</h4>
+                <p className="text-sm text-muted-foreground">
+                  See trends and make data-informed decisions
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </section>
 
@@ -309,16 +389,13 @@ const Landing = () => {
 
         {/* Final CTA */}
         <section className="py-20 text-center max-w-4xl mx-auto space-y-8">
-          <h3 className="text-5xl font-heading font-bold">Let's Build Safer Spaces Together</h3>
-          <p className="text-xl text-muted-foreground leading-relaxed">
+          <h3 className="text-4xl md:text-5xl font-heading font-bold">Let's Build Safer Spaces Together</h3>
+          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
             Whether you're heading to an event or organizing one, OurSafeBase helps create communities where everyone feels supported, respected, and heard.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Button onClick={scrollToAttendee} size="lg" variant="secondary" className="text-lg rounded-xl">
-              Join as an Attendee
-            </Button>
-            <Button onClick={() => navigate("/auth")} size="lg" className="text-lg rounded-xl">
-              Start Your Society
+          <div className="pt-4">
+            <Button onClick={() => navigate("/auth")} size="lg" className="text-lg rounded-xl w-full sm:w-auto">
+              Create Your First Safe Event
             </Button>
           </div>
         </section>
