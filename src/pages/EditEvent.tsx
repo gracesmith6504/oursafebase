@@ -876,7 +876,7 @@ const EditEvent = () => {
                         <option value="">None (optional)</option>
                         {availableCoCs.map((coc) => (
                           <option key={coc.id} value={coc.id}>
-                            Version {coc.version}{coc.is_active ? ' (Active)' : ''}
+                            {coc.name || `Version ${coc.version}`}{coc.is_active ? ' (Active)' : ''}
                           </option>
                         ))}
                       </select>

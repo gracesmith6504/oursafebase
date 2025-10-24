@@ -50,6 +50,7 @@ interface EmergencyInfo {
 
 interface CodeOfConduct {
   id?: string;
+  name?: string;
   content?: string;
   file_url?: string;
   version?: number;
@@ -177,7 +178,7 @@ const EventSafetyPage = () => {
       // Fetch code of conduct - only event-specific for display
       let { data: cocData } = await supabase
         .from("code_of_conduct")
-        .select("id, content, file_url, version")
+        .select("id, name, content, file_url, version")
         .eq("event_id", eventData.id)
         .eq("is_active", true)
         .maybeSingle();
@@ -189,7 +190,7 @@ const EventSafetyPage = () => {
       if (!cocData) {
         const { data: templateCocData } = await supabase
           .from("code_of_conduct")
-          .select("id, content, file_url, version")
+          .select("id, name, content, file_url, version")
           .eq("society_id", eventData.society_id)
           .is("event_id", null)
           .eq("is_active", true)
@@ -473,15 +474,41 @@ const EventSafetyPage = () => {
             <CardContent>
               {codeOfConduct.file_url ? (
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    The Code of Conduct for this event is available as a file.
-                  </p>
+                  {codeOfConduct.name && (
+                    <p className="text-sm font-medium mb-2">{codeOfConduct.name}</p>
+                  )}
+                  
+                  {/* Inline viewer for PDFs/Images */}
+                  {codeOfConduct.file_url.toLowerCase().endsWith('.pdf') ? (
+                    <div className="w-full h-[60vh] md:h-[70vh] border rounded-md">
+                      <iframe 
+                        src={codeOfConduct.file_url} 
+                        className="w-full h-full rounded-md"
+                        title="Code of Conduct"
+                      />
+                    </div>
+                  ) : (codeOfConduct.file_url.toLowerCase().endsWith('.jpg') || 
+                        codeOfConduct.file_url.toLowerCase().endsWith('.jpeg') || 
+                        codeOfConduct.file_url.toLowerCase().endsWith('.png') || 
+                        codeOfConduct.file_url.toLowerCase().endsWith('.gif')) ? (
+                    <img 
+                      src={codeOfConduct.file_url} 
+                      alt="Code of Conduct" 
+                      className="w-full h-auto rounded-md border"
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Click below to download and view the document.
+                    </p>
+                  )}
+                  
                   <Button 
                     variant="outline"
                     onClick={() => window.open(codeOfConduct.file_url, '_blank')}
+                    className="w-full sm:w-auto"
                   >
                     <FileText className="mr-2 h-4 w-4" />
-                    View Code of Conduct
+                    Open in New Tab
                   </Button>
                 </div>
               ) : (
