@@ -50,7 +50,13 @@ All colors MUST be HSL.
     --input: 158 26% 85%;
     --ring: 185 49% 26%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
+    
+    /* Shadows inspired by mockup */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-card: 0 2px 8px rgba(34, 94, 99, 0.08);
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 176 21% 14%;
