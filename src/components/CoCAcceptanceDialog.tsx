@@ -71,23 +71,21 @@ const CoCAcceptanceDialog = ({
     
     if (fileExt === 'pdf') {
       return (
-        <div className="w-full h-[60vh] md:h-[70vh]">
-          <iframe 
-            src={cocFileUrl} 
-            className="w-full h-full rounded-md border-0"
-            title="Code of Conduct PDF"
-          />
-        </div>
+        <iframe 
+          src={`${cocFileUrl}#view=FitH`}
+          className="w-full h-full min-h-[60vh] border-0"
+          title="Code of Conduct PDF"
+        />
       );
     }
     
-    if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
       return (
-        <div className="w-full">
+        <div className="w-full p-4">
           <img 
             src={cocFileUrl} 
             alt="Code of Conduct" 
-            className="w-full h-auto rounded-md"
+            className="w-full h-auto"
           />
         </div>
       );
@@ -95,12 +93,12 @@ const CoCAcceptanceDialog = ({
     
     // For other file types (DOC, DOCX, TXT)
     return (
-      <div className="flex flex-col items-center justify-center py-12 space-y-4">
+      <div className="flex flex-col items-center justify-center py-12 px-6 space-y-4 min-h-[40vh]">
         <FileText className="h-16 w-16 text-muted-foreground" />
-        <div className="text-center">
+        <div className="text-center max-w-md">
           <p className="font-medium mb-2">Code of Conduct Document</p>
           <p className="text-sm text-muted-foreground mb-4">
-            Please download the file to view the Code of Conduct
+            This file type cannot be previewed in the browser. Please download it to view the Code of Conduct.
           </p>
         </div>
         <Button 
@@ -140,29 +138,24 @@ const CoCAcceptanceDialog = ({
 
   return (
     <Dialog open={true} onOpenChange={() => {}}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle>Code of Conduct Required</DialogTitle>
           <DialogDescription>
             Before viewing the event safety information, please read and accept
             our Code of Conduct.
           </DialogDescription>
+          <p className="text-sm font-medium pt-2">Event: {eventTitle}</p>
         </DialogHeader>
 
-        <div className="space-y-4 flex-1 flex flex-col min-h-0">
-          <div className="space-y-1">
-            <p className="text-sm font-medium">Event: {eventTitle}</p>
-          </div>
-
+        <div className="flex-1 min-h-0 overflow-auto">
           {cocFileUrl ? (
-            <div className="flex-1 border rounded-md p-4 overflow-auto">
-              {renderFileViewer()}
-            </div>
+            renderFileViewer()
           ) : (
             <ScrollArea
               ref={scrollRef}
               onScroll={handleScroll}
-              className="flex-1 border rounded-md p-4"
+              className="h-full px-6 py-4"
             >
               <div className="prose prose-sm max-w-none dark:prose-invert">
                 {cocContent?.split("\n").map((line, i) => {
@@ -196,22 +189,25 @@ const CoCAcceptanceDialog = ({
               </div>
             </ScrollArea>
           )}
+        </div>
 
+        <div className="border-t bg-background px-6 py-4 space-y-4">
           <div className="flex items-center space-x-2">
             <Checkbox
               id="agree"
               checked={agreed}
               onCheckedChange={(checked) => setAgreed(checked as boolean)}
             />
-            <Label htmlFor="agree">
+            <Label htmlFor="agree" className="cursor-pointer">
               I have read and agree to this Code of Conduct
             </Label>
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end">
             <Button
               onClick={handleAccept}
               disabled={!agreed || loading}
+              className="min-w-[200px]"
             >
               {loading ? "Accepting..." : "Accept Code of Conduct"}
             </Button>
