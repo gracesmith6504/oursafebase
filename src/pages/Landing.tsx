@@ -20,13 +20,16 @@ const Landing = () => {
             <img src={logo} alt="OurSafeBase" className="h-12" />
             <h1 className="text-2xl font-heading font-bold text-primary">OurSafeBase</h1>
           </div>
-          <Button onClick={() => navigate("/auth")} variant="outline" className="rounded-xl">
+          <Button onClick={() => navigate("/auth")} variant="outline" className="rounded-xl text-sm md:text-base px-4 md:px-6">
             Sign In
           </Button>
         </header>
 
         {/* Hero Section */}
         <section className="py-12 md:py-20 text-center max-w-4xl mx-auto space-y-6">
+          <div className="inline-block px-4 py-1.5 bg-success/10 text-success rounded-full text-sm font-medium mb-4">
+            Free to use
+          </div>
           <h2 className="mb-4 text-3xl font-heading font-bold md:text-5xl lg:text-6xl leading-tight">
             Student Events.{" "}
             <span className="text-primary">Made Safer Together.</span>
@@ -87,7 +90,7 @@ const Landing = () => {
               <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <Users className="h-10 w-10 text-primary" />
               </div>
-              <CardTitle className="text-3xl font-heading">If You're Organizing an Event</CardTitle>
+              <CardTitle className="text-3xl font-heading">If You're Organising an Event</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <ul className="space-y-3 text-muted-foreground">
@@ -148,7 +151,7 @@ const Landing = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium">Sarah Miller</p>
-                              <p className="text-xs text-muted-foreground truncate">Sober Driver</p>
+                              <p className="text-xs text-muted-foreground truncate">Safety Officer</p>
                               <p className="text-xs text-muted-foreground">+353 87 234 5678</p>
                             </div>
                           </div>
@@ -158,7 +161,7 @@ const Landing = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium">James O'Brien</p>
-                              <p className="text-xs text-muted-foreground truncate">Sober Driver</p>
+                              <p className="text-xs text-muted-foreground truncate">Safety Officer</p>
                               <p className="text-xs text-muted-foreground">+353 86 912 3456</p>
                             </div>
                           </div>
@@ -228,7 +231,7 @@ const Landing = () => {
         <section id="attendee-features" className="py-20 max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h3 className="text-4xl font-heading font-bold mb-4">Everything You Need for Safer Events</h3>
-            <p className="text-lg text-muted-foreground">Whether you're attending or organizing</p>
+            <p className="text-lg text-muted-foreground">Whether you're attending or organising</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -324,7 +327,7 @@ const Landing = () => {
               </div>
               <h4 className="text-xl font-heading font-semibold">Committees Create Safety Infrastructure</h4>
               <p className="text-muted-foreground">
-                Organizers set up their society, create events, and build comprehensive safety pages with all the information attendees need.
+                Organisers set up their society, create events, and build comprehensive safety pages with all the information attendees need.
               </p>
             </div>
 
@@ -377,16 +380,6 @@ const Landing = () => {
 
               <Card className="bg-gradient-card hover:scale-[1.02] transition-all">
                 <CardContent className="pt-6 flex gap-4">
-                  <Heart className="h-8 w-8 text-success flex-shrink-0" />
-                  <div>
-                    <h4 className="font-heading font-semibold text-lg mb-2">No ads, no data selling</h4>
-                    <p className="text-muted-foreground">Just tools for safer events</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-card hover:scale-[1.02] transition-all">
-                <CardContent className="pt-6 flex gap-4">
                   <GraduationCap className="h-8 w-8 text-primary flex-shrink-0" />
                   <div>
                     <h4 className="font-heading font-semibold text-lg mb-2">Designed for student societies</h4>
@@ -412,7 +405,7 @@ const Landing = () => {
         <section className="py-20 text-center max-w-4xl mx-auto space-y-8">
           <h3 className="text-4xl md:text-5xl font-heading font-bold">Let's Build Safer Spaces Together</h3>
           <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-            Whether you're heading to an event or organizing one, OurSafeBase helps create communities where everyone feels supported, respected, and heard.
+            Whether you're heading to an event or organising one, OurSafeBase helps create communities where everyone feels supported, respected, and heard.
           </p>
           <div className="pt-4">
             <Button onClick={() => navigate("/auth")} size="lg" className="text-lg rounded-xl w-full sm:w-auto">
