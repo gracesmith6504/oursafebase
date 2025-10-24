@@ -26,7 +26,7 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
         
         // On mobile (< 640px), use a minimum width for readability
         // On larger screens, fit to container
-        const minMobileWidth = 650;
+        const minMobileWidth = 520;
         
         if (containerWidth < 640) {
           // Mobile: use larger fixed width, allow horizontal scroll
