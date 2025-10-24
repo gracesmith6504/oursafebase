@@ -73,7 +73,7 @@ const EditEvent = () => {
   const [externalContacts, setExternalContacts] = useState<ExternalContact[]>([]);
   const [emergencyFields, setEmergencyFields] = useState<EmergencyField[]>([]);
   const [selectedCoCId, setSelectedCoCId] = useState("");
-  const [availableCoCs, setAvailableCoCs] = useState<Array<{ id: string; version: number; content: string; is_active: boolean }>>([]);
+  const [availableCoCs, setAvailableCoCs] = useState<Array<{ id: string; version: number; content: string | null; file_url: string | null; name: string | null; is_active: boolean }>>([]);
 
   // Team member selection state
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -192,7 +192,7 @@ const EditEvent = () => {
       // Fetch available society-level CoCs
       const { data: cocsData } = await supabase
         .from("code_of_conduct")
-        .select("id, version, content, is_active")
+        .select("id, version, content, file_url, name, is_active")
         .eq("society_id", societyData.id)
         .is("event_id", null)
         .order("version", { ascending: false });
@@ -453,6 +453,8 @@ const EditEvent = () => {
             .insert({
               event_id: eventId,
               content: selectedCoC.content,
+              file_url: selectedCoC.file_url,
+              name: selectedCoC.name,
               version: selectedCoC.version,
               is_active: true,
             } as any);
@@ -883,7 +885,15 @@ const EditEvent = () => {
                       <div className="rounded-lg bg-muted p-4">
                         <p className="mb-2 text-sm font-medium">Preview:</p>
                         <div className="max-h-40 overflow-y-auto text-sm text-muted-foreground">
-                          {availableCoCs.find(c => c.id === selectedCoCId)?.content.substring(0, 300)}...
+                          {(() => {
+                            const selectedCoC = availableCoCs.find(c => c.id === selectedCoCId);
+                            if (selectedCoC?.content) {
+                              return `${selectedCoC.content.substring(0, 300)}...`;
+                            } else if (selectedCoC?.file_url) {
+                              return `File-based Code of Conduct${selectedCoC.name ? `: ${selectedCoC.name}` : ''}`;
+                            }
+                            return 'No content available';
+                          })()}
                         </div>
                       </div>
                     )}
