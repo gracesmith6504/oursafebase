@@ -209,14 +209,6 @@ const CoCAcceptanceDialog = ({
         </div>
 
         <div className="border-t bg-background px-3 sm:px-6 py-2 sm:py-4 space-y-2 sm:space-y-3">
-          {!scrolledToBottom && cocFileUrl && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              <span className="hidden sm:inline">Please review the document</span>
-              <span className="sm:hidden">Review document</span>
-            </div>
-          )}
-          
           <div className="flex items-center space-x-2">
             <Checkbox
               id="agree"
@@ -233,18 +225,11 @@ const CoCAcceptanceDialog = ({
           <div className="flex justify-end">
             <Button
               onClick={handleAccept}
-              disabled={!agreed || !scrolledToBottom || loading}
+              disabled={!agreed || loading}
               className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10"
             >
               {loading 
                 ? "Accepting..." 
-                : !scrolledToBottom && cocFileUrl
-                ? (
-                  <>
-                    <span className="hidden sm:inline">Please read the full document</span>
-                    <span className="sm:hidden">Read document</span>
-                  </>
-                )
                 : (
                   <>
                     <span className="hidden sm:inline">Accept Code of Conduct</span>
