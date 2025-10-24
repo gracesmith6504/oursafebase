@@ -110,3 +110,46 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Floating label input styles */
+.floating-input-group {
+  position: relative;
+  margin: 1em 0;
+}
+
+.floating-input-group input {
+  width: 100%;
+  padding: 0.8em;
+  font-size: 100%;
+  border: 2px solid hsl(var(--input));
+  border-radius: 20px;
+  background-color: transparent;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.floating-input-group input:focus {
+  border-color: hsl(var(--primary));
+}
+
+.floating-input-group label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0.8em;
+  margin-left: 0.5em;
+  font-size: 100%;
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.floating-input-group input:focus ~ label,
+.floating-input-group input:valid ~ label {
+  transform: translateY(-50%) scale(0.9);
+  margin: 0;
+  margin-left: 1.3em;
+  padding: 0.4em;
+  background-color: hsl(var(--background));
+  color: hsl(var(--primary));
+}

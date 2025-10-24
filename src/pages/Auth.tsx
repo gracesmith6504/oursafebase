@@ -162,26 +162,29 @@ const Auth = () => {
             
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
+                <div className="floating-input-group">
                   <Input
                     id="signin-email"
                     type="email"
-                    placeholder="you@university.edu"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={loading}
+                    autoComplete="off"
                   />
+                  <Label>Email</Label>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
+                <div className="floating-input-group">
                   <Input
                     id="signin-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    disabled={loading}
+                    autoComplete="off"
                   />
+                  <Label>Password</Label>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In"}
@@ -191,44 +194,43 @@ const Auth = () => {
             
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-firstname">First Name</Label>
+                <div className="floating-input-group">
                   <Input
                     id="signup-firstname"
                     type="text"
-                    placeholder="First name"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     disabled={loading}
                     required
+                    autoComplete="off"
                   />
+                  <Label>First Name</Label>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-lastname">Last Name</Label>
+                <div className="floating-input-group">
                   <Input
                     id="signup-lastname"
                     type="text"
-                    placeholder="Last name"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     disabled={loading}
                     required
+                    autoComplete="off"
                   />
+                  <Label>Last Name</Label>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                <div className="floating-input-group">
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="you@university.edu"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading}
                     required
+                    autoComplete="off"
                   />
+                  <Label>Email</Label>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                <div className="floating-input-group">
                   <Input
                     id="signup-password"
                     type="password"
@@ -236,7 +238,9 @@ const Auth = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading}
                     required
+                    autoComplete="off"
                   />
+                  <Label>Password</Label>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Creating account..." : "Create Account"}
