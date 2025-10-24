@@ -256,20 +256,21 @@ const EventSafetyPage = () => {
       return;
     }
 
-    // Check if user has accepted current version
-    const { data: acceptance } = await supabase
-      .from("code_acceptances")
-      .select("accepted_version")
-      .eq("user_id", user.id)
-      .eq("code_of_conduct_id", coc.id)
-      .gte("accepted_version", coc.version)
-      .maybeSingle();
+      // Check if user has accepted current version
+      const { data: acceptance } = await supabase
+        .from("code_acceptances")
+        .select("accepted_version")
+        .eq("user_id", user.id)
+        .eq("event_id", eventData.id)
+        .eq("code_of_conduct_id", coc.id)
+        .gte("accepted_version", coc.version)
+        .maybeSingle();
 
-    if (!acceptance) {
-      setCoCRequired(true);
-      setCoCData(coc);
-      setShowCoCDialog(true);
-    }
+      if (!acceptance) {
+        setCoCRequired(true);
+        setCoCData(coc);
+        setShowCoCDialog(true);
+      }
   };
 
   const copyPhoneNumber = (phone: string) => {
@@ -483,7 +484,13 @@ const EventSafetyPage = () => {
                   </p>
                   <Button 
                     variant="outline"
-                    onClick={() => window.open(codeOfConduct.file_url, '_blank')}
+                    onClick={() => {
+                      if (codeOfConduct.id) {
+                        window.open(`/code-of-conduct/${codeOfConduct.id}`, '_blank');
+                      } else {
+                        window.open(codeOfConduct.file_url, '_blank');
+                      }
+                    }}
                     className="w-full sm:w-auto"
                   >
                     <FileText className="mr-2 h-4 w-4" />

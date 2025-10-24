@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, Loader2 } from "lucide-react";
-import { format } from "date-fns";
+import { format, startOfDay } from "date-fns";
 import { toast } from "sonner";
 import { getEventStatus } from "@/lib/eventHelpers";
 
@@ -63,12 +63,13 @@ const SocietyAttendee = () => {
 
     setSociety(societyData);
 
-    // Fetch upcoming events
+    // Fetch upcoming events (including today)
+    const today = startOfDay(new Date()).toISOString();
     const { data: eventsData, error: eventsError } = await supabase
       .from("events")
       .select("id, title, slug, event_date, location, description")
       .eq("society_id", societyData.id)
-      .gte("event_date", new Date().toISOString())
+      .gte("event_date", today)
       .order("event_date", { ascending: true });
 
     if (eventsError) {

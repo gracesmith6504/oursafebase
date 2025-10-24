@@ -20,6 +20,7 @@ import SocietyCodesOfConduct from "./pages/SocietyCodesOfConduct";
 import InviteJoin from "./pages/InviteJoin";
 import CommitteeOnboarding from "./pages/CommitteeOnboarding";
 import EventSummary from "./pages/EventSummary";
+import CodeOfConductView from "./pages/CodeOfConductView";
 import NotFound from "./pages/NotFound";
 import { ScrollToTop } from "./components/ScrollToTop";
 
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/onboarding" element={<CommitteeOnboarding />} />
           <Route path="/invite/:code" element={<InviteJoin />} />
           <Route path="/invite/:type/:code" element={<InviteJoin />} />
+          <Route path="/code-of-conduct/:cocId" element={<CodeOfConductView />} />
           {/* New slug-based route for pretty URLs */}
           <Route path="/:societySlug/:eventSlug" element={<EventSafetyPage />} />
           {/* Keep old UUID route for backwards compatibility */}
