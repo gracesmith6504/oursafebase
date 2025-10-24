@@ -257,23 +257,13 @@ const SocietyEvents = () => {
                           <span className="text-muted-foreground">Accepted</span>
                         </div>
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 gap-2">
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => navigate(`/${societySlug}/${event.slug}`)}
                         >
                           <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            navigator.clipboard.writeText(`${getAppUrl()}/${societySlug}/${event.slug}`);
-                            toast.success("Link copied to clipboard");
-                          }}
-                        >
-                          <Share2 className="h-4 w-4" />
                         </Button>
                         <Button 
                           variant="outline"
@@ -283,7 +273,7 @@ const SocietyEvents = () => {
                             setQrDialogOpen(true);
                           }}
                         >
-                          <QrCode className="h-4 w-4" />
+                          <Share2 className="h-4 w-4" />
                         </Button>
                       </div>
                       <div className="space-y-2">
