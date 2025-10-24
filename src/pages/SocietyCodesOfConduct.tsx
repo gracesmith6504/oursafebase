@@ -6,11 +6,12 @@ import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Shield, Plus, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft, Shield, Plus, Edit, Trash2, FileText, Image } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
 import { CreateCoCDialog } from "@/components/CreateCoCDialog";
 import { EditCoCDialog } from "@/components/EditCoCDialog";
+import { getFileExtension } from "@/lib/fileUtils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,11 +31,13 @@ interface Society {
 
 interface CodeOfConduct {
   id: string;
-  content: string;
+  content?: string;
+  file_url?: string;
   version: number;
   is_active: boolean;
   created_at: string;
   name?: string;
+  society_id?: string;
 }
 
 const SocietyCodesOfConduct = () => {
@@ -123,6 +126,16 @@ const SocietyCodesOfConduct = () => {
 
     const deletingCoC = cocs.find(c => c.id === deletingCoCId);
     if (!deletingCoC) return;
+
+    // If CoC has a file, delete it from storage first
+    if (deletingCoC.file_url) {
+      const filePath = deletingCoC.file_url.split('/code-of-conduct-files/')[1];
+      if (filePath) {
+        await supabase.storage
+          .from('code-of-conduct-files')
+          .remove([filePath]);
+      }
+    }
 
     // Check if this CoC has any acceptances
     const { data: acceptancesData } = await supabase
@@ -267,9 +280,29 @@ const SocietyCodesOfConduct = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="mb-4 max-h-32 overflow-hidden text-sm text-muted-foreground">
-                      {coc.content.substring(0, 200)}...
-                    </div>
+                    {coc.file_url ? (
+                      <div className="mb-4">
+                        <div className="flex items-center gap-2 p-3 bg-accent/10 rounded-lg">
+                          {['jpg', 'jpeg', 'png', 'gif'].includes(getFileExtension(coc.file_url)) ? (
+                            <Image className="h-5 w-5 text-primary" />
+                          ) : (
+                            <FileText className="h-5 w-5 text-primary" />
+                          )}
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">
+                              File: {getFileExtension(coc.file_url).toUpperCase()}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Click "Set as Active" to use this template
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mb-4 max-h-32 overflow-hidden text-sm text-muted-foreground">
+                        {coc.content?.substring(0, 200)}...
+                      </div>
+                    )}
                     {!coc.is_active && (
                       <Button
                         variant="outline"

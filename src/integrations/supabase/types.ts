@@ -64,10 +64,11 @@ export type Database = {
       }
       code_of_conduct: {
         Row: {
-          content: string
+          content: string | null
           content_type: string | null
           created_at: string | null
           event_id: string | null
+          file_url: string | null
           id: string
           is_active: boolean | null
           name: string | null
@@ -75,10 +76,11 @@ export type Database = {
           version: number | null
         }
         Insert: {
-          content: string
+          content?: string | null
           content_type?: string | null
           created_at?: string | null
           event_id?: string | null
+          file_url?: string | null
           id?: string
           is_active?: boolean | null
           name?: string | null
@@ -86,10 +88,11 @@ export type Database = {
           version?: number | null
         }
         Update: {
-          content?: string
+          content?: string | null
           content_type?: string | null
           created_at?: string | null
           event_id?: string | null
+          file_url?: string | null
           id?: string
           is_active?: boolean | null
           name?: string | null

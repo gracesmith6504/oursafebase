@@ -49,7 +49,10 @@ interface EmergencyInfo {
 }
 
 interface CodeOfConduct {
-  content: string;
+  id?: string;
+  content?: string;
+  file_url?: string;
+  version?: number;
 }
 
 const EventSafetyPage = () => {
@@ -174,7 +177,7 @@ const EventSafetyPage = () => {
       // Fetch code of conduct - only event-specific for display
       let { data: cocData } = await supabase
         .from("code_of_conduct")
-        .select("content")
+        .select("id, content, file_url, version")
         .eq("event_id", eventData.id)
         .eq("is_active", true)
         .maybeSingle();
@@ -186,7 +189,7 @@ const EventSafetyPage = () => {
       if (!cocData) {
         const { data: templateCocData } = await supabase
           .from("code_of_conduct")
-          .select("content")
+          .select("id, content, file_url, version")
           .eq("society_id", eventData.society_id)
           .is("event_id", null)
           .eq("is_active", true)
@@ -468,7 +471,22 @@ const EventSafetyPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap text-sm">{codeOfConduct.content}</p>
+              {codeOfConduct.file_url ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    The Code of Conduct for this event is available as a file.
+                  </p>
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open(codeOfConduct.file_url, '_blank')}
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    View Code of Conduct
+                  </Button>
+                </div>
+              ) : (
+                <p className="whitespace-pre-wrap text-sm">{codeOfConduct.content}</p>
+              )}
               {!hasEventLevelCoC && isCommittee && (
                 <div className="mt-4 p-3 bg-muted rounded-md">
                   <p className="text-sm text-muted-foreground">

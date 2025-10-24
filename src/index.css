@@ -110,3 +110,47 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* File Upload Area Styles */
+.file-upload-area {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  cursor: pointer;
+  border: 2px dashed hsl(var(--input));
+  background-color: hsl(var(--background));
+  padding: 1.5rem;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.file-upload-area:hover {
+  border-color: hsl(var(--primary));
+  background-color: hsl(var(--accent) / 0.1);
+}
+
+.file-upload-area .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-upload-area .icon svg {
+  height: 80px;
+  fill: hsl(var(--muted-foreground));
+}
+
+.file-upload-area .text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 400;
+  color: hsl(var(--muted-foreground));
+}
+
+.file-upload-area input {
+  display: none;
+}
