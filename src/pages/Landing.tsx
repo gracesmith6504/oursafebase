@@ -1,6 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, AlertCircle, BarChart3, Users, Heart, UserCheck, MessageSquare, Calendar, MessageCircle, TrendingUp, Lock, Zap, GraduationCap, Sparkles, Smartphone, Phone } from "lucide-react";
+import {
+  Shield,
+  AlertCircle,
+  BarChart3,
+  Users,
+  Heart,
+  UserCheck,
+  MessageSquare,
+  Calendar,
+  MessageCircle,
+  TrendingUp,
+  Lock,
+  Zap,
+  GraduationCap,
+  Sparkles,
+  Smartphone,
+  Phone,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
@@ -8,7 +25,7 @@ const Landing = () => {
   const navigate = useNavigate();
 
   const scrollToAttendee = () => {
-    document.getElementById('attendee-features')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById("attendee-features")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -20,7 +37,11 @@ const Landing = () => {
             <img src={logo} alt="OurSafeBase" className="h-8 md:h-12" />
             <h1 className="text-lg md:text-2xl font-heading font-bold text-primary">OurSafeBase</h1>
           </div>
-          <Button onClick={() => navigate("/auth")} variant="outline" className="rounded-xl text-sm md:text-base px-3 md:px-4">
+          <Button
+            onClick={() => navigate("/auth")}
+            variant="outline"
+            className="rounded-xl text-sm md:text-base px-3 md:px-4"
+          >
             Sign In
           </Button>
         </header>
@@ -29,20 +50,28 @@ const Landing = () => {
         <section className="py-12 md:py-20 text-center max-w-4xl mx-auto space-y-6">
           <div className="inline-flex items-center gap-2 bg-success/10 text-success px-4 py-2 rounded-full text-sm font-medium mb-4">
             <Zap className="h-4 w-4" />
-            Free to use for all student societies
+            Free to use for all students
           </div>
           <h2 className="mb-4 text-3xl font-heading font-bold md:text-5xl lg:text-6xl leading-tight">
-            Student Events.{" "}
-            <span className="text-primary">Made Safer Together.</span>
+            Student Events. <span className="text-primary">Made Safer Together.</span>
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed">
             Connect welfare support, report concerns, and build trust, all in one place.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            <Button onClick={() => navigate("/auth")} size="lg" className="text-base md:text-lg rounded-xl w-full sm:w-auto">
+            <Button
+              onClick={() => navigate("/auth")}
+              size="lg"
+              className="text-base md:text-lg rounded-xl w-full sm:w-auto"
+            >
               Get Started
             </Button>
-            <Button onClick={scrollToAttendee} size="lg" variant="outline" className="text-base md:text-lg rounded-xl w-full sm:w-auto">
+            <Button
+              onClick={scrollToAttendee}
+              size="lg"
+              variant="outline"
+              className="text-base md:text-lg rounded-xl w-full sm:w-auto"
+            >
               See How It Works
             </Button>
           </div>
@@ -84,7 +113,11 @@ const Landing = () => {
                   <span>No account needed, just care and community</span>
                 </li>
               </ul>
-              <Button onClick={scrollToAttendee} variant="outline" className="w-full mt-6 border-success/30 hover:border-success rounded-xl">
+              <Button
+                onClick={scrollToAttendee}
+                variant="outline"
+                className="w-full mt-6 border-success/30 hover:border-success rounded-xl"
+              >
                 Learn More
               </Button>
             </CardContent>
@@ -133,16 +166,16 @@ const Landing = () => {
                 <div className="relative w-[280px] h-[560px] bg-gradient-to-br from-card to-card/80 rounded-[3rem] border-8 border-foreground/10 shadow-2xl overflow-hidden">
                   {/* Notch */}
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-foreground/10 rounded-b-2xl z-10"></div>
-                  
+
                   {/* Screen Content */}
                   <div className="absolute inset-4 mt-8 bg-background rounded-[2rem] overflow-hidden">
                     <div className="p-4 space-y-3">
                       {/* Event Header */}
                       <div className="pb-3 border-b">
-                        <h3 className="font-bold text-sm">Summer Social</h3>
-                        <p className="text-xs text-muted-foreground">June 15, 2024 • Student Union</p>
+                        <h3 className="font-bold text-sm">Ski Club</h3>
+                        <p className="text-xs text-muted-foreground">January 15, 2025 • Ski Trip 2025</p>
                       </div>
-                      
+
                       {/* Welfare Contact Card */}
                       <div className="bg-muted/50 rounded-lg p-3 border">
                         <p className="text-xs font-semibold mb-2 flex items-center gap-1">
@@ -156,7 +189,7 @@ const Landing = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium">Sarah Miller</p>
-                              <p className="text-xs text-muted-foreground truncate">Sober Driver</p>
+                              <p className="text-xs text-muted-foreground truncate">Safety Officer</p>
                               <p className="text-xs text-muted-foreground">+353 87 234 5678</p>
                             </div>
                           </div>
@@ -208,7 +241,8 @@ const Landing = () => {
             <div className="md:col-span-3 space-y-6">
               <h3 className="text-3xl md:text-4xl font-heading font-bold">Every Event Gets Its Own Safety Page</h3>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Attendees scan a QR code or click a link to instantly access welfare contacts, emergency info, and reporting options.
+                Attendees scan a QR code or click a link to instantly access welfare contacts, emergency info, and
+                reporting options.
               </p>
               <ul className="space-y-3">
                 <li className="flex gap-3 items-start">
@@ -236,7 +270,7 @@ const Landing = () => {
         <section id="attendee-features" className="py-20 max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h3 className="text-4xl font-heading font-bold mb-4">Everything You Need for Safer Events</h3>
-            <p className="text-lg text-muted-foreground">Whether you're attending or organizing</p>
+            <p className="text-lg text-muted-foreground">Whether you're attending or organising</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -259,9 +293,7 @@ const Landing = () => {
                   <AlertCircle className="h-6 w-6 text-success" />
                 </div>
                 <h4 className="text-lg font-heading font-semibold">Your Way, Your Voice</h4>
-                <p className="text-sm text-muted-foreground">
-                  Anonymous or identified, you choose how to communicate
-                </p>
+                <p className="text-sm text-muted-foreground">Anonymous or identified, you choose how to communicate</p>
               </CardContent>
             </Card>
 
@@ -271,9 +303,7 @@ const Landing = () => {
                   <Heart className="h-6 w-6 text-success" />
                 </div>
                 <h4 className="text-lg font-heading font-semibold">Feedback That Matters</h4>
-                <p className="text-sm text-muted-foreground">
-                  Your input helps create better experiences
-                </p>
+                <p className="text-sm text-muted-foreground">Your input helps create better experiences</p>
               </CardContent>
             </Card>
 
@@ -284,9 +314,7 @@ const Landing = () => {
                   <Calendar className="h-6 w-6 text-primary" />
                 </div>
                 <h4 className="text-lg font-heading font-semibold">Ready in Minutes</h4>
-                <p className="text-sm text-muted-foreground">
-                  Build comprehensive safety pages for every event
-                </p>
+                <p className="text-sm text-muted-foreground">Build comprehensive safety pages for every event</p>
               </CardContent>
             </Card>
 
@@ -296,9 +324,7 @@ const Landing = () => {
                   <MessageCircle className="h-6 w-6 text-primary" />
                 </div>
                 <h4 className="text-lg font-heading font-semibold">Track & Follow Up</h4>
-                <p className="text-sm text-muted-foreground">
-                  Review concerns with care and accountability
-                </p>
+                <p className="text-sm text-muted-foreground">Review concerns with care and accountability</p>
               </CardContent>
             </Card>
 
@@ -308,9 +334,7 @@ const Landing = () => {
                   <TrendingUp className="h-6 w-6 text-primary" />
                 </div>
                 <h4 className="text-lg font-heading font-semibold">Insights That Improve</h4>
-                <p className="text-sm text-muted-foreground">
-                  See trends and make data-informed decisions
-                </p>
+                <p className="text-sm text-muted-foreground">See trends and make data-informed decisions</p>
               </CardContent>
             </Card>
           </div>
@@ -322,17 +346,18 @@ const Landing = () => {
             <h3 className="text-5xl font-heading font-bold mb-4">How It Works</h3>
             <p className="text-xl text-muted-foreground">A collaborative journey to safer events</p>
           </div>
-          
+
           <div className="max-w-5xl mx-auto grid md:grid-cols-4 gap-8 relative">
             <div className="hidden md:block absolute top-12 left-16 right-16 h-1 bg-gradient-to-r from-primary via-accent to-success"></div>
-            
+
             <div className="relative space-y-4 text-center">
               <div className="h-24 w-24 mx-auto rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg relative z-10">
                 <Shield className="h-12 w-12 text-primary-foreground" />
               </div>
               <h4 className="text-xl font-heading font-semibold">Committees Create Safety Infrastructure</h4>
               <p className="text-muted-foreground">
-                Organizers set up their society, create events, and build comprehensive safety pages with all the information attendees need.
+                Organisers set up their society, create events, and build comprehensive safety pages with all the
+                information attendees need.
               </p>
             </div>
 
@@ -342,7 +367,9 @@ const Landing = () => {
               </div>
               <h4 className="text-xl font-heading font-semibold">Attendees Access Support Instantly</h4>
               <p className="text-muted-foreground">
-                Every event gets a unique link. Attendees can view contacts, find emergency info, and accept the code of conduct, no account needed. Optionally create an account to access all your events from a personal dashboard.
+                Every event gets a unique link. Attendees can view contacts and find emergency info. Logged in users can
+                accept the code of conduct, report incidents,give feedback and access all your events from a personal
+                dashboard.
               </p>
             </div>
 
@@ -352,7 +379,8 @@ const Landing = () => {
               </div>
               <h4 className="text-xl font-heading font-semibold">Everyone Communicates Openly</h4>
               <p className="text-muted-foreground">
-                Attendees share concerns or feedback. Committees receive, review, and respond. Real dialogue creates real improvement.
+                Attendees share concerns or feedback. Committees receive, review, and respond. Real dialogue creates
+                real improvement.
               </p>
             </div>
 
@@ -362,7 +390,8 @@ const Landing = () => {
               </div>
               <h4 className="text-xl font-heading font-semibold">Communities Grow Safer Together</h4>
               <p className="text-muted-foreground">
-                Every report reviewed, every piece of feedback considered. Over time, events become spaces where everyone truly feels they belong.
+                Every report reviewed, every piece of feedback considered. Over time, events become spaces where
+                everyone truly feels they belong.
               </p>
             </div>
           </div>
@@ -371,7 +400,9 @@ const Landing = () => {
         {/* Trust Section */}
         <section className="py-20">
           <div className="max-w-4xl mx-auto">
-            <h3 className="text-4xl font-heading font-bold text-center mb-12">Built for Student Communities, By People Who Care</h3>
+            <h3 className="text-4xl font-heading font-bold text-center mb-12">
+              Built for Student Communities, By People Who Care
+            </h3>
             <div className="grid md:grid-cols-2 gap-8">
               <Card className="bg-gradient-card hover:scale-[1.02] transition-all">
                 <CardContent className="pt-6 flex gap-4">
@@ -379,16 +410,6 @@ const Landing = () => {
                   <div>
                     <h4 className="font-heading font-semibold text-lg mb-2">Your privacy is protected</h4>
                     <p className="text-muted-foreground">Anonymous reporting truly means anonymous</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-card hover:scale-[1.02] transition-all">
-                <CardContent className="pt-6 flex gap-4">
-                  <Heart className="h-8 w-8 text-success flex-shrink-0" />
-                  <div>
-                    <h4 className="font-heading font-semibold text-lg mb-2">No ads, no data selling</h4>
-                    <p className="text-muted-foreground">Just tools for safer events</p>
                   </div>
                 </CardContent>
               </Card>
@@ -408,7 +429,7 @@ const Landing = () => {
                   <Zap className="h-8 w-8 text-success flex-shrink-0" />
                   <div>
                     <h4 className="font-heading font-semibold text-lg mb-2">Free to use</h4>
-                    <p className="text-muted-foreground">Because every student deserves to feel safe</p>
+                    <p className="text-muted-foreground">Because every student deserves a safe base</p>
                   </div>
                 </CardContent>
               </Card>
@@ -420,7 +441,8 @@ const Landing = () => {
         <section className="py-20 text-center max-w-4xl mx-auto space-y-8">
           <h3 className="text-4xl md:text-5xl font-heading font-bold">Let's Build Safer Spaces Together</h3>
           <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-            Whether you're heading to an event or organizing one, OurSafeBase helps create communities where everyone feels supported, respected, and heard.
+            Whether you're heading to an event or organising one, OurSafeBase helps create communities where everyone
+            feels supported, respected, and heard.
           </p>
           <div className="pt-4">
             <Button onClick={() => navigate("/auth")} size="lg" className="text-lg rounded-xl w-full sm:w-auto">
