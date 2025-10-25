@@ -226,6 +226,7 @@ export type Database = {
         Row: {
           contact_email: string | null
           contact_name: string | null
+          contact_phone: string | null
           event_id: string
           felt_safe: string
           id: string
@@ -236,6 +237,7 @@ export type Database = {
         Insert: {
           contact_email?: string | null
           contact_name?: string | null
+          contact_phone?: string | null
           event_id: string
           felt_safe: string
           id?: string
@@ -246,6 +248,7 @@ export type Database = {
         Update: {
           contact_email?: string | null
           contact_name?: string | null
+          contact_phone?: string | null
           event_id?: string
           felt_safe?: string
           id?: string
