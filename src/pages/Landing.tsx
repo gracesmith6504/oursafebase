@@ -15,12 +15,12 @@ const Landing = () => {
     <div className="min-h-screen bg-gradient-subtle bg-pattern-dots">
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
-        <header className="flex items-center justify-between pb-8 mb-8 bg-card/80 backdrop-blur-sm shadow-sm border-b border-border/50 rounded-b-2xl sticky top-0 z-50 px-6 py-4 -mx-4">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="OurSafeBase" className="h-12" />
-            <h1 className="text-2xl font-heading font-bold text-primary">OurSafeBase</h1>
+        <header className="flex items-center justify-between pb-4 md:pb-8 mb-4 md:mb-8 bg-card/80 backdrop-blur-sm shadow-sm border-b border-border/50 rounded-b-2xl sticky top-0 z-50 px-3 md:px-6 py-3 md:py-4 -mx-4">
+          <div className="flex items-center gap-2 md:gap-3">
+            <img src={logo} alt="OurSafeBase" className="h-8 md:h-12" />
+            <h1 className="text-lg md:text-2xl font-heading font-bold text-primary">OurSafeBase</h1>
           </div>
-          <Button onClick={() => navigate("/auth")} variant="outline" className="rounded-xl">
+          <Button onClick={() => navigate("/auth")} variant="outline" className="rounded-xl text-sm md:text-base px-3 md:px-4">
             Sign In
           </Button>
         </header>
