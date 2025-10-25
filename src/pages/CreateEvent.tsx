@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { CreateCoCDialog } from "@/components/CreateCoCDialog";
 
 interface Society {
   id: string;
@@ -74,6 +75,9 @@ const CreateEvent = () => {
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
   const [location, setLocation] = useState("");
+  
+  // Create CoC dialog state
+  const [createCoCDialogOpen, setCreateCoCDialogOpen] = useState(false);
   const [selectedContacts, setSelectedContacts] = useState<WelfareContact[]>([]);
   const [externalContacts, setExternalContacts] = useState<ExternalContact[]>([]);
   const [emergencyFields, setEmergencyFields] = useState<EmergencyField[]>([]);
@@ -183,6 +187,28 @@ const CreateEvent = () => {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data");
       navigate("/dashboard");
+    }
+  };
+
+  const fetchCoCs = async () => {
+    if (!society) return;
+    
+    const { data: cocsData } = await supabase
+      .from("code_of_conduct")
+      .select("id, version, content, file_url, name, is_active")
+      .eq("society_id", society.id)
+      .is("event_id", null)
+      .order("version", { ascending: false });
+
+    if (cocsData) {
+      setAvailableCoCs(cocsData);
+      // Auto-select the active CoC, or the most recent if none is active
+      const activeCoC = cocsData.find((c) => c.is_active);
+      if (activeCoC) {
+        setSelectedCoCId(activeCoC.id);
+      } else if (cocsData.length > 0) {
+        setSelectedCoCId(cocsData[0].id);
+      }
     }
   };
 
@@ -786,10 +812,19 @@ const CreateEvent = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {availableCoCs.length === 0 ? (
-                  <div className="rounded-lg border border-dashed p-4 text-center">
-                    <p className="mb-2 text-sm text-muted-foreground">
-                      No codes of conduct available. Create one first.
+                  <div className="rounded-lg border border-dashed p-6 text-center space-y-3">
+                    <p className="text-sm text-muted-foreground">
+                      No codes of conduct available yet.
                     </p>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setCreateCoCDialogOpen(true)}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create One Now
+                    </Button>
                   </div>
                 ) : (
                   <>
@@ -850,6 +885,16 @@ const CreateEvent = () => {
             </Button>
           </div>
         </div>
+
+        {/* Create CoC Dialog */}
+        {society && (
+          <CreateCoCDialog
+            open={createCoCDialogOpen}
+            onOpenChange={setCreateCoCDialogOpen}
+            societyId={society.id}
+            onSuccess={fetchCoCs}
+          />
+        )}
       </div>
     </ProtectedRoute>
   );
