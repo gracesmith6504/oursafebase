@@ -789,8 +789,28 @@ export default function SocietyReports() {
                       {/* Status Accent Bar */}
                       <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${getStatusAccentColor(report.status)} group-hover:w-2 transition-all`} />
                       
-                      <CardContent className="p-4 sm:p-6 pl-6 sm:pl-8">
-                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6">
+                      {/* Bookmark Button - Top Right */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleBookmark(report.id);
+                        }}
+                        className={`absolute top-3 right-3 h-8 w-8 z-10 ${
+                          bookmarkedReportIds.includes(report.id)
+                            ? 'text-amber-600 hover:text-amber-700'
+                            : 'text-muted-foreground hover:text-amber-600'
+                        }`}
+                      >
+                        <Bookmark
+                          className="h-5 w-5"
+                          fill={bookmarkedReportIds.includes(report.id) ? 'currentColor' : 'none'}
+                        />
+                      </Button>
+                      
+                      <CardContent className="p-4 sm:p-6 pl-6 sm:pl-8 pr-12 sm:pr-14">
+                        <div className="flex flex-col gap-4">
                           <div className="flex-1 space-y-3 sm:space-y-4 min-w-0">
                             {/* Status and Severity - Primary Badges */}
                             <div className="flex items-center gap-2 flex-wrap">
@@ -843,31 +863,13 @@ export default function SocietyReports() {
                             </p>
                           </div>
 
-                          {/* Action Buttons - Responsive Layout */}
-                          <div className="flex sm:flex-col gap-2 items-stretch sm:items-end shrink-0 w-full sm:w-auto">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleBookmark(report.id);
-                              }}
-                              className={`h-10 w-10 sm:h-9 sm:w-9 shrink-0 ${
-                                bookmarkedReportIds.includes(report.id)
-                                  ? 'text-amber-600 hover:text-amber-700'
-                                  : 'text-muted-foreground hover:text-amber-600'
-                              }`}
-                            >
-                              <Bookmark
-                                className="h-5 w-5"
-                                fill={bookmarkedReportIds.includes(report.id) ? 'currentColor' : 'none'}
-                              />
-                            </Button>
+                          {/* View Details Button */}
+                          <div className="flex justify-end">
                             <Button
                               onClick={() => handleViewDetails(report.id)}
                               variant="outline"
                               size="default"
-                              className="flex-1 sm:flex-initial hover:bg-primary hover:text-primary-foreground transition-all border-2 font-medium h-10"
+                              className="hover:bg-primary hover:text-primary-foreground transition-all border-2 font-medium h-10"
                             >
                               View Details
                             </Button>
@@ -1135,18 +1137,6 @@ export default function SocietyReports() {
                   <AlertCircle className="h-12 w-12 mx-auto" />
                   <div>
                     <p className="font-medium">Analytics Dashboard Coming Soon</p>
-                    <p className="text-sm mt-2">Future features will include:</p>
-                    <ul className="text-sm mt-2 space-y-1">
-                      <li>• Reports by event (bar chart)</li>
-                      <li>• Reports by category (pie chart)</li>
-                      <li>• Trend over time (line chart)</li>
-                      <li>• Average time to first response</li>
-                      <li>• Resolution rate</li>
-                      <li>• Safety ratings distribution (pie chart)</li>
-                      <li>• Safety trends over time (line chart)</li>
-                      <li>• Events with lowest safety scores</li>
-                      <li>• Anonymous vs named feedback ratio</li>
-                    </ul>
                   </div>
                 </div>
               </CardContent>

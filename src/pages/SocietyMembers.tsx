@@ -244,7 +244,16 @@ const SocietyMembers = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {members.filter(m => m.role === 'committee').map((member) => {
+                {members
+                  .filter(m => m.role === 'committee')
+                  .sort((a, b) => {
+                    // Current user first
+                    if (a.user_id === user?.id) return -1;
+                    if (b.user_id === user?.id) return 1;
+                    // Then by joined date
+                    return new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime();
+                  })
+                  .map((member) => {
                   const isCurrentUser = member.user_id === user?.id;
                   
                   return (
