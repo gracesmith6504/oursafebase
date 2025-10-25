@@ -27,6 +27,10 @@ const Landing = () => {
 
         {/* Hero Section */}
         <section className="py-12 md:py-20 text-center max-w-4xl mx-auto space-y-6">
+          <div className="inline-flex items-center gap-2 bg-success/10 text-success px-4 py-2 rounded-full text-sm font-medium mb-4">
+            <Zap className="h-4 w-4" />
+            Free to use for all student societies
+          </div>
           <h2 className="mb-4 text-3xl font-heading font-bold md:text-5xl lg:text-6xl leading-tight">
             Student Events.{" "}
             <span className="text-primary">Made Safer Together.</span>
@@ -42,6 +46,10 @@ const Landing = () => {
               See How It Works
             </Button>
           </div>
+          <p className="text-sm text-muted-foreground/80 flex items-center justify-center gap-2 mt-6">
+            <GraduationCap className="h-4 w-4" />
+            Backed by Trinity LaunchBox
+          </p>
         </section>
 
         {/* Dual Perspective Section */}
