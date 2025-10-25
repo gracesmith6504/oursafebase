@@ -190,12 +190,14 @@ const SocietyEvents = () => {
         </header>
 
         <main className="container mx-auto px-4 py-8">
-          <div className="mb-6 flex justify-end">
-            <Button onClick={() => navigate(`/society/${slug}/events/new`)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Event
-            </Button>
-          </div>
+          {events.length > 0 && (
+            <div className="mb-6 flex justify-end">
+              <Button onClick={() => navigate(`/society/${slug}/events/new`)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Event
+              </Button>
+            </div>
+          )}
           {events.length === 0 ? (
             <Card className="mx-auto max-w-2xl">
               <CardHeader>
