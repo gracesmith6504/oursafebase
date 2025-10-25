@@ -395,11 +395,11 @@ const Landing = () => {
 
         {/* Trust Section */}
         <section className="py-20">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <h3 className="text-4xl font-heading font-bold text-center mb-12">
               Built for Student Communities, By People Who Care
             </h3>
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
               <Card className="bg-gradient-card hover:scale-[1.02] transition-all">
                 <CardContent className="pt-6 flex gap-4">
                   <Lock className="h-8 w-8 text-primary flex-shrink-0" />
@@ -420,7 +420,7 @@ const Landing = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-card hover:scale-[1.02] transition-all">
+              <Card className="bg-gradient-card hover:scale-[1.02] transition-all sm:col-span-2 lg:col-span-1">
                 <CardContent className="pt-6 flex gap-4">
                   <Zap className="h-8 w-8 text-success flex-shrink-0" />
                   <div>
