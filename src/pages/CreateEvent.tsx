@@ -25,7 +25,7 @@ interface Society {
 
 interface Member {
   user_id: string;
-  role: 'committee' | 'attendee';
+  role: "committee" | "attendee";
   profile: {
     id: string;
     display_name: string | null;
@@ -57,7 +57,7 @@ const CreateEvent = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [society, setSociety] = useState<Society | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,18 +74,27 @@ const CreateEvent = () => {
   const [externalContacts, setExternalContacts] = useState<ExternalContact[]>([]);
   const [emergencyFields, setEmergencyFields] = useState<EmergencyField[]>([]);
   const [selectedCoCId, setSelectedCoCId] = useState("");
-  const [availableCoCs, setAvailableCoCs] = useState<Array<{ id: string; version: number; content: string | null; file_url: string | null; name: string | null; is_active: boolean }>>([]);
+  const [availableCoCs, setAvailableCoCs] = useState<
+    Array<{
+      id: string;
+      version: number;
+      content: string | null;
+      file_url: string | null;
+      name: string | null;
+      is_active: boolean;
+    }>
+  >([]);
 
   // Team member selection state
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [tempRole, setTempRole] = useState("");
-  
+
   // External contact state
   const [externalName, setExternalName] = useState("");
   const [externalPhone, setExternalPhone] = useState("");
   const [externalRole, setExternalRole] = useState("");
   const [externalCountryCode, setExternalCountryCode] = useState("+353");
-  
+
   const countryCodes = [
     { code: "+353", country: "Ireland", flag: "🇮🇪" },
     { code: "+44", country: "UK", flag: "🇬🇧" },
@@ -133,11 +142,13 @@ const CreateEvent = () => {
       // Fetch all members
       const { data: membersData, error: membersError } = await supabase
         .from("society_members")
-        .select(`
+        .select(
+          `
           user_id,
           role,
           profile:profiles(id, display_name)
-        `)
+        `,
+        )
         .eq("society_id", societyData.id);
 
       if (!membersError && membersData) {
@@ -155,7 +166,7 @@ const CreateEvent = () => {
       if (cocsData) {
         setAvailableCoCs(cocsData);
         // Auto-select the active CoC, or the most recent if none is active
-        const activeCoC = cocsData.find(c => c.is_active);
+        const activeCoC = cocsData.find((c) => c.is_active);
         if (activeCoC) {
           setSelectedCoCId(activeCoC.id);
         } else if (cocsData.length > 0) {
@@ -179,7 +190,7 @@ const CreateEvent = () => {
   };
 
   const handleMemberSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const member = members.find(m => m.user_id === e.target.value);
+    const member = members.find((m) => m.user_id === e.target.value);
     if (member) {
       setSelectedMember(member);
       setTempRole("");
@@ -190,7 +201,7 @@ const CreateEvent = () => {
   const handleAddMember = () => {
     if (!selectedMember) return;
 
-    const exists = selectedContacts.some(c => c.userId === selectedMember.user_id);
+    const exists = selectedContacts.some((c) => c.userId === selectedMember.user_id);
     if (exists) {
       toast.error("Contact already added");
       setSelectedMember(null);
@@ -211,7 +222,7 @@ const CreateEvent = () => {
   };
 
   const removeMemberContact = (userId: string) => {
-    setSelectedContacts(selectedContacts.filter(c => c.userId !== userId));
+    setSelectedContacts(selectedContacts.filter((c) => c.userId !== userId));
   };
 
   const handleAddExternalContact = () => {
@@ -229,14 +240,14 @@ const CreateEvent = () => {
         role: externalRole.trim(),
       },
     ]);
-    
+
     setExternalName("");
     setExternalPhone("");
     setExternalRole("");
   };
 
   const removeExternalContact = (id: string) => {
-    setExternalContacts(externalContacts.filter(c => c.id !== id));
+    setExternalContacts(externalContacts.filter((c) => c.id !== id));
   };
 
   const addEmergencyField = () => {
@@ -253,15 +264,11 @@ const CreateEvent = () => {
   };
 
   const updateEmergencyField = (id: string, field: keyof EmergencyField, value: string) => {
-    setEmergencyFields(
-      emergencyFields.map(ef =>
-        ef.id === id ? { ...ef, [field]: value } : ef
-      )
-    );
+    setEmergencyFields(emergencyFields.map((ef) => (ef.id === id ? { ...ef, [field]: value } : ef)));
   };
 
   const removeEmergencyField = (id: string) => {
-    setEmergencyFields(emergencyFields.filter(ef => ef.id !== id));
+    setEmergencyFields(emergencyFields.filter((ef) => ef.id !== id));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -321,16 +328,14 @@ const CreateEvent = () => {
       // Fetch member profiles for snapshot fields
       let memberProfiles: any = {};
       if (selectedContacts.length > 0) {
-        const memberIds = selectedContacts.map(c => c.userId);
+        const memberIds = selectedContacts.map((c) => c.userId);
         const { data: profilesData } = await supabase
           .from("profiles")
           .select("id, display_name, phone_number, avatar_url")
           .in("id", memberIds);
-        
+
         if (profilesData) {
-          memberProfiles = Object.fromEntries(
-            profilesData.map(p => [p.id, p])
-          );
+          memberProfiles = Object.fromEntries(profilesData.map((p) => [p.id, p]));
         }
       }
 
@@ -360,43 +365,37 @@ const CreateEvent = () => {
           external_phone: contact.phone,
           role: contact.role,
           display_order: selectedContacts.length + index,
-        }))
+        })),
       ];
 
       if (contactsToInsert.length > 0) {
-        const { error: contactsError } = await supabase
-          .from("event_contacts")
-          .insert(contactsToInsert);
+        const { error: contactsError } = await supabase.from("event_contacts").insert(contactsToInsert);
 
         if (contactsError) throw contactsError;
       }
 
       // Create emergency info - store all fields as custom_emergency_info
       if (emergencyFields.length > 0) {
-        const { error: emergencyError } = await supabase
-          .from("emergency_info")
-          .insert({
-            event_id: eventData.id,
-            custom_emergency_info: emergencyFields as any,
-          });
+        const { error: emergencyError } = await supabase.from("emergency_info").insert({
+          event_id: eventData.id,
+          custom_emergency_info: emergencyFields as any,
+        });
 
         if (emergencyError) throw emergencyError;
       }
 
       // Create a copy of the selected CoC for this event
       if (selectedCoCId) {
-        const selectedCoC = availableCoCs.find(c => c.id === selectedCoCId);
+        const selectedCoC = availableCoCs.find((c) => c.id === selectedCoCId);
         if (selectedCoC) {
-          const { error: cocError } = await supabase
-            .from("code_of_conduct")
-            .insert({
-              event_id: eventData.id,
-              content: selectedCoC.content,
-              file_url: selectedCoC.file_url,
-              name: selectedCoC.name,
-              version: selectedCoC.version,
-              is_active: true,
-            } as any);
+          const { error: cocError } = await supabase.from("code_of_conduct").insert({
+            event_id: eventData.id,
+            content: selectedCoC.content,
+            file_url: selectedCoC.file_url,
+            name: selectedCoC.name,
+            version: selectedCoC.version,
+            is_active: true,
+          } as any);
 
           if (cocError) {
             console.error("Error creating event CoC:", cocError);
@@ -432,14 +431,10 @@ const CreateEvent = () => {
           <Card className="max-w-md">
             <CardHeader>
               <CardTitle>Committee Access Required</CardTitle>
-              <CardDescription>
-                You need committee access to create events.
-              </CardDescription>
+              <CardDescription>You need committee access to create events.</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button onClick={() => navigate('/my-events')}>
-                Back to My Events
-              </Button>
+              <Button onClick={() => navigate("/my-events")}>Back to My Events</Button>
             </CardContent>
           </Card>
         </div>
@@ -453,11 +448,7 @@ const CreateEvent = () => {
         <header className="border-b bg-background">
           <div className="container mx-auto flex items-center justify-between px-4 py-4">
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate(`/society/${slug}/events`)}
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate(`/society/${slug}/events`)}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <img src={logo} alt="OurSafeBase" className="h-8" />
@@ -502,7 +493,7 @@ const CreateEvent = () => {
                           variant="outline"
                           className={cn(
                             "w-full justify-start text-left font-normal",
-                            !eventDate && "text-muted-foreground"
+                            !eventDate && "text-muted-foreground",
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
@@ -533,14 +524,14 @@ const CreateEvent = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>End Date (optional - for multi-day events)</Label>
+                  <Label>End Date </Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         className={cn(
                           "w-full justify-start text-left font-normal",
-                          !eventEndDate && "text-muted-foreground"
+                          !eventEndDate && "text-muted-foreground",
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -553,7 +544,7 @@ const CreateEvent = () => {
                         selected={eventEndDate}
                         onSelect={setEventEndDate}
                         initialFocus
-                        disabled={(date) => eventDate ? date < eventDate : false}
+                        disabled={(date) => (eventDate ? date < eventDate : false)}
                         className="pointer-events-auto"
                       />
                     </PopoverContent>
@@ -576,9 +567,7 @@ const CreateEvent = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Important Contacts</CardTitle>
-                <CardDescription>
-                  Welfare officers and emergency contacts for attendees
-                </CardDescription>
+                <CardDescription>Welfare officers and emergency contacts for attendees</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Society Members */}
@@ -595,14 +584,11 @@ const CreateEvent = () => {
                       Add members on Members page
                     </Button>
                   </div>
-                  
+
                   {selectedContacts.length > 0 && (
                     <div className="space-y-2">
                       {selectedContacts.map((contact) => (
-                        <div
-                          key={contact.userId}
-                          className="flex items-center gap-2 rounded-lg border bg-muted p-3"
-                        >
+                        <div key={contact.userId} className="flex items-center gap-2 rounded-lg border bg-muted p-3">
                           <div className="flex-1">
                             <p className="font-medium">{contact.displayName}</p>
                             <p className="text-sm text-muted-foreground">{contact.role}</p>
@@ -629,7 +615,7 @@ const CreateEvent = () => {
                     >
                       <option value="">Select a member...</option>
                       {members
-                        .filter(m => m.role === 'committee' && !selectedContacts.some(c => c.userId === m.user_id))
+                        .filter((m) => m.role === "committee" && !selectedContacts.some((c) => c.userId === m.user_id))
                         .map((member) => (
                           <option key={member.user_id} value={member.user_id}>
                             {member.profile?.display_name || "Anonymous"}
@@ -665,12 +651,7 @@ const CreateEvent = () => {
                             className="h-9"
                           />
                         </div>
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={handleAddMember}
-                          className="w-full"
-                        >
+                        <Button type="button" size="sm" onClick={handleAddMember} className="w-full">
                           Add Contact
                         </Button>
                       </div>
@@ -681,15 +662,14 @@ const CreateEvent = () => {
                 {/* External Contacts */}
                 <div className="space-y-4 pt-6 border-t">
                   <Label>External Contacts</Label>
-                  <p className="text-sm text-muted-foreground">Add contacts who are not society members (e.g., venue staff, security)</p>
-                  
+                  <p className="text-sm text-muted-foreground">
+                    Add contacts who are not society members (e.g., venue staff, security)
+                  </p>
+
                   {externalContacts.length > 0 && (
                     <div className="space-y-2">
                       {externalContacts.map((contact) => (
-                        <div
-                          key={contact.id}
-                          className="flex items-center gap-2 rounded-lg border bg-muted p-3"
-                        >
+                        <div key={contact.id} className="flex items-center gap-2 rounded-lg border bg-muted p-3">
                           <div className="flex-1">
                             <p className="font-medium">{contact.name}</p>
                             <p className="text-sm text-muted-foreground">{contact.phone}</p>
@@ -750,18 +730,12 @@ const CreateEvent = () => {
                         placeholder="e.g., Security, Venue Staff"
                       />
                     </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleAddExternalContact}
-                      className="w-full"
-                    >
+                    <Button type="button" size="sm" onClick={handleAddExternalContact} className="w-full">
                       <Plus className="h-4 w-4 mr-2" />
                       Add External Contact
                     </Button>
                   </div>
                 </div>
-
               </CardContent>
             </Card>
 
@@ -781,12 +755,7 @@ const CreateEvent = () => {
                         onChange={(e) => updateEmergencyField(field.id, "label", e.target.value)}
                         className="font-medium"
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeEmergencyField(field.id)}
-                      >
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeEmergencyField(field.id)}>
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
@@ -807,13 +776,8 @@ const CreateEvent = () => {
                     />
                   </div>
                 ))}
-                
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addEmergencyField}
-                  className="w-full"
-                >
+
+                <Button type="button" variant="outline" onClick={addEmergencyField} className="w-full">
                   <Plus className="mr-2 h-4 w-4" />
                   Add Emergency Info
                 </Button>
@@ -854,7 +818,8 @@ const CreateEvent = () => {
                         <option value="">None (optional)</option>
                         {availableCoCs.map((coc) => (
                           <option key={coc.id} value={coc.id}>
-                            {coc.name || `Version ${coc.version}`}{coc.is_active ? ' (Active)' : ''}
+                            {coc.name || `Version ${coc.version}`}
+                            {coc.is_active ? " (Active)" : ""}
                           </option>
                         ))}
                       </select>
@@ -864,13 +829,13 @@ const CreateEvent = () => {
                         <p className="mb-2 text-sm font-medium">Preview:</p>
                         <div className="max-h-40 overflow-y-auto text-sm text-muted-foreground">
                           {(() => {
-                            const selectedCoC = availableCoCs.find(c => c.id === selectedCoCId);
+                            const selectedCoC = availableCoCs.find((c) => c.id === selectedCoCId);
                             if (selectedCoC?.content) {
                               return `${selectedCoC.content.substring(0, 300)}...`;
                             } else if (selectedCoC?.file_url) {
-                              return `File-based Code of Conduct${selectedCoC.name ? `: ${selectedCoC.name}` : ''}`;
+                              return `File-based Code of Conduct${selectedCoC.name ? `: ${selectedCoC.name}` : ""}`;
                             }
-                            return 'No content available';
+                            return "No content available";
                           })()}
                         </div>
                       </div>
@@ -894,12 +859,7 @@ const CreateEvent = () => {
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              onClick={handleSubmit}
-              className="flex-1"
-              disabled={submitting}
-            >
+            <Button type="submit" onClick={handleSubmit} className="flex-1" disabled={submitting}>
               {submitting ? "Creating..." : "Save & Create Safety Page"}
             </Button>
           </div>
