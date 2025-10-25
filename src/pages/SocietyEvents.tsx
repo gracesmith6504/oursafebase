@@ -18,6 +18,7 @@ interface Event {
   title: string;
   slug: string;
   event_date: string;
+  event_end_date: string | null;
   status: string;
   location: string | null;
   description: string | null;
@@ -223,7 +224,12 @@ const SocietyEvents = () => {
                           <CardTitle className="mb-2">{event.title}</CardTitle>
                           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                             <Calendar className="h-4 w-4" />
-                            <span>{format(new Date(event.event_date), "PPP")}</span>
+                            <span>
+                              {event.event_end_date 
+                                ? `${format(new Date(event.event_date), "MMM d")} - ${format(new Date(event.event_end_date), "MMM d, yyyy")}`
+                                : format(new Date(event.event_date), "PPP")
+                              }
+                            </span>
                           </div>
                           {event.location && (
                             <p className="mt-1 text-sm text-muted-foreground">{event.location}</p>

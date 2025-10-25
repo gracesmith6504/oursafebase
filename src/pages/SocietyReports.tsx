@@ -772,11 +772,6 @@ export default function SocietyReports() {
                         ? "No concerns reported yet" 
                         : "No reports match your filters"}
                     </p>
-                    {reports.length === 0 && (
-                      <p className="text-sm text-muted-foreground/70 mt-2 text-center max-w-md">
-                        Your society is doing great! This means attendees feel safe and comfortable at your events.
-                      </p>
-                    )}
                   </CardContent>
                 </Card>
               ) : (

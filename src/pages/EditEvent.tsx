@@ -67,6 +67,7 @@ const EditEvent = () => {
   // Form state
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState<Date>();
+  const [eventEndDate, setEventEndDate] = useState<Date>();
   const [eventTime, setEventTime] = useState("");
   const [location, setLocation] = useState("");
   const [selectedContacts, setSelectedContacts] = useState<WelfareContact[]>([]);
@@ -145,6 +146,9 @@ const EditEvent = () => {
       // Set event data
       setEventName(eventData.title);
       setEventDate(new Date(eventData.event_date));
+      if (eventData.event_end_date) {
+        setEventEndDate(new Date(eventData.event_end_date));
+      }
       setEventTime(format(new Date(eventData.event_date), "HH:mm"));
       setLocation(eventData.location || "");
 
@@ -356,12 +360,23 @@ const EditEvent = () => {
         eventDateTime.setHours(parseInt(hours), parseInt(minutes));
       }
 
+      // Combine end date and time if provided
+      let eventEndDateTime = null;
+      if (eventEndDate) {
+        eventEndDateTime = new Date(eventEndDate);
+        if (eventTime) {
+          const [hours, minutes] = eventTime.split(":");
+          eventEndDateTime.setHours(parseInt(hours), parseInt(minutes));
+        }
+      }
+
       // Update event
       const { error: eventError } = await supabase
         .from("events")
         .update({
           title: eventName.trim(),
           event_date: eventDateTime.toISOString(),
+          event_end_date: eventEndDateTime?.toISOString() || null,
           location: location.trim() || null,
         })
         .eq("id", eventId);
@@ -555,7 +570,7 @@ const EditEvent = () => {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>
-                      Date <span className="text-destructive">*</span>
+                      Start Date <span className="text-destructive">*</span>
                     </Label>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -591,6 +606,34 @@ const EditEvent = () => {
                       onChange={(e) => setEventTime(e.target.value)}
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>End Date (optional - for multi-day events)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !eventEndDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {eventEndDate ? format(eventEndDate, "PPP") : <span>Pick end date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={eventEndDate}
+                        onSelect={setEventEndDate}
+                        initialFocus
+                        disabled={(date) => eventDate ? date < eventDate : false}
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="space-y-2">

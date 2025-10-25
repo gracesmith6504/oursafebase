@@ -23,6 +23,7 @@ interface Event {
   id: string;
   title: string;
   event_date: string;
+  event_end_date: string | null;
   location: string | null;
   society: Society;
   code_of_conduct: {
@@ -86,6 +87,7 @@ const MyEvents = () => {
         id,
         title,
         event_date,
+        event_end_date,
         location,
         society:societies!inner(id, name, slug)
       `)
@@ -291,7 +293,10 @@ const MyEvents = () => {
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            {format(new Date(event.event_date), "MMM d, yyyy")}
+                            {event.event_end_date 
+                              ? `${format(new Date(event.event_date), "MMM d")} - ${format(new Date(event.event_end_date), "MMM d, yyyy")}`
+                              : format(new Date(event.event_date), "MMM d, yyyy")
+                            }
                           </span>
                           <Badge variant="outline" className="text-xs">
                             {event.society.name}
