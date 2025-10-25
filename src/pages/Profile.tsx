@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
-import { ArrowLeft, Upload, Bell } from "lucide-react";
+import { ArrowLeft, Upload, Bell, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import logo from "@/assets/logo.png";
@@ -46,6 +46,7 @@ const Profile = () => {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [societyToLeave, setSocietyToLeave] = useState<Society | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   useEffect(() => {
     if (user) {
       fetchProfile();
@@ -196,6 +197,12 @@ const Profile = () => {
       toast.error("An unexpected error occurred");
     }
   };
+  
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+  
   const getInitials = (name: string | null) => {
     if (!name) return "U";
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
@@ -211,13 +218,17 @@ const Profile = () => {
       <div className="min-h-screen bg-muted">
         <header className="border-b bg-background">
           <div className="container mx-auto flex items-center justify-between px-4 py-4">
-            <div className="flex items-center gap-2 sm:gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Dashboard</span>
+            </Button>
+            <div className="flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => navigate("/")}>
               <img src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
               <h1 className="text-lg md:text-xl font-bold">OurSafeBase</h1>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-              <ArrowLeft className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">Back to Dashboard</span>
+            <Button variant="ghost" size="sm" onClick={() => setLogoutDialogOpen(true)}>
+              <LogOut className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Sign Out</span>
             </Button>
           </div>
         </header>
@@ -390,6 +401,26 @@ const Profile = () => {
             }}>
                 Leave Society
               </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Sign Out Confirmation Dialog */}
+        <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+          <AlertDialogContent className="max-w-[80%] rounded-xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Log out of your account?</AlertDialogTitle>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
+              <AlertDialogAction
+                onClick={handleSignOut}
+                className="w-full border border-input bg-background text-destructive hover:bg-accent hover:text-destructive"
+              >
+                Log Out
+              </AlertDialogAction>
+              <AlertDialogCancel className="w-full mt-0">
+                Cancel
+              </AlertDialogCancel>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

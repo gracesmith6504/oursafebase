@@ -189,14 +189,15 @@ const MyEvents = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-background">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-2 sm:gap-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Dashboard</span>
+          </Button>
+          <div className="flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => navigate("/")}>
             <img src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
             <h1 className="text-lg md:text-xl font-bold">OurSafeBase</h1>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-4 w-4 md:mr-2" />
-            <span className="hidden md:inline">Back to Dashboard</span>
-          </Button>
+          <div className="w-[100px]"></div>
         </div>
       </header>
 

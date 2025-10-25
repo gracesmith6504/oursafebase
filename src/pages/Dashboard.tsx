@@ -5,16 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Plus, LogOut, User, Calendar } from "lucide-react";
+import { Plus, User, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import CreateSocietyDialog from "@/components/CreateSocietyDialog";
 import JoinSocietyDialog from "@/components/JoinSocietyDialog";
@@ -36,7 +27,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -78,17 +68,13 @@ const Dashboard = () => {
     setLoading(false);
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
-  };
 
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
         <header className="bg-card/80 backdrop-blur-sm shadow-md border-b border-border/50 rounded-b-3xl sticky top-0 z-50">
           <div className="container mx-auto flex items-center justify-between px-4 py-5">
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => navigate("/")}>
               <img src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
               <h1 className="text-lg md:text-xl font-heading font-bold text-foreground">OurSafeBase</h1>
             </div>
@@ -100,10 +86,6 @@ const Dashboard = () => {
               <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
                 <User className="h-4 w-4 md:mr-2" />
                 <span className="hidden md:inline">Profile</span>
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setLogoutDialogOpen(true)}>
-                <LogOut className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Sign Out</span>
               </Button>
             </div>
           </div>
@@ -194,25 +176,6 @@ const Dashboard = () => {
           onOpenChange={setJoinDialogOpen}
           onSuccess={fetchSocieties}
         />
-
-        <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-          <AlertDialogContent className="max-w-[80%] rounded-xl">
-            <AlertDialogHeader>
-              <AlertDialogTitle>Log out of your account?</AlertDialogTitle>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
-              <AlertDialogAction
-                onClick={handleSignOut}
-                className="w-full border border-input bg-background text-destructive hover:bg-accent hover:text-destructive"
-              >
-                Log Out
-              </AlertDialogAction>
-              <AlertDialogCancel className="w-full mt-0">
-                Cancel
-              </AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </ProtectedRoute>
   );

@@ -363,7 +363,12 @@ const EventSafetyPage = () => {
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
-            <img src={logo} alt="OurSafeBase" className="h-10" />
+            <img 
+              src={logo} 
+              alt="OurSafeBase" 
+              className="h-10 cursor-pointer" 
+              onClick={() => navigate("/")}
+            />
             <div>
               <h1 className="text-2xl font-bold">{event.title}</h1>
               <p className="text-sm text-muted-foreground">
@@ -464,9 +469,33 @@ const EventSafetyPage = () => {
           </Card>
         )}
 
-        {/* Code of Conduct - Minimal Design */}
+        {/* Action Buttons */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Button 
+            size="lg" 
+            className="w-full" 
+            variant="destructive"
+            onClick={() => {
+              if (!isSocietyMember) {
+                setShowMembershipAlert(true);
+              } else {
+                setShowReportDialog(true);
+              }
+            }}
+            disabled={membershipLoading}
+          >
+            <FileText className="mr-2 h-5 w-5" />
+            Report a Concern
+          </Button>
+          <Button size="lg" className="w-full" variant="outline" onClick={() => setShowFeedbackDialog(true)}>
+            <MessageSquare className="mr-2 h-5 w-5" />
+            Submit Feedback
+          </Button>
+        </div>
+
+        {/* Code of Conduct - Bottom Section */}
         {codeOfConduct && (
-          <Card className="border bg-muted/30">
+          <Card className="border bg-muted/30 mt-8">
             <CardContent className="p-4">
               {codeOfConduct.file_url ? (
                 <div className="flex items-center justify-between gap-4">
@@ -531,30 +560,6 @@ const EventSafetyPage = () => {
             </CardContent>
           </Card>
         )}
-
-        {/* Action Buttons */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Button 
-            size="lg" 
-            className="w-full" 
-            variant="destructive"
-            onClick={() => {
-              if (!isSocietyMember) {
-                setShowMembershipAlert(true);
-              } else {
-                setShowReportDialog(true);
-              }
-            }}
-            disabled={membershipLoading}
-          >
-            <FileText className="mr-2 h-5 w-5" />
-            Report a Concern
-          </Button>
-          <Button size="lg" className="w-full" variant="outline" onClick={() => setShowFeedbackDialog(true)}>
-            <MessageSquare className="mr-2 h-5 w-5" />
-            Submit Feedback
-          </Button>
-        </div>
       </main>
 
       {/* Footer */}
