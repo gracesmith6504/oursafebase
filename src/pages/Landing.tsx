@@ -128,7 +128,7 @@ const Landing = () => {
               <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <Users className="h-10 w-10 text-primary" />
               </div>
-              <CardTitle className="text-3xl font-heading">If You're Organizing an Event</CardTitle>
+              <CardTitle className="text-3xl font-heading">If You're Organising an Event</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <ul className="space-y-3 text-muted-foreground">
