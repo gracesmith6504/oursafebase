@@ -37,9 +37,10 @@ const Landing = () => {
             <img 
               src={logo} 
               alt="OurSafeBase" 
-              className="h-8 md:h-12" 
+              className="h-8 md:h-12 w-auto object-contain"
+              style={{ maxWidth: '48px', maxHeight: '48px' }}
               loading="eager"
-              fetchPriority="high"
+              decoding="async"
               width="48"
               height="48"
             />
