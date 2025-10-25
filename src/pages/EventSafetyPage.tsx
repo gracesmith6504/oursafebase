@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy, Loader2, ArrowLeft } from "lucide-react";
+import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy, Loader2, ArrowLeft, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
@@ -15,6 +15,7 @@ import { MembershipRequiredAlert } from "@/components/MembershipRequiredAlert";
 import { useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { EventQRCodeDialog } from "@/components/EventQRCodeDialog";
 
 interface Event {
   id: string;
@@ -77,6 +78,7 @@ const EventSafetyPage = () => {
   const [isSocietyMember, setIsSocietyMember] = useState(false);
   const [membershipLoading, setMembershipLoading] = useState(true);
   const [showViewCoCDialog, setShowViewCoCDialog] = useState(false);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
   
   const { isCommittee, loading: roleLoading } = useCommitteeRole(event?.society_id);
 
@@ -354,30 +356,40 @@ const EventSafetyPage = () => {
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-4">
-            {society && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleBackClick}
-                className="h-8 w-8"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            )}
-            <img 
-              src={logo} 
-              alt="OurSafeBase" 
-              className="h-10 cursor-pointer" 
-              onClick={() => navigate("/")}
-            />
-            <div>
-              <h1 className="text-2xl font-bold">{event.title}</h1>
-              <p className="text-sm text-muted-foreground">
-                {format(new Date(event.event_date), "PPP")}
-                {event.location && ` • ${event.location}`}
-              </p>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              {society && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleBackClick}
+                  className="h-8 w-8"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              )}
+              <img 
+                src={logo} 
+                alt="OurSafeBase" 
+                className="h-10 cursor-pointer" 
+                onClick={() => navigate("/")}
+              />
+              <div>
+                <h1 className="text-2xl font-bold">{event.title}</h1>
+                <p className="text-sm text-muted-foreground">
+                  {format(new Date(event.event_date), "PPP")}
+                  {event.location && ` • ${event.location}`}
+                </p>
+              </div>
             </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setQrDialogOpen(true)}
+              className="h-8 w-8 shrink-0"
+            >
+              <Share2 className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </header>
@@ -616,6 +628,18 @@ const EventSafetyPage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Share Event Dialog */}
+      {event && society && (
+        <EventQRCodeDialog
+          open={qrDialogOpen}
+          onOpenChange={setQrDialogOpen}
+          eventId={event.id}
+          eventTitle={event.title}
+          societySlug={society.slug}
+          eventSlug={eventSlug || event.id}
+        />
       )}
     </div>
   );
