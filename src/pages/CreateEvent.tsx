@@ -69,6 +69,10 @@ const CreateEvent = () => {
   const [eventDate, setEventDate] = useState<Date>();
   const [eventEndDate, setEventEndDate] = useState<Date>();
   const [eventTime, setEventTime] = useState("");
+  
+  // Popover open states for auto-closing calendars
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
   const [location, setLocation] = useState("");
   const [selectedContacts, setSelectedContacts] = useState<WelfareContact[]>([]);
   const [externalContacts, setExternalContacts] = useState<ExternalContact[]>([]);
@@ -482,50 +486,41 @@ const CreateEvent = () => {
                   />
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>
-                      Start Date <span className="text-destructive">*</span>
-                    </Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !eventDate && "text-muted-foreground",
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {eventDate ? format(eventDate, "PPP") : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={eventDate}
-                          onSelect={setEventDate}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="eventTime">Time (optional)</Label>
-                    <Input
-                      id="eventTime"
-                      type="time"
-                      value={eventTime}
-                      onChange={(e) => setEventTime(e.target.value)}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label>
+                    Start Date <span className="text-destructive">*</span>
+                  </Label>
+                  <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !eventDate && "text-muted-foreground",
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {eventDate ? format(eventDate, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={eventDate}
+                        onSelect={(date) => {
+                          setEventDate(date);
+                          setStartDateOpen(false);
+                        }}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="space-y-2">
                   <Label>End Date </Label>
-                  <Popover>
+                  <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
@@ -542,13 +537,26 @@ const CreateEvent = () => {
                       <Calendar
                         mode="single"
                         selected={eventEndDate}
-                        onSelect={setEventEndDate}
+                        onSelect={(date) => {
+                          setEventEndDate(date);
+                          setEndDateOpen(false);
+                        }}
                         initialFocus
                         disabled={(date) => (eventDate ? date < eventDate : false)}
                         className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="eventTime">Time (optional)</Label>
+                  <Input
+                    id="eventTime"
+                    type="time"
+                    value={eventTime}
+                    onChange={(e) => setEventTime(e.target.value)}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -572,17 +580,11 @@ const CreateEvent = () => {
               <CardContent className="space-y-6">
                 {/* Society Members */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="space-y-1">
                     <Label>Society Team Members</Label>
-                    <Button
-                      type="button"
-                      variant="link"
-                      size="sm"
-                      className="h-auto p-0 text-xs text-muted-foreground"
-                      onClick={() => navigate(`/society/${slug}/members`)}
-                    >
-                      Send comitee code to Invite Members to your society
-                    </Button>
+                    <p className="text-xs sm:text-sm text-muted-foreground break-words">
+                      Send committee code on Members page to invite members to your society
+                    </p>
                   </div>
 
                   {selectedContacts.length > 0 && (
