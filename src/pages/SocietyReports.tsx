@@ -494,10 +494,13 @@ export default function SocietyReports() {
     return bubbles;
   };
 
-  if (roleLoading) {
+  if (roleLoading || dataLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Loading reports...</div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="text-muted-foreground">Loading reports...</div>
+        </div>
       </div>
     );
   }

@@ -189,11 +189,11 @@ export function ReportConcernDialog({
                     <FormLabel>Type of Concern</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="z-50">
                         <SelectItem value="harassment">Harassment</SelectItem>
                         <SelectItem value="safety">Safety Issue</SelectItem>
                         <SelectItem value="code_violation">Code of Conduct Violation</SelectItem>

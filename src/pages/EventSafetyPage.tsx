@@ -505,9 +505,6 @@ const EventSafetyPage = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-sm">Code of Conduct</p>
-                      {codeOfConduct.name && (
-                        <p className="text-xs text-muted-foreground truncate">{codeOfConduct.name}</p>
-                      )}
                     </div>
                   </div>
                   <Button 
@@ -533,9 +530,6 @@ const EventSafetyPage = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-sm">Code of Conduct</p>
-                      {codeOfConduct.name && (
-                        <p className="text-xs text-muted-foreground truncate">{codeOfConduct.name}</p>
-                      )}
                     </div>
                   </div>
                   <div className="shrink-0">

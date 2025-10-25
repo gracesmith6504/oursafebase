@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle, ArrowLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 const feedbackSchema = z.object({
@@ -22,7 +23,9 @@ const feedbackSchema = z.object({
   improvements: z.string().trim().max(1000, "Improvements must be less than 1000 characters").optional().or(z.literal("")),
   isAnonymous: z.boolean(),
   name: z.string().trim().max(100, "Name must be less than 100 characters").optional().or(z.literal("")),
-  email: z.string().trim().email("Please enter a valid email").max(255, "Email must be less than 255 characters").optional().or(z.literal(""))
+  email: z.string().trim().email("Please enter a valid email").max(255, "Email must be less than 255 characters").optional().or(z.literal("")),
+  countryCode: z.string().optional().or(z.literal("")),
+  phone: z.string().trim().max(20, "Phone must be less than 20 characters").optional().or(z.literal(""))
 }).refine(data => {
   if (!data.isAnonymous) {
     return data.email && data.email.length > 0;
@@ -73,7 +76,9 @@ export function SubmitFeedbackDialog({
       improvements: "",
       isAnonymous: true,
       name: "",
-      email: user?.email || ""
+      email: user?.email || "",
+      countryCode: "+353",
+      phone: ""
     }
   });
   const isAnonymous = form.watch("isAnonymous");
@@ -87,6 +92,7 @@ export function SubmitFeedbackDialog({
     setIsSubmitting(true);
     try {
       // User is always authenticated; is_anonymous controls contact visibility
+      const fullPhone = data.isAnonymous ? null : (data.phone ? `${data.countryCode || '+353'}${data.phone}` : null);
       const {
         error
       } = await supabase.from("event_feedback").insert({
@@ -95,7 +101,8 @@ export function SubmitFeedbackDialog({
         improvements: data.improvements || null,
         is_anonymous: data.isAnonymous,
         contact_name: data.isAnonymous ? null : data.name || null,
-        contact_email: data.isAnonymous ? null : data.email || null
+        contact_email: data.isAnonymous ? null : data.email || null,
+        contact_phone: fullPhone
       });
       if (error) throw error;
       setShowSuccess(true);
@@ -223,6 +230,49 @@ export function SubmitFeedbackDialog({
                               </FormControl>
                               <FormMessage />
                             </FormItem>} />
+
+                        <div className="space-y-2">
+                          <FormLabel>Phone Number (optional)</FormLabel>
+                          <div className="flex gap-2">
+                            <FormField control={form.control} name="countryCode" render={({
+                              field
+                            }) => <FormItem className="w-[120px]">
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="+353" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent className="z-50">
+                                      <SelectItem value="+353">🇮🇪 +353</SelectItem>
+                                      <SelectItem value="+44">🇬🇧 +44</SelectItem>
+                                      <SelectItem value="+1">🇺🇸 +1</SelectItem>
+                                      <SelectItem value="+61">🇦🇺 +61</SelectItem>
+                                      <SelectItem value="+33">🇫🇷 +33</SelectItem>
+                                      <SelectItem value="+49">🇩🇪 +49</SelectItem>
+                                      <SelectItem value="+34">🇪🇸 +34</SelectItem>
+                                      <SelectItem value="+39">🇮🇹 +39</SelectItem>
+                                      <SelectItem value="+31">🇳🇱 +31</SelectItem>
+                                      <SelectItem value="+32">🇧🇪 +32</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>} />
+                            
+                            <FormField control={form.control} name="phone" render={({
+                              field
+                            }) => <FormItem className="flex-1">
+                                  <FormControl>
+                                    <Input 
+                                      type="tel" 
+                                      placeholder="87 123 4567"
+                                      {...field} 
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>} />
+                          </div>
+                        </div>
                       </div>}
                   </form>
                 </Form>
