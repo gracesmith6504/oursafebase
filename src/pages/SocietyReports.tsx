@@ -239,33 +239,43 @@ export default function SocietyReports() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "new": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "in_progress": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "under_review": return "bg-purple-100 text-purple-800 border-purple-200";
-      case "resolved": return "bg-green-100 text-green-800 border-green-200";
-      case "closed": return "bg-gray-100 text-gray-800 border-gray-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "new": return "bg-amber-50 text-amber-700 border-amber-200";
+      case "in_progress": return "bg-blue-50 text-blue-700 border-blue-200";
+      case "under_review": return "bg-purple-50 text-purple-700 border-purple-200";
+      case "resolved": return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "closed": return "bg-slate-50 text-slate-600 border-slate-200";
+      default: return "bg-slate-50 text-slate-600 border-slate-200";
     }
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case "low": return "bg-gray-100 text-gray-800 border-gray-200";
-      case "medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "high": return "bg-orange-100 text-orange-800 border-orange-200";
-      case "critical": return "bg-red-100 text-red-800 border-red-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "low": return "bg-slate-50 text-slate-600 border-slate-200";
+      case "medium": return "bg-orange-50 text-orange-700 border-orange-200";
+      case "high": return "bg-rose-50 text-rose-700 border-rose-200";
+      case "critical": return "bg-red-100 text-red-800 border-red-300 font-semibold";
+      default: return "bg-slate-50 text-slate-600 border-slate-200";
+    }
+  };
+
+  const getSeverityAccentColor = (severity: string) => {
+    switch (severity) {
+      case "low": return "bg-slate-300";
+      case "medium": return "bg-orange-400";
+      case "high": return "bg-rose-500";
+      case "critical": return "bg-red-600";
+      default: return "bg-slate-300";
     }
   };
 
   const getSafetyColor = (feltSafe: string) => {
     switch (feltSafe) {
-      case "very_safe": return "bg-green-100 text-green-800";
-      case "mostly_safe": return "bg-green-50 text-green-700";
-      case "somewhat_safe": return "bg-yellow-100 text-yellow-800";
-      case "unsafe": return "bg-orange-100 text-orange-800";
-      case "very_unsafe": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "very_safe": return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "mostly_safe": return "bg-emerald-50/50 text-emerald-600 border-emerald-100";
+      case "somewhat_safe": return "bg-amber-50 text-amber-700 border-amber-200";
+      case "unsafe": return "bg-orange-50 text-orange-700 border-orange-200";
+      case "very_unsafe": return "bg-red-50 text-red-700 border-red-200";
+      default: return "bg-slate-50 text-slate-600 border-slate-200";
     }
   };
 
@@ -459,9 +469,23 @@ export default function SocietyReports() {
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <Tabs defaultValue="reports" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="reports">Concerns</TabsTrigger>
-            <TabsTrigger value="feedback">Feedback</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+            <TabsTrigger value="reports" className="relative">
+              Concerns
+              {reports.length > 0 && (
+                <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs bg-primary/20 text-primary">
+                  {reports.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="feedback" className="relative">
+              Feedback
+              {feedback.length > 0 && (
+                <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs bg-primary/20 text-primary">
+                  {feedback.length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -584,18 +608,18 @@ export default function SocietyReports() {
               
               {/* Applied Filter Bubbles */}
               {getReportFilterBubbles().length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   {getReportFilterBubbles().map((bubble, index) => (
                     <Badge 
                       key={index} 
                       variant="secondary" 
-                      className="gap-2 pr-1 pl-3 py-1"
+                      className="gap-2 pr-1.5 pl-3 py-1.5 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors"
                     >
-                      {bubble.label}
+                      <span className="text-xs font-medium">{bubble.label}</span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-4 w-4 p-0 hover:bg-transparent"
+                        className="h-4 w-4 p-0 hover:bg-primary/30 rounded-full"
                         onClick={bubble.onRemove}
                       >
                         <X className="h-3 w-3" />
@@ -605,7 +629,7 @@ export default function SocietyReports() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-xs"
+                    className="h-8 text-xs text-primary hover:text-primary hover:bg-primary/10"
                     onClick={() => {
                       setStatusFilter("all");
                       setEventFilter("all");
@@ -624,47 +648,82 @@ export default function SocietyReports() {
               {filteredReports.length === 0 ? (
                 <Card>
                   <CardContent className="flex flex-col items-center justify-center py-12">
-                    <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-lg font-medium text-muted-foreground">
+                    <div className="text-6xl mb-4">✅</div>
+                    <p className="text-lg font-medium text-muted-foreground text-center">
                       {reports.length === 0 
-                        ? "No concerns reported yet. Your society is doing great!" 
-                        : "No reports match your filters."}
+                        ? "No concerns reported yet" 
+                        : "No reports match your filters"}
                     </p>
+                    {reports.length === 0 && (
+                      <p className="text-sm text-muted-foreground/70 mt-2 text-center max-w-md">
+                        Your society is doing great! This means attendees feel safe and comfortable at your events.
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               ) : (
                 filteredReports.map(report => {
                   const needsResponse = report.reporter_email || report.reporter_phone;
+                  const isNew = report.status === "new";
+                  
                   return (
-                    <Card key={report.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-6">
+                    <Card 
+                      key={report.id} 
+                      className="relative overflow-hidden hover:shadow-lg transition-all duration-300 group"
+                    >
+                      {/* Severity Accent Bar */}
+                      <div className={`absolute left-0 top-0 bottom-0 w-1 ${getSeverityAccentColor(report.severity)} group-hover:w-1.5 transition-all`} />
+                      
+                      <CardContent className="p-6 pl-7">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 space-y-3">
+                            {/* Status and Severity - Primary Badges */}
                             <div className="flex items-center gap-2 flex-wrap">
-                              <Badge variant="outline" className={getStatusColor(report.status)}>
-                                {report.status.replace('_', ' ').toUpperCase()}
+                              {isNew && (
+                                <div className="relative flex items-center">
+                                  <span className="flex h-2 w-2 absolute -left-1 -top-1">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                  </span>
+                                </div>
+                              )}
+                              <Badge variant="outline" className={`${getStatusColor(report.status)} font-medium tracking-wide`}>
+                                {report.status === "new" ? "New" : 
+                                 report.status === "in_progress" ? "In Progress" :
+                                 report.status === "under_review" ? "Under Review" :
+                                 report.status === "resolved" ? "Resolved" : "Closed"}
                               </Badge>
-                              <Badge variant="outline" className={getSeverityColor(report.severity)}>
-                                {report.severity.toUpperCase()}
-                              </Badge>
-                              <Badge variant="outline">
-                                {CONCERN_TYPE_LABELS[report.concern_type]}
-                              </Badge>
-                              <Badge 
-                                variant="outline" 
-                                className={needsResponse ? "bg-green-100 text-green-800 border-green-200" : "bg-gray-100 text-gray-800 border-gray-200"}
-                              >
-                                Needs Response: {needsResponse ? "Yes" : "No"}
+                              <Badge variant="outline" className={`${getSeverityColor(report.severity)} tracking-wide`}>
+                                {report.severity === "critical" && "🚨 "}
+                                {report.severity.charAt(0).toUpperCase() + report.severity.slice(1)}
                               </Badge>
                             </div>
 
+                            {/* Event Title & Time */}
                             <div>
-                              <p className="text-sm text-muted-foreground">
-                                {report.events.title} • {formatDistanceToNow(new Date(report.submitted_at), { addSuffix: true })}
+                              <p className="font-semibold text-foreground/90">
+                                {report.events.title}
+                              </p>
+                              <p className="text-xs text-muted-foreground/70 mt-0.5">
+                                {formatDistanceToNow(new Date(report.submitted_at), { addSuffix: true })}
                               </p>
                             </div>
 
-                            <p className="text-sm line-clamp-2">
+                            {/* Category & Response Badge */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-xs">
+                                {CONCERN_TYPE_LABELS[report.concern_type]}
+                              </Badge>
+                              {needsResponse && (
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5" />
+                                  Needs Response
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Description */}
+                            <p className="text-sm text-foreground/80 line-clamp-2 leading-relaxed pt-1">
                               {report.description}
                             </p>
                           </div>
@@ -672,6 +731,7 @@ export default function SocietyReports() {
                           <Button
                             onClick={() => handleViewDetails(report.id)}
                             variant="outline"
+                            className="shrink-0 hover:bg-primary hover:text-primary-foreground transition-colors"
                           >
                             View Details
                           </Button>
@@ -801,18 +861,18 @@ export default function SocietyReports() {
               
               {/* Applied Filter Bubbles */}
               {getFeedbackFilterBubbles().length > 0 && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   {getFeedbackFilterBubbles().map((bubble, index) => (
                     <Badge 
                       key={index} 
                       variant="secondary" 
-                      className="gap-2 pr-1 pl-3 py-1"
+                      className="gap-2 pr-1.5 pl-3 py-1.5 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors"
                     >
-                      {bubble.label}
+                      <span className="text-xs font-medium">{bubble.label}</span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-4 w-4 p-0 hover:bg-transparent"
+                        className="h-4 w-4 p-0 hover:bg-primary/30 rounded-full"
                         onClick={bubble.onRemove}
                       >
                         <X className="h-3 w-3" />
@@ -822,7 +882,7 @@ export default function SocietyReports() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-xs"
+                    className="h-8 text-xs text-primary hover:text-primary hover:bg-primary/10"
                     onClick={() => {
                       setFeedbackEventFilter("all");
                       setFeedbackSafetyFilter("all");
@@ -840,65 +900,72 @@ export default function SocietyReports() {
             <div className="space-y-4">
               {filteredFeedback.length === 0 ? (
                 <Card>
-                  <CardContent className="py-12">
-                    <div className="text-center text-muted-foreground">
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <div className="text-6xl mb-4">🎤</div>
+                    <p className="text-lg font-medium text-muted-foreground text-center">
                       {feedback.length === 0 
-                        ? "No feedback received yet. Encourage attendees to share their experience! 🎤"
-                        : "No feedback matches your filters."}
-                    </div>
+                        ? "No feedback received yet"
+                        : "No feedback matches your filters"}
+                    </p>
+                    {feedback.length === 0 && (
+                      <p className="text-sm text-muted-foreground/70 mt-2 text-center max-w-md">
+                        Encourage attendees to share their experience after events to help improve safety and engagement.
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               ) : (
                 filteredFeedback.map(fb => {
                   return (
-                    <Card key={fb.id} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-6">
+                    <Card key={fb.id} className="hover:shadow-lg transition-all duration-300 group relative overflow-hidden border-l-4 border-l-primary/20">
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary/30 group-hover:w-1.5 transition-all" />
+                      
+                      <CardContent className="p-6 pl-8">
                         <div className="flex flex-col gap-4">
                           <div className="flex items-start justify-between">
-                            <div className="space-y-2 flex-1">
+                            <div className="space-y-3 flex-1">
+                              {/* Safety Rating Badge */}
                               <div className="flex items-center gap-2 flex-wrap">
-                                <Badge variant="secondary" className={getSafetyColor(fb.felt_safe)}>
-                                  <span className="mr-1">{getSafetyEmoji(fb.felt_safe)}</span>
+                                <Badge variant="outline" className={`${getSafetyColor(fb.felt_safe)} font-medium px-3 py-1`}>
+                                  <span className="mr-2 text-base">{getSafetyEmoji(fb.felt_safe)}</span>
                                   {getSafetyLabel(fb.felt_safe)}
                                 </Badge>
-                                <Badge variant="outline" className={fb.is_anonymous ? "bg-gray-100 text-gray-800" : "bg-blue-100 text-blue-800"}>
-                                  {fb.is_anonymous ? "Anonymous" : "With Contact"}
-                                </Badge>
                                 {fb.contact_email && (
-                                  <span className="text-xs text-green-600 flex items-center gap-1">
-                                    <span className="h-2 w-2 rounded-full bg-green-500" />
+                                  <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5" />
                                     Has Contact
-                                  </span>
+                                  </Badge>
+                                )}
+                                {fb.is_anonymous && (
+                                  <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-xs">
+                                    Anonymous
+                                  </Badge>
                                 )}
                               </div>
                               
-                              <p className="text-sm font-medium text-muted-foreground">
-                                {fb.events.title}
-                              </p>
+                              {/* Event Title */}
+                              <div>
+                                <p className="font-semibold text-foreground/90">
+                                  {fb.events.title}
+                                </p>
+                                <p className="text-xs text-muted-foreground/70 mt-0.5">
+                                  {formatDistanceToNow(new Date(fb.submitted_at), { addSuffix: true })}
+                                </p>
+                              </div>
                               
-                              <p className="text-sm text-muted-foreground">
-                                Submitted {formatDistanceToNow(new Date(fb.submitted_at), { addSuffix: true })}
-                              </p>
-                              
+                              {/* Improvements Preview */}
                               {fb.improvements && (
-                                <p className="text-sm line-clamp-2 bg-muted p-3 rounded-md">
+                                <p className="text-sm text-foreground/80 line-clamp-2 leading-relaxed">
                                   {fb.improvements}
                                 </p>
                               )}
-                              
-                              {!fb.improvements && (
-                                <p className="text-sm text-muted-foreground italic">
-                                  No improvement suggestions provided
-                                </p>
-                              )}
                             </div>
-                          </div>
-                          
-                          <div className="flex justify-end">
+                            
                             <Button
                               onClick={() => handleViewFeedback(fb)}
-                              size="sm"
                               variant="outline"
+                              size="sm"
+                              className="shrink-0 hover:bg-primary hover:text-primary-foreground transition-colors"
                             >
                               View Details
                             </Button>

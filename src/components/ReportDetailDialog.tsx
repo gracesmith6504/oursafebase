@@ -156,22 +156,22 @@ export function ReportDetailDialog({ open, onOpenChange, reportId, onUpdate }: R
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "new": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "in_progress": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "under_review": return "bg-purple-100 text-purple-800 border-purple-200";
-      case "resolved": return "bg-green-100 text-green-800 border-green-200";
-      case "closed": return "bg-gray-100 text-gray-800 border-gray-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "new": return "bg-amber-50 text-amber-700 border-amber-200";
+      case "in_progress": return "bg-blue-50 text-blue-700 border-blue-200";
+      case "under_review": return "bg-purple-50 text-purple-700 border-purple-200";
+      case "resolved": return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "closed": return "bg-slate-50 text-slate-600 border-slate-200";
+      default: return "bg-slate-50 text-slate-600 border-slate-200";
     }
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case "low": return "bg-gray-100 text-gray-800 border-gray-200";
-      case "medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "high": return "bg-orange-100 text-orange-800 border-orange-200";
-      case "critical": return "bg-red-100 text-red-800 border-red-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "low": return "bg-slate-50 text-slate-600 border-slate-200";
+      case "medium": return "bg-orange-50 text-orange-700 border-orange-200";
+      case "high": return "bg-rose-50 text-rose-700 border-rose-200";
+      case "critical": return "bg-red-100 text-red-800 border-red-300 font-semibold";
+      default: return "bg-slate-50 text-slate-600 border-slate-200";
     }
   };
 
@@ -302,7 +302,8 @@ export function ReportDetailDialog({ open, onOpenChange, reportId, onUpdate }: R
               )}
               <div className="pt-2 border-t">
                 <span className="text-sm font-medium">Needs Response: </span>
-                <Badge variant="outline" className={needsResponse ? "bg-green-100 text-green-800 border-green-200" : "bg-gray-100 text-gray-800 border-gray-200"}>
+              <Badge variant="outline" className={needsResponse ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-50 text-slate-600 border-slate-200"}>
+                  {needsResponse && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5" />}
                   {needsResponse ? "Yes" : "No"}
                 </Badge>
               </div>

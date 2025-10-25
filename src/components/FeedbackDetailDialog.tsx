@@ -31,11 +31,11 @@ interface FeedbackDetailDialogProps {
 }
 
 const SAFETY_DISPLAY = {
-  very_safe: { label: "Very Safe", emoji: "😊", color: "bg-green-100 text-green-800" },
-  mostly_safe: { label: "Mostly Safe", emoji: "🙂", color: "bg-green-50 text-green-700" },
-  somewhat_safe: { label: "Somewhat Safe", emoji: "😐", color: "bg-yellow-100 text-yellow-800" },
-  unsafe: { label: "Unsafe", emoji: "😟", color: "bg-orange-100 text-orange-800" },
-  very_unsafe: { label: "Very Unsafe", emoji: "😢", color: "bg-red-100 text-red-800" },
+  very_safe: { label: "Very Safe", emoji: "😊", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  mostly_safe: { label: "Mostly Safe", emoji: "🙂", color: "bg-emerald-50/50 text-emerald-600 border-emerald-100" },
+  somewhat_safe: { label: "Somewhat Safe", emoji: "😐", color: "bg-amber-50 text-amber-700 border-amber-200" },
+  unsafe: { label: "Unsafe", emoji: "😟", color: "bg-orange-50 text-orange-700 border-orange-200" },
+  very_unsafe: { label: "Very Unsafe", emoji: "😢", color: "bg-red-50 text-red-700 border-red-200" },
 };
 
 export function FeedbackDetailDialog({
@@ -81,7 +81,7 @@ export function FeedbackDetailDialog({
 
           <div>
             <p className="text-sm font-medium text-muted-foreground mb-2">Safety Rating</p>
-            <Badge variant="secondary" className={`${safetyInfo.color} text-base py-2 px-4`}>
+            <Badge variant="outline" className={`${safetyInfo.color} text-base py-2 px-4 font-medium`}>
               <span className="mr-2 text-xl">{safetyInfo.emoji}</span>
               {safetyInfo.label}
             </Badge>
@@ -112,7 +112,7 @@ export function FeedbackDetailDialog({
             </p>
             <div className="space-y-2">
               {feedback.is_anonymous ? (
-                <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+                <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
                   Submitted Anonymously
                 </Badge>
               ) : (
