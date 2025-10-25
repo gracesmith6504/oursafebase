@@ -34,7 +34,15 @@ const Landing = () => {
         {/* Header */}
         <header className="flex items-center justify-between pb-4 md:pb-8 mb-4 md:mb-8 bg-card/80 backdrop-blur-sm shadow-sm border-b border-border/50 rounded-b-2xl sticky top-0 z-50 px-3 md:px-6 py-3 md:py-4 -mx-4">
           <div className="flex items-center gap-2 md:gap-3">
-            <img src={logo} alt="OurSafeBase" className="h-8 md:h-12" />
+            <img 
+              src={logo} 
+              alt="OurSafeBase" 
+              className="h-8 md:h-12" 
+              loading="eager"
+              fetchPriority="high"
+              width="48"
+              height="48"
+            />
             <h1 className="text-lg md:text-2xl font-heading font-bold text-primary">OurSafeBase</h1>
           </div>
           <Button
@@ -320,7 +328,7 @@ const Landing = () => {
                   <MessageCircle className="h-6 w-6 text-primary" />
                 </div>
                 <h4 className="text-lg font-heading font-semibold">Track & Follow Up</h4>
-                <p className="text-sm text-muted-foreground">Review concerns with care and accountability</p>
+                <p className="text-sm text-muted-foreground">Review concerns with care and accountability. See who's accepted your code of conduct.</p>
               </CardContent>
             </Card>
 
