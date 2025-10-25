@@ -14,6 +14,7 @@ import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
 import { MembershipRequiredAlert } from "@/components/MembershipRequiredAlert";
 import { useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Event {
   id: string;
@@ -75,6 +76,7 @@ const EventSafetyPage = () => {
   const [hasEventLevelCoC, setHasEventLevelCoC] = useState(false);
   const [isSocietyMember, setIsSocietyMember] = useState(false);
   const [membershipLoading, setMembershipLoading] = useState(true);
+  const [showViewCoCDialog, setShowViewCoCDialog] = useState(false);
   
   const { isCommittee, loading: roleLoading } = useCommitteeRole(event?.society_id);
 
@@ -532,9 +534,14 @@ const EventSafetyPage = () => {
                       <p className="font-semibold text-sm">Code of Conduct</p>
                     </div>
                   </div>
-                  <div className="shrink-0">
-                    <p className="whitespace-pre-wrap text-sm line-clamp-2">{codeOfConduct.content}</p>
-                  </div>
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowViewCoCDialog(true)}
+                    className="shrink-0 hover:bg-primary/10"
+                  >
+                    View Code of Conduct →
+                  </Button>
                 </div>
               )}
               {!hasEventLevelCoC && isCommittee && (
@@ -586,6 +593,30 @@ const EventSafetyPage = () => {
         open={showMembershipAlert}
         onOpenChange={setShowMembershipAlert}
       />
+
+      {/* View CoC Dialog (no acceptance required) */}
+      {showViewCoCDialog && codeOfConduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowViewCoCDialog(false)}>
+          <div className="bg-background rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b">
+              <h2 className="text-2xl font-semibold">Code of Conduct</h2>
+              {codeOfConduct.name && (
+                <p className="text-sm text-muted-foreground mt-1">{codeOfConduct.name}</p>
+              )}
+            </div>
+            <ScrollArea className="flex-1 p-6">
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                <p className="whitespace-pre-wrap">{codeOfConduct.content}</p>
+              </div>
+            </ScrollArea>
+            <div className="p-6 border-t flex justify-end">
+              <Button onClick={() => setShowViewCoCDialog(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

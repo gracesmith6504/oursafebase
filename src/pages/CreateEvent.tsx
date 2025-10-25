@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { CreateCoCDialog } from "@/components/CreateCoCDialog";
+import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
 
 interface Society {
   id: string;
@@ -78,6 +79,12 @@ const CreateEvent = () => {
   
   // Create CoC dialog state
   const [createCoCDialogOpen, setCreateCoCDialogOpen] = useState(false);
+  
+  // CoC preview after event creation
+  const [showCoCPreview, setShowCoCPreview] = useState(false);
+  const [createdEventData, setCreatedEventData] = useState<any>(null);
+  const [cocPreviewData, setCoCPreviewData] = useState<any>(null);
+  
   const [selectedContacts, setSelectedContacts] = useState<WelfareContact[]>([]);
   const [externalContacts, setExternalContacts] = useState<ExternalContact[]>([]);
   const [emergencyFields, setEmergencyFields] = useState<EmergencyField[]>([]);
@@ -487,8 +494,29 @@ const CreateEvent = () => {
 
       // Clear draft after successful creation
       clearDraft();
-      toast.success("Event created. Safety Page ready.");
-      navigate(`/event/${eventData.id}`);
+      
+      // If there's a CoC, show preview dialog before navigating
+      if (selectedCoCId) {
+        const { data: eventCocData } = await supabase
+          .from("code_of_conduct")
+          .select("*")
+          .eq("event_id", eventData.id)
+          .eq("is_active", true)
+          .maybeSingle();
+        
+        if (eventCocData) {
+          setCreatedEventData(eventData);
+          setCoCPreviewData(eventCocData);
+          setShowCoCPreview(true);
+          toast.success("Event created! Preview the Code of Conduct.");
+        } else {
+          toast.success("Event created. Safety Page ready.");
+          navigate(`/event/${eventData.id}`);
+        }
+      } else {
+        toast.success("Event created. Safety Page ready.");
+        navigate(`/event/${eventData.id}`);
+      }
     } catch (error: any) {
       console.error("Error creating event:", error);
       toast.error(error?.message || "Failed to create event");
@@ -955,6 +983,23 @@ const CreateEvent = () => {
             onOpenChange={setCreateCoCDialogOpen}
             societyId={society.id}
             onSuccess={fetchCoCs}
+          />
+        )}
+        
+        {/* CoC Preview Dialog after event creation */}
+        {showCoCPreview && cocPreviewData && createdEventData && (
+          <CoCAcceptanceDialog
+            eventId={createdEventData.id}
+            eventTitle={createdEventData.title}
+            cocId={cocPreviewData.id}
+            cocVersion={cocPreviewData.version}
+            cocContent={cocPreviewData.content || undefined}
+            cocFileUrl={cocPreviewData.file_url || undefined}
+            cocContentType="text"
+            onAccepted={async () => {
+              setShowCoCPreview(false);
+              navigate(`/event/${createdEventData.id}`);
+            }}
           />
         )}
       </div>
