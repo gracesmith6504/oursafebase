@@ -50,6 +50,7 @@ interface EmergencyField {
   label: string;
   name: string;
   address: string;
+  phone: string;
 }
 
 const CreateEvent = () => {
@@ -106,53 +107,6 @@ const CreateEvent = () => {
       fetchData();
     }
   }, [user, slug]);
-
-  // Save form draft to localStorage
-  useEffect(() => {
-    if (society?.id) {
-      const draftKey = `event-draft-${society.id}`;
-      const draft = {
-        eventName,
-        eventDate: eventDate?.toISOString(),
-        eventEndDate: eventEndDate?.toISOString(),
-        eventTime,
-        location,
-        selectedContacts,
-        externalContacts,
-        emergencyFields,
-        selectedCoCId,
-      };
-      localStorage.setItem(draftKey, JSON.stringify(draft));
-    }
-  }, [eventName, eventDate, eventEndDate, eventTime, location, selectedContacts, externalContacts, emergencyFields, selectedCoCId, society?.id]);
-
-  // Restore draft on mount
-  useEffect(() => {
-    if (society?.id && !loading) {
-      const draftKey = `event-draft-${society.id}`;
-      const savedDraft = localStorage.getItem(draftKey);
-      if (savedDraft) {
-        try {
-          const draft = JSON.parse(savedDraft);
-          // Only restore if the form is empty (user returning from members/coc page)
-          if (!eventName && draft.eventName) {
-            setEventName(draft.eventName);
-            if (draft.eventDate) setEventDate(new Date(draft.eventDate));
-            if (draft.eventEndDate) setEventEndDate(new Date(draft.eventEndDate));
-            setEventTime(draft.eventTime || "");
-            setLocation(draft.location || "");
-            setSelectedContacts(draft.selectedContacts || []);
-            setExternalContacts(draft.externalContacts || []);
-            setEmergencyFields(draft.emergencyFields || []);
-            setSelectedCoCId(draft.selectedCoCId || "");
-            toast.info("Draft restored");
-          }
-        } catch (error) {
-          console.error("Error restoring draft:", error);
-        }
-      }
-    }
-  }, [society?.id, loading]);
 
   const fetchData = async () => {
     try {
@@ -304,6 +258,7 @@ const CreateEvent = () => {
         label: "",
         name: "",
         address: "",
+        phone: "",
       },
     ]);
   };
@@ -449,12 +404,6 @@ const CreateEvent = () => {
         }
       }
 
-      // Clear draft on successful creation
-      if (society?.id) {
-        const draftKey = `event-draft-${society.id}`;
-        localStorage.removeItem(draftKey);
-      }
-
       toast.success("Event created. Safety Page ready.");
       navigate(`/event/${eventData.id}`);
     } catch (error: any) {
@@ -533,37 +482,49 @@ const CreateEvent = () => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>
-                    Start Date <span className="text-destructive">*</span>
-                  </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !eventDate && "text-muted-foreground",
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {eventDate ? format(eventDate, "PPP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={eventDate}
-                        onSelect={setEventDate}
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>
+                      Start Date <span className="text-destructive">*</span>
+                    </Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !eventDate && "text-muted-foreground",
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {eventDate ? format(eventDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={eventDate}
+                          onSelect={setEventDate}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="eventTime">Time (optional)</Label>
+                    <Input
+                      id="eventTime"
+                      type="time"
+                      value={eventTime}
+                      onChange={(e) => setEventTime(e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>End Date (optional)</Label>
+                  <Label>End Date </Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -591,16 +552,6 @@ const CreateEvent = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="eventTime">Time (optional)</Label>
-                  <Input
-                    id="eventTime"
-                    type="time"
-                    value={eventTime}
-                    onChange={(e) => setEventTime(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="location">Location (optional)</Label>
                   <Input
                     id="location"
@@ -621,43 +572,34 @@ const CreateEvent = () => {
               <CardContent className="space-y-6">
                 {/* Society Members */}
                 <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                  <div className="flex items-center justify-between">
                     <Label>Society Team Members</Label>
                     <Button
                       type="button"
                       variant="link"
                       size="sm"
-                      className="h-auto p-0 text-xs text-muted-foreground self-start sm:self-auto"
-                      onClick={() => navigate(`/society/${slug}/members`, { state: { returnToCreateEvent: true } })}
+                      className="h-auto p-0 text-xs text-muted-foreground"
+                      onClick={() => navigate(`/society/${slug}/members`)}
                     >
-                      💡 Add members on Members page
+                      Send comitee code to Invite Members to your society
                     </Button>
                   </div>
 
                   {selectedContacts.length > 0 && (
                     <div className="space-y-2">
                       {selectedContacts.map((contact) => (
-                        <div key={contact.userId} className="flex items-center gap-2 rounded-lg border bg-muted p-2 sm:p-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm sm:text-base truncate">{contact.displayName}</p>
-                            <p className="text-xs sm:text-sm text-muted-foreground truncate">{contact.role}</p>
+                        <div key={contact.userId} className="flex items-center gap-2 rounded-lg border bg-muted p-3">
+                          <div className="flex-1">
+                            <p className="font-medium">{contact.displayName}</p>
+                            <p className="text-sm text-muted-foreground">{contact.role}</p>
                           </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 flex-shrink-0"
-                            onClick={() => removeMemberContact(contact.userId)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
                         </div>
                       ))}
                     </div>
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="memberSelect" className="text-sm">Add Team Member</Label>
+                    <Label htmlFor="memberSelect">Add Team Member</Label>
                     <select
                       id="memberSelect"
                       className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -674,14 +616,13 @@ const CreateEvent = () => {
                     </select>
 
                     {selectedMember && (
-                      <div className="rounded-lg border bg-muted p-2 sm:p-3 space-y-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-medium text-sm sm:text-base truncate">{selectedMember.profile?.display_name || "Anonymous"}</p>
+                      <div className="rounded-lg border bg-muted p-3 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium">{selectedMember.profile?.display_name || "Anonymous"}</p>
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="h-8 text-xs flex-shrink-0"
                             onClick={() => {
                               setSelectedMember(null);
                               setTempRole("");
@@ -691,7 +632,7 @@ const CreateEvent = () => {
                           </Button>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="tempRole" className="text-xs sm:text-sm">
+                          <Label htmlFor="tempRole" className="text-sm">
                             Role (optional)
                           </Label>
                           <Input
@@ -699,10 +640,10 @@ const CreateEvent = () => {
                             value={tempRole}
                             onChange={(e) => setTempRole(e.target.value)}
                             placeholder="e.g., Welfare Officer"
-                            className="h-9 text-sm"
+                            className="h-9"
                           />
                         </div>
-                        <Button type="button" size="sm" onClick={handleAddMember} className="w-full h-9">
+                        <Button type="button" size="sm" onClick={handleAddMember} className="w-full">
                           Add Contact
                         </Button>
                       </div>
@@ -711,26 +652,25 @@ const CreateEvent = () => {
                 </div>
 
                 {/* External Contacts */}
-                <div className="space-y-4 pt-4 sm:pt-6 border-t">
-                  <Label className="text-sm sm:text-base">External Contacts</Label>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
+                <div className="space-y-4 pt-6 border-t">
+                  <Label>External Contacts</Label>
+                  <p className="text-sm text-muted-foreground">
                     Add contacts who are not society members (e.g., venue staff, security)
                   </p>
 
                   {externalContacts.length > 0 && (
                     <div className="space-y-2">
                       {externalContacts.map((contact) => (
-                        <div key={contact.id} className="flex items-center gap-2 rounded-lg border bg-muted p-2 sm:p-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm sm:text-base truncate">{contact.name}</p>
-                            <p className="text-xs sm:text-sm text-muted-foreground break-all">{contact.phone}</p>
-                            {contact.role && <p className="text-xs sm:text-sm text-muted-foreground truncate">{contact.role}</p>}
+                        <div key={contact.id} className="flex items-center gap-2 rounded-lg border bg-muted p-3">
+                          <div className="flex-1">
+                            <p className="font-medium">{contact.name}</p>
+                            <p className="text-sm text-muted-foreground">{contact.phone}</p>
+                            {contact.role && <p className="text-sm text-muted-foreground">{contact.role}</p>}
                           </div>
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 flex-shrink-0"
                             onClick={() => removeExternalContact(contact.id)}
                           >
                             <X className="h-4 w-4" />
@@ -740,24 +680,23 @@ const CreateEvent = () => {
                     </div>
                   )}
 
-                  <div className="space-y-3 rounded-lg border bg-muted p-2 sm:p-3">
+                  <div className="space-y-3 rounded-lg border bg-muted p-3">
                     <div className="space-y-2">
-                      <Label htmlFor="externalName" className="text-xs sm:text-sm">Name *</Label>
+                      <Label htmlFor="externalName">Name *</Label>
                       <Input
                         id="externalName"
                         value={externalName}
                         onChange={(e) => setExternalName(e.target.value)}
                         placeholder="Contact name"
-                        className="text-sm"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="externalPhone" className="text-xs sm:text-sm">Phone Number *</Label>
-                      <div className="flex flex-col sm:flex-row gap-2">
+                      <Label htmlFor="externalPhone">Phone Number *</Label>
+                      <div className="flex gap-2">
                         <select
                           value={externalCountryCode}
                           onChange={(e) => setExternalCountryCode(e.target.value)}
-                          className="w-full sm:w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          className="w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
                         >
                           {countryCodes.map((c) => (
                             <option key={c.code} value={c.code}>
@@ -771,21 +710,19 @@ const CreateEvent = () => {
                           value={externalPhone}
                           onChange={(e) => setExternalPhone(e.target.value)}
                           placeholder="87 123 4567"
-                          className="text-sm"
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="externalRole" className="text-xs sm:text-sm">Role (optional)</Label>
+                      <Label htmlFor="externalRole">Role (optional)</Label>
                       <Input
                         id="externalRole"
                         value={externalRole}
                         onChange={(e) => setExternalRole(e.target.value)}
                         placeholder="e.g., Security, Venue Staff"
-                        className="text-sm"
                       />
                     </div>
-                    <Button type="button" size="sm" onClick={handleAddExternalContact} className="w-full h-9">
+                    <Button type="button" size="sm" onClick={handleAddExternalContact} className="w-full">
                       <Plus className="h-4 w-4 mr-2" />
                       Add External Contact
                     </Button>
@@ -824,6 +761,11 @@ const CreateEvent = () => {
                       value={field.address}
                       onChange={(e) => updateEmergencyField(field.id, "address", e.target.value)}
                     />
+                    <Input
+                      placeholder="Phone (optional)"
+                      value={field.phone}
+                      onChange={(e) => updateEmergencyField(field.id, "phone", e.target.value)}
+                    />
                   </div>
                 ))}
 
@@ -846,14 +788,6 @@ const CreateEvent = () => {
                     <p className="mb-2 text-sm text-muted-foreground">
                       No codes of conduct available. Create one first.
                     </p>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/society/${slug}/codes-of-conduct`, { state: { returnToCreateEvent: true } })}
-                    >
-                      Manage Codes of Conduct
-                    </Button>
                   </div>
                 ) : (
                   <>
