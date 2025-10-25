@@ -24,6 +24,7 @@ interface Event {
   location: string | null;
   society_id: string;
   created_by: string | null;
+  slug: string;
 }
 
 interface Society {
@@ -124,7 +125,7 @@ const EventSafetyPage = () => {
         // Query by UUID (backwards compatibility)
         const { data, error } = await supabase
           .from("events")
-          .select("*")
+          .select("*, societies!inner(slug)")
           .eq("id", eventId)
           .single();
         eventData = data;
@@ -638,7 +639,7 @@ const EventSafetyPage = () => {
           eventId={event.id}
           eventTitle={event.title}
           societySlug={society.slug}
-          eventSlug={eventSlug || event.id}
+          eventSlug={eventSlug || event.slug}
         />
       )}
     </div>
