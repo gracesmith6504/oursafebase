@@ -116,6 +116,31 @@ const CreateEvent = () => {
     }
   }, [user, slug]);
 
+  // Load draft on mount
+  useEffect(() => {
+    if (society?.id) {
+      const draftKey = `event-draft-${society.id}`;
+      const savedDraft = localStorage.getItem(draftKey);
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft);
+          setEventName(draft.eventName || "");
+          setEventDate(draft.eventDate ? new Date(draft.eventDate) : undefined);
+          setEventEndDate(draft.eventEndDate ? new Date(draft.eventEndDate) : undefined);
+          setEventTime(draft.eventTime || "");
+          setLocation(draft.location || "");
+          setSelectedContacts(draft.selectedContacts || []);
+          setExternalContacts(draft.externalContacts || []);
+          setEmergencyFields(draft.emergencyFields || []);
+          setSelectedCoCId(draft.selectedCoCId || "");
+          toast.info("Draft restored");
+        } catch (error) {
+          console.error("Error loading draft:", error);
+        }
+      }
+    }
+  }, [society?.id]);
+
   const fetchData = async () => {
     try {
       // Fetch society
@@ -190,8 +215,34 @@ const CreateEvent = () => {
     }
   };
 
+  const saveDraft = () => {
+    if (!society) return;
+    const draftKey = `event-draft-${society.id}`;
+    const draft = {
+      eventName,
+      eventDate: eventDate?.toISOString(),
+      eventEndDate: eventEndDate?.toISOString(),
+      eventTime,
+      location,
+      selectedContacts,
+      externalContacts,
+      emergencyFields,
+      selectedCoCId,
+    };
+    localStorage.setItem(draftKey, JSON.stringify(draft));
+  };
+
+  const clearDraft = () => {
+    if (!society) return;
+    const draftKey = `event-draft-${society.id}`;
+    localStorage.removeItem(draftKey);
+  };
+
   const fetchCoCs = async () => {
     if (!society) return;
+    
+    // Save draft before fetching CoCs
+    saveDraft();
     
     const { data: cocsData } = await supabase
       .from("code_of_conduct")
@@ -434,6 +485,8 @@ const CreateEvent = () => {
         }
       }
 
+      // Clear draft after successful creation
+      clearDraft();
       toast.success("Event created. Safety Page ready.");
       navigate(`/event/${eventData.id}`);
     } catch (error: any) {
@@ -820,7 +873,10 @@ const CreateEvent = () => {
                       type="button" 
                       variant="outline" 
                       size="sm"
-                      onClick={() => setCreateCoCDialogOpen(true)}
+                      onClick={() => {
+                        saveDraft();
+                        setCreateCoCDialogOpen(true);
+                      }}
                     >
                       <Plus className="mr-2 h-4 w-4" />
                       Create One Now
@@ -869,19 +925,25 @@ const CreateEvent = () => {
         </main>
 
         {/* Sticky Footer */}
-        <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-4">
-          <div className="container mx-auto flex max-w-2xl gap-4">
+        <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-3 sm:p-4">
+          <div className="container mx-auto flex max-w-2xl gap-2 sm:gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => navigate(`/society/${slug}/events`)}
-              className="flex-1"
+              className="flex-1 text-sm sm:text-base"
               disabled={submitting}
             >
               Cancel
             </Button>
-            <Button type="submit" onClick={handleSubmit} className="flex-1" disabled={submitting}>
-              {submitting ? "Creating..." : "Save & Create Safety Page"}
+            <Button 
+              type="submit" 
+              onClick={handleSubmit} 
+              className="flex-1 text-sm sm:text-base whitespace-normal sm:whitespace-nowrap px-2 sm:px-4 leading-tight py-2" 
+              disabled={submitting}
+            >
+              {submitting ? "Creating..." : <span className="inline sm:hidden">Save & Create</span>}
+              {submitting ? "" : <span className="hidden sm:inline">Save & Create Safety Page</span>}
             </Button>
           </div>
         </div>
