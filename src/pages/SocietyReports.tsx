@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import { ReportDetailDialog } from "@/components/ReportDetailDialog";
 import { FeedbackDetailDialog } from "@/components/FeedbackDetailDialog";
-import { ArrowLeft, Search, Filter, AlertCircle, X } from "lucide-react";
+import { ArrowLeft, Search, Filter, AlertCircle, X, Bookmark } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
@@ -88,6 +89,9 @@ export default function SocietyReports() {
   const [feedbackContactFilter, setFeedbackContactFilter] = useState<string>("all");
   const [feedbackSearchQuery, setFeedbackSearchQuery] = useState("");
   
+  const [bookmarkedReportIds, setBookmarkedReportIds] = useState<string[]>([]);
+  const [bookmarkFilter, setBookmarkFilter] = useState<boolean>(false);
+  
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   
@@ -159,6 +163,7 @@ export default function SocietyReports() {
       // Fetch reports
       await fetchReports(society.id);
       await fetchFeedback(society.id);
+      await fetchBookmarks(society.id);
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -237,6 +242,62 @@ export default function SocietyReports() {
     }
   };
 
+  const fetchBookmarks = async (socId: string) => {
+    try {
+      const { data: bookmarkData, error: bookmarkError } = await supabase
+        .from("report_bookmarks")
+        .select("report_id")
+        .eq("user_id", user!.id);
+
+      if (bookmarkError) throw bookmarkError;
+      setBookmarkedReportIds(bookmarkData?.map(b => b.report_id) || []);
+    } catch (error) {
+      console.error("Error fetching bookmarks:", error);
+    }
+  };
+
+  const toggleBookmark = async (reportId: string) => {
+    const isBookmarked = bookmarkedReportIds.includes(reportId);
+    
+    try {
+      if (isBookmarked) {
+        // Remove bookmark
+        await supabase
+          .from("report_bookmarks")
+          .delete()
+          .eq("report_id", reportId)
+          .eq("user_id", user!.id);
+        
+        setBookmarkedReportIds(prev => prev.filter(id => id !== reportId));
+        toast({
+          title: "Bookmark removed",
+          description: "Report removed from your bookmarks",
+        });
+      } else {
+        // Add bookmark
+        await supabase
+          .from("report_bookmarks")
+          .insert({
+            report_id: reportId,
+            user_id: user!.id,
+          });
+        
+        setBookmarkedReportIds(prev => [...prev, reportId]);
+        toast({
+          title: "Bookmarked",
+          description: "Report added to your bookmarks",
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling bookmark:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update bookmark",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "new": return "bg-amber-50 text-amber-700 border-amber-200";
@@ -307,6 +368,7 @@ export default function SocietyReports() {
     if (eventFilter !== "all" && report.event_id !== eventFilter) return false;
     if (categoryFilter !== "all" && report.concern_type !== categoryFilter) return false;
     if (searchQuery && !report.description.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (bookmarkFilter && !bookmarkedReportIds.includes(report.id)) return false;
     return true;
   });
 
@@ -327,6 +389,7 @@ export default function SocietyReports() {
   const handleReportUpdate = () => {
     if (societyId) {
       fetchReports(societyId);
+      fetchBookmarks(societyId);
     }
   };
 
@@ -341,6 +404,7 @@ export default function SocietyReports() {
     if (eventFilter !== "all") count++;
     if (categoryFilter !== "all") count++;
     if (searchQuery !== "") count++;
+    if (bookmarkFilter) count++;
     return count;
   };
 
@@ -382,6 +446,13 @@ export default function SocietyReports() {
       bubbles.push({
         label: `Search: "${searchQuery}"`,
         onRemove: () => setSearchQuery("")
+      });
+    }
+    
+    if (bookmarkFilter) {
+      bubbles.push({
+        label: "Bookmarked Only",
+        onRemove: () => setBookmarkFilter(false)
       });
     }
     
@@ -604,6 +675,23 @@ export default function SocietyReports() {
                           />
                         </div>
                       </div>
+
+                      <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-accent/30">
+                        <div className="flex items-center gap-3">
+                          <Bookmark className="h-5 w-5 text-amber-600" />
+                          <div>
+                            <label htmlFor="bookmark-filter" className="text-sm font-semibold cursor-pointer">Show Bookmarked Only</label>
+                            <p className="text-xs text-muted-foreground">
+                              {bookmarkedReportIds.length} bookmarked report{bookmarkedReportIds.length !== 1 ? 's' : ''}
+                            </p>
+                          </div>
+                        </div>
+                        <Switch
+                          id="bookmark-filter"
+                          checked={bookmarkFilter}
+                          onCheckedChange={setBookmarkFilter}
+                        />
+                      </div>
                     </div>
                     
                     <SheetFooter className="flex-col sm:flex-col gap-3 mt-auto pt-6 border-t">
@@ -616,6 +704,7 @@ export default function SocietyReports() {
                           setEventFilter("all");
                           setCategoryFilter("all");
                           setSearchQuery("");
+                          setBookmarkFilter(false);
                         }}
                       >
                         Clear All Filters
@@ -754,14 +843,34 @@ export default function SocietyReports() {
                             </p>
                           </div>
 
-                          <Button
-                            onClick={() => handleViewDetails(report.id)}
-                            variant="outline"
-                            size="lg"
-                            className="shrink-0 hover:bg-primary hover:text-primary-foreground transition-all border-2 font-medium"
-                          >
-                            View Details
-                          </Button>
+                          <div className="flex flex-col gap-2 items-end shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleBookmark(report.id);
+                              }}
+                              className={`h-9 w-9 ${
+                                bookmarkedReportIds.includes(report.id)
+                                  ? 'text-amber-600 hover:text-amber-700'
+                                  : 'text-muted-foreground hover:text-amber-600'
+                              }`}
+                            >
+                              <Bookmark
+                                className="h-5 w-5"
+                                fill={bookmarkedReportIds.includes(report.id) ? 'currentColor' : 'none'}
+                              />
+                            </Button>
+                            <Button
+                              onClick={() => handleViewDetails(report.id)}
+                              variant="outline"
+                              size="lg"
+                              className="hover:bg-primary hover:text-primary-foreground transition-all border-2 font-medium"
+                            >
+                              View Details
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>

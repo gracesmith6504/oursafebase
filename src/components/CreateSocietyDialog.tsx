@@ -24,7 +24,6 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
 
   const createSlug = (name: string) => {
     return name
@@ -51,7 +50,6 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
       .insert({
         name: name.trim(),
         slug,
-        description: description.trim() || null,
       })
       .select()
       .single();
@@ -81,7 +79,6 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
 
     toast.success("Society created successfully!");
     setName("");
-    setDescription("");
     setLoading(false);
     onOpenChange(false);
     onSuccess();
@@ -104,28 +101,8 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Drama Society"
+              inputMode="text"
               required
-            />
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="description">Description (optional)</Label>
-              <span className="text-sm text-muted-foreground">
-                {description.length}/150
-              </span>
-            </div>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value.length <= 150) {
-                  setDescription(value);
-                }
-              }}
-              placeholder="Tell members what your society is about..."
-              rows={3}
-              maxLength={150}
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>

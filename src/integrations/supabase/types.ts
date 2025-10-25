@@ -385,6 +385,35 @@ export type Database = {
         }
         Relationships: []
       }
+      report_bookmarks: {
+        Row: {
+          created_at: string | null
+          id: string
+          report_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          report_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          report_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_bookmarks_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           concern_type: string
@@ -478,7 +507,6 @@ export type Database = {
           attendee_invite_code: string
           committee_invite_code: string
           created_at: string | null
-          description: string | null
           id: string
           name: string
           slug: string
@@ -488,7 +516,6 @@ export type Database = {
           attendee_invite_code?: string
           committee_invite_code?: string
           created_at?: string | null
-          description?: string | null
           id?: string
           name: string
           slug: string
@@ -498,7 +525,6 @@ export type Database = {
           attendee_invite_code?: string
           committee_invite_code?: string
           created_at?: string | null
-          description?: string | null
           id?: string
           name?: string
           slug?: string

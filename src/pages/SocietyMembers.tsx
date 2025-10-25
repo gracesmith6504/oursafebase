@@ -68,7 +68,7 @@ const SocietyMembers = () => {
     // Fetch basic society info (available to all members)
     const { data: basicData, error: basicError } = await supabase
       .from("societies")
-      .select("id, name, slug, description, created_at, updated_at")
+      .select("id, name, slug, created_at, updated_at")
       .eq("slug", slug)
       .single();
 

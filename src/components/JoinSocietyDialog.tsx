@@ -121,6 +121,7 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value)}
               placeholder="e.g. abc12345"
+              inputMode="text"
               required
             />
           </div>

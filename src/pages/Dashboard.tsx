@@ -26,7 +26,6 @@ interface SocietyMembership {
     id: string;
     name: string;
     slug: string;
-    description: string | null;
   };
 }
 
@@ -60,7 +59,7 @@ const Dashboard = () => {
   const fetchSocieties = async () => {
     const { data, error } = await supabase
       .from("society_members")
-      .select("role, society:societies(id, name, slug, description)")
+      .select("role, society:societies(id, name, slug)")
       .eq("user_id", user?.id);
 
     if (error) {
@@ -165,16 +164,13 @@ const Dashboard = () => {
                       )
                     }
                   >
-                    <CardHeader className="min-w-0 pb-4">
+                    <CardHeader className="min-w-0">
                       <div className="flex items-start justify-between gap-3 min-w-0">
                         <CardTitle className="break-words min-w-0 flex-1 font-heading">{membership.society.name}</CardTitle>
                         <Badge variant={membership.role === "committee" ? "default" : "secondary"} className="shrink-0 shadow-sm">
                           {membership.role === "committee" ? "Committee" : "Attendee"}
                         </Badge>
                       </div>
-                <CardDescription className="break-words line-clamp-3 overflow-hidden mt-2">
-                  {membership.society.description || "No description"}
-                </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-0">
                       <Button className="w-full" variant="elevated">

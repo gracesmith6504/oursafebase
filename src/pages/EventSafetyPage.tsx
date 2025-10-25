@@ -464,26 +464,26 @@ const EventSafetyPage = () => {
           </Card>
         )}
 
-        {/* Code of Conduct */}
+        {/* Code of Conduct - Minimal Design */}
         {codeOfConduct && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
-                Code of Conduct
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <Card className="border bg-muted/30">
+            <CardContent className="p-4">
               {codeOfConduct.file_url ? (
-                <div className="space-y-3">
-                  {codeOfConduct.name && (
-                    <p className="text-sm font-medium">{codeOfConduct.name}</p>
-                  )}
-                  <p className="text-sm text-muted-foreground">
-                    View the Code of Conduct document for this event.
-                  </p>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                      <Shield className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm">Code of Conduct</p>
+                      {codeOfConduct.name && (
+                        <p className="text-xs text-muted-foreground truncate">{codeOfConduct.name}</p>
+                      )}
+                    </div>
+                  </div>
                   <Button 
-                    variant="outline"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       if (codeOfConduct.id) {
                         window.open(`/code-of-conduct/${codeOfConduct.id}`, '_blank');
@@ -491,27 +491,40 @@ const EventSafetyPage = () => {
                         window.open(codeOfConduct.file_url, '_blank');
                       }
                     }}
-                    className="w-full sm:w-auto"
+                    className="shrink-0 hover:bg-primary/10"
                   >
-                    <FileText className="mr-2 h-4 w-4" />
-                    View Code of Conduct
+                    View Document →
                   </Button>
                 </div>
               ) : (
-                <p className="whitespace-pre-wrap text-sm">{codeOfConduct.content}</p>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                      <Shield className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm">Code of Conduct</p>
+                      {codeOfConduct.name && (
+                        <p className="text-xs text-muted-foreground truncate">{codeOfConduct.name}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="shrink-0">
+                    <p className="whitespace-pre-wrap text-sm line-clamp-2">{codeOfConduct.content}</p>
+                  </div>
+                </div>
               )}
               {!hasEventLevelCoC && isCommittee && (
-                <div className="mt-4 p-3 bg-muted rounded-md">
-                  <p className="text-sm text-muted-foreground">
-                    This event doesn't have a Code of Conduct assigned yet.{" "}
+                <div className="mt-2 p-2 bg-muted/50 rounded-md">
+                  <p className="text-xs text-muted-foreground">
+                    No event-specific CoC.{" "}
                     <Button
                       variant="link"
-                      className="h-auto p-0 text-sm"
+                      className="h-auto p-0 text-xs"
                       onClick={() => navigate(`/society/${society?.slug}/events/${eventId}/edit`)}
                     >
                       Edit Event
-                    </Button>{" "}
-                    to select a template.
+                    </Button>
                   </p>
                 </div>
               )}
