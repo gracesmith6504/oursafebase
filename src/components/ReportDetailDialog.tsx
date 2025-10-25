@@ -194,54 +194,54 @@ export function ReportDetailDialog({ open, onOpenChange, reportId, onUpdate }: R
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Report Details</DialogTitle>
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[700px] max-h-[85vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="text-lg sm:text-xl">Report Details</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Reference ID and Status */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <p className="text-sm text-muted-foreground">Reference ID</p>
-              <code className="text-sm font-mono bg-muted px-2 py-1 rounded">{referenceId}</code>
+              <p className="text-xs sm:text-sm text-muted-foreground">Reference ID</p>
+              <code className="text-xs sm:text-sm font-mono bg-muted px-2 py-1 rounded break-all">{referenceId}</code>
             </div>
-            <div className="flex gap-2">
-              <Badge variant="outline" className={getStatusColor(status)}>
+            <div className="flex gap-2 flex-wrap">
+              <Badge variant="outline" className={`${getStatusColor(status)} text-xs`}>
                 {STATUS_OPTIONS.find(s => s.value === status)?.label}
               </Badge>
-              <Badge variant="outline" className={getSeverityColor(severity)}>
+              <Badge variant="outline" className={`${getSeverityColor(severity)} text-xs`}>
                 {SEVERITY_OPTIONS.find(s => s.value === severity)?.label}
               </Badge>
             </div>
           </div>
 
           {/* Event Details */}
-          <div className="bg-muted p-4 rounded-lg space-y-2">
-            <h3 className="font-semibold">{event.title}</h3>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              {format(new Date(event.event_date), "PPP 'at' p")}
+          <div className="bg-muted p-3 sm:p-4 rounded-lg space-y-2">
+            <h3 className="font-semibold text-sm sm:text-base break-words">{event.title}</h3>
+            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+              <span className="break-words">{format(new Date(event.event_date), "PPP 'at' p")}</span>
             </div>
             {event.location && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4" />
-                {event.location}
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                <span className="break-words">{event.location}</span>
               </div>
             )}
           </div>
 
           {/* Report Info */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Category:</span>
-              <Badge variant="secondary">{CONCERN_TYPE_LABELS[report.concern_type] || report.concern_type}</Badge>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs sm:text-sm font-medium">Category:</span>
+              <Badge variant="secondary" className="text-xs">{CONCERN_TYPE_LABELS[report.concern_type] || report.concern_type}</Badge>
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-xs sm:text-sm text-muted-foreground break-words">
               Submitted: {format(new Date(report.submitted_at), "PPP 'at' p")}
             </div>
             {report.resolved_at && (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground break-words">
                 Resolved: {format(new Date(report.resolved_at), "PPP 'at' p")}
               </div>
             )}
@@ -249,32 +249,35 @@ export function ReportDetailDialog({ open, onOpenChange, reportId, onUpdate }: R
 
           {/* Description */}
           <div className="space-y-2">
-            <h4 className="font-semibold">Description</h4>
-            <div className="bg-muted p-4 rounded-lg">
-              <p className="text-sm whitespace-pre-wrap">{report.description}</p>
+            <h4 className="font-semibold text-sm sm:text-base">Description</h4>
+            <div className="bg-muted p-3 sm:p-4 rounded-lg">
+              <p className="text-xs sm:text-sm whitespace-pre-wrap break-words">{report.description}</p>
             </div>
           </div>
 
           {/* Contact Information */}
           <div className="space-y-2">
-            <h4 className="font-semibold">Contact Information</h4>
-            <div className="bg-muted p-4 rounded-lg space-y-3">
+            <h4 className="font-semibold text-sm sm:text-base">Contact Information</h4>
+            <div className="bg-muted p-3 sm:p-4 rounded-lg space-y-3">
               {report.is_anonymous ? (
-                <p className="text-sm text-muted-foreground">Anonymous Report</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Anonymous Report</p>
               ) : (
                 <>
                   {report.reporter_name && (
-                    <div className="text-sm">
+                    <div className="text-xs sm:text-sm break-words">
                       <span className="font-medium">Name:</span> {report.reporter_name}
                     </div>
                   )}
                   {report.reporter_email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{report.reporter_email}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
+                        <span className="text-xs sm:text-sm break-all">{report.reporter_email}</span>
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
+                        className="w-full sm:w-auto shrink-0"
                         asChild
                       >
                         <a href={`mailto:${report.reporter_email}?subject=Re: Your Concern Report (${referenceId})`}>
@@ -284,12 +287,15 @@ export function ReportDetailDialog({ open, onOpenChange, reportId, onUpdate }: R
                     </div>
                   )}
                   {report.reporter_phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{report.reporter_phone}</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground shrink-0" />
+                        <span className="text-xs sm:text-sm break-all">{report.reporter_phone}</span>
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
+                        className="w-full sm:w-auto shrink-0"
                         asChild
                       >
                         <a href={`tel:${report.reporter_phone}`}>
@@ -301,21 +307,23 @@ export function ReportDetailDialog({ open, onOpenChange, reportId, onUpdate }: R
                 </>
               )}
               <div className="pt-2 border-t">
-                <span className="text-sm font-medium">Needs Response: </span>
-              <Badge variant="outline" className={needsResponse ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-50 text-slate-600 border-slate-200"}>
-                  {needsResponse && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5" />}
-                  {needsResponse ? "Yes" : "No"}
-                </Badge>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs sm:text-sm font-medium">Needs Response:</span>
+                  <Badge variant="outline" className={`text-xs ${needsResponse ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-50 text-slate-600 border-slate-200"}`}>
+                    {needsResponse && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5" />}
+                    {needsResponse ? "Yes" : "No"}
+                  </Badge>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Status and Severity Controls */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
+              <label className="text-xs sm:text-sm font-medium">Status</label>
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger>
+                <SelectTrigger className="h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -328,9 +336,9 @@ export function ReportDetailDialog({ open, onOpenChange, reportId, onUpdate }: R
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Severity</label>
+              <label className="text-xs sm:text-sm font-medium">Severity</label>
               <Select value={severity} onValueChange={setSeverity}>
-                <SelectTrigger>
+                <SelectTrigger className="h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -346,28 +354,28 @@ export function ReportDetailDialog({ open, onOpenChange, reportId, onUpdate }: R
 
           {/* Internal Notes */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Internal Notes (Committee Only)</label>
+            <label className="text-xs sm:text-sm font-medium">Internal Notes (Committee Only)</label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add internal notes about this report..."
-              className="min-h-[100px]"
+              className="min-h-[80px] sm:min-h-[100px] text-sm"
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-4">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="flex-1"
+              className="flex-1 h-10 sm:h-auto"
               disabled={saving}
             >
               Cancel
             </Button>
             <Button
               onClick={handleSave}
-              className="flex-1"
+              className="flex-1 h-10 sm:h-auto"
               disabled={saving}
             >
               {saving ? "Saving..." : "Save Changes"}

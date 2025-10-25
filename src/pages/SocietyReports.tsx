@@ -789,9 +789,9 @@ export default function SocietyReports() {
                       {/* Status Accent Bar */}
                       <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${getStatusAccentColor(report.status)} group-hover:w-2 transition-all`} />
                       
-                      <CardContent className="p-6 pl-8">
-                        <div className="flex items-start justify-between gap-6">
-                          <div className="flex-1 space-y-4">
+                      <CardContent className="p-4 sm:p-6 pl-6 sm:pl-8">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6">
+                          <div className="flex-1 space-y-3 sm:space-y-4 min-w-0">
                             {/* Status and Severity - Primary Badges */}
                             <div className="flex items-center gap-2 flex-wrap">
                               {isNew && (
@@ -802,13 +802,13 @@ export default function SocietyReports() {
                                   </span>
                                 </div>
                               )}
-                              <Badge variant="outline" className={`${getStatusColor(report.status)} font-semibold tracking-wide text-sm px-3 py-1`}>
+                              <Badge variant="outline" className={`${getStatusColor(report.status)} font-semibold tracking-wide text-xs sm:text-sm px-2 sm:px-3 py-1`}>
                                 {report.status === "new" ? "New" : 
                                  report.status === "in_progress" ? "In Progress" :
                                  report.status === "under_review" ? "Under Review" :
                                  report.status === "resolved" ? "Resolved" : "Closed"}
                               </Badge>
-                              <Badge variant="outline" className={`${getSeverityColor(report.severity)} tracking-wide text-sm px-3 py-1`}>
+                              <Badge variant="outline" className={`${getSeverityColor(report.severity)} tracking-wide text-xs sm:text-sm px-2 sm:px-3 py-1`}>
                                 {report.severity === "critical" && "🚨 "}
                                 {report.severity.charAt(0).toUpperCase() + report.severity.slice(1)}
                               </Badge>
@@ -816,10 +816,10 @@ export default function SocietyReports() {
 
                             {/* Event Title & Time */}
                             <div>
-                              <p className="font-semibold text-lg text-foreground">
+                              <p className="font-semibold text-base sm:text-lg text-foreground break-words">
                                 {report.events.title}
                               </p>
-                              <p className="text-sm text-muted-foreground mt-1">
+                              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                                 {formatDistanceToNow(new Date(report.submitted_at), { addSuffix: true })}
                               </p>
                             </div>
@@ -838,12 +838,13 @@ export default function SocietyReports() {
                             </div>
 
                             {/* Description */}
-                            <p className="text-sm text-foreground/90 line-clamp-2 leading-relaxed pt-1">
+                            <p className="text-sm text-foreground/90 line-clamp-2 leading-relaxed pt-1 break-words">
                               {report.description}
                             </p>
                           </div>
 
-                          <div className="flex flex-col gap-2 items-end shrink-0">
+                          {/* Action Buttons - Responsive Layout */}
+                          <div className="flex sm:flex-col gap-2 items-stretch sm:items-end shrink-0 w-full sm:w-auto">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -851,7 +852,7 @@ export default function SocietyReports() {
                                 e.stopPropagation();
                                 toggleBookmark(report.id);
                               }}
-                              className={`h-9 w-9 ${
+                              className={`h-10 w-10 sm:h-9 sm:w-9 shrink-0 ${
                                 bookmarkedReportIds.includes(report.id)
                                   ? 'text-amber-600 hover:text-amber-700'
                                   : 'text-muted-foreground hover:text-amber-600'
@@ -865,8 +866,8 @@ export default function SocietyReports() {
                             <Button
                               onClick={() => handleViewDetails(report.id)}
                               variant="outline"
-                              size="lg"
-                              className="hover:bg-primary hover:text-primary-foreground transition-all border-2 font-medium"
+                              size="default"
+                              className="flex-1 sm:flex-initial hover:bg-primary hover:text-primary-foreground transition-all border-2 font-medium h-10"
                             >
                               View Details
                             </Button>
