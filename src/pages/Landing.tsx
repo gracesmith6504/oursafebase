@@ -108,10 +108,6 @@ const Landing = () => {
                   <span className="text-success">✓</span>
                   <span>Access all your event safety pages in one place from your personal dashboard</span>
                 </li>
-                <li className="flex gap-3">
-                  <span className="text-success">✓</span>
-                  <span>No account needed, just care and community</span>
-                </li>
               </ul>
               <Button
                 onClick={scrollToAttendee}
@@ -134,7 +130,7 @@ const Landing = () => {
               <ul className="space-y-3 text-muted-foreground">
                 <li className="flex gap-3">
                   <span className="text-primary">✓</span>
-                  <span>Set up safety pages in minutes for every event</span>
+                  <span>Set up safety pages in seconds</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-primary">✓</span>
@@ -188,7 +184,7 @@ const Landing = () => {
                               <span className="text-xs font-bold text-primary">SM</span>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium">Sarah Miller</p>
+                              <p className="text-xs font-medium">Hannah Miller</p>
                               <p className="text-xs text-muted-foreground truncate">Safety Officer</p>
                               <p className="text-xs text-muted-foreground">+353 87 234 5678</p>
                             </div>
