@@ -258,12 +258,13 @@ export default function SocietyReports() {
     }
   };
 
-  const getSeverityAccentColor = (severity: string) => {
-    switch (severity) {
-      case "low": return "bg-slate-300";
-      case "medium": return "bg-orange-400";
-      case "high": return "bg-rose-500";
-      case "critical": return "bg-red-600";
+  const getStatusAccentColor = (status: string) => {
+    switch (status) {
+      case "new": return "bg-amber-400";
+      case "in_progress": return "bg-blue-500";
+      case "under_review": return "bg-purple-500";
+      case "resolved": return "bg-emerald-500";
+      case "closed": return "bg-slate-400";
       default: return "bg-slate-300";
     }
   };
@@ -468,26 +469,43 @@ export default function SocietyReports() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        <Tabs defaultValue="reports" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-            <TabsTrigger value="reports" className="relative">
-              Concerns
-              {reports.length > 0 && (
-                <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs bg-primary/20 text-primary">
-                  {reports.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="feedback" className="relative">
-              Feedback
-              {feedback.length > 0 && (
-                <Badge variant="secondary" className="ml-2 h-5 min-w-5 px-1.5 text-xs bg-primary/20 text-primary">
-                  {feedback.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="reports" className="space-y-8">
+          <div className="bg-card rounded-xl border shadow-sm p-1.5">
+            <TabsList className="grid w-full grid-cols-3 h-auto bg-transparent gap-1">
+              <TabsTrigger 
+                value="reports" 
+                className="relative data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-3 px-4 transition-all"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <span className="font-medium">Concerns</span>
+                  {reports.length > 0 && (
+                    <Badge className="h-5 min-w-5 px-1.5 text-xs bg-primary text-primary-foreground">
+                      {reports.length}
+                    </Badge>
+                  )}
+                </div>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="feedback" 
+                className="relative data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-3 px-4 transition-all"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <span className="font-medium">Feedback</span>
+                  {feedback.length > 0 && (
+                    <Badge className="h-5 min-w-5 px-1.5 text-xs bg-primary text-primary-foreground">
+                      {feedback.length}
+                    </Badge>
+                  )}
+                </div>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="analytics" 
+                className="data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg py-3 px-4 transition-all"
+              >
+                <span className="font-medium">Analytics</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="reports" className="space-y-6">
             {/* Filter Button and Applied Filters */}
@@ -495,11 +513,15 @@ export default function SocietyReports() {
               <div className="flex items-center justify-between">
                 <Sheet open={showReportFilters} onOpenChange={setShowReportFilters}>
                   <SheetTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="default" 
+                      className="gap-2 border-2 hover:bg-accent hover:border-primary/30 transition-all shadow-sm"
+                    >
                       <Filter className="h-4 w-4" />
-                      Filters
+                      <span className="font-medium">Filters</span>
                       {getActiveReportFiltersCount() > 0 && (
-                        <Badge variant="secondary" className="ml-1 rounded-full h-5 w-5 p-0 flex items-center justify-center text-xs">
+                        <Badge className="ml-1 rounded-full h-5 w-5 p-0 flex items-center justify-center text-xs bg-primary text-primary-foreground">
                           {getActiveReportFiltersCount()}
                         </Badge>
                       )}
@@ -508,37 +530,39 @@ export default function SocietyReports() {
                   
                   <SheetContent 
                     side="right" 
-                    className="w-[90vw] sm:w-[400px] h-full overflow-y-auto flex flex-col"
+                    className="w-[90vw] sm:w-[440px] h-full overflow-y-auto flex flex-col"
                   >
-                    <SheetHeader className="text-left">
-                      <SheetTitle className="flex items-center gap-2">
-                        <Filter className="h-5 w-5" />
-                        Filter Concerns
+                    <SheetHeader className="text-left pb-6 border-b">
+                      <SheetTitle className="flex items-center gap-3 text-xl">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <Filter className="h-5 w-5 text-primary" />
+                        </div>
+                        <span>Filter Concerns</span>
                       </SheetTitle>
                     </SheetHeader>
                     
                     <div className="flex-1 space-y-6 py-6">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Status</label>
+                      <div className="space-y-3">
+                        <label className="text-sm font-semibold text-foreground">Status</label>
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-11 border-2">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Statuses</SelectItem>
-                            <SelectItem value="new">New</SelectItem>
-                            <SelectItem value="in_progress">In Progress</SelectItem>
-                            <SelectItem value="under_review">Under Review</SelectItem>
-                            <SelectItem value="resolved">Resolved</SelectItem>
-                            <SelectItem value="closed">Closed</SelectItem>
+                            <SelectItem value="new">🆕 New</SelectItem>
+                            <SelectItem value="in_progress">⏳ In Progress</SelectItem>
+                            <SelectItem value="under_review">🔍 Under Review</SelectItem>
+                            <SelectItem value="resolved">✅ Resolved</SelectItem>
+                            <SelectItem value="closed">🔒 Closed</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Event</label>
+                      <div className="space-y-3">
+                        <label className="text-sm font-semibold text-foreground">Event</label>
                         <Select value={eventFilter} onValueChange={setEventFilter}>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-11 border-2">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -552,40 +576,41 @@ export default function SocietyReports() {
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Category</label>
+                      <div className="space-y-3">
+                        <label className="text-sm font-semibold text-foreground">Category</label>
                         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-11 border-2">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Categories</SelectItem>
-                            <SelectItem value="harassment">Harassment</SelectItem>
-                            <SelectItem value="safety">Safety Issue</SelectItem>
-                            <SelectItem value="code_violation">Code of Conduct</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
+                            <SelectItem value="harassment">⚠️ Harassment</SelectItem>
+                            <SelectItem value="safety">🛡️ Safety Issue</SelectItem>
+                            <SelectItem value="code_violation">📋 Code of Conduct</SelectItem>
+                            <SelectItem value="other">💬 Other</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Search</label>
+                      <div className="space-y-3">
+                        <label className="text-sm font-semibold text-foreground">Search</label>
                         <div className="relative">
                           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             placeholder="Search descriptions..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9"
+                            className="pl-10 h-11 border-2"
                           />
                         </div>
                       </div>
                     </div>
                     
-                    <SheetFooter className="flex-col sm:flex-col gap-2 mt-auto pt-6 border-t">
+                    <SheetFooter className="flex-col sm:flex-col gap-3 mt-auto pt-6 border-t">
                       <Button 
                         variant="outline" 
-                        className="w-full"
+                        size="lg"
+                        className="w-full border-2"
                         onClick={() => {
                           setStatusFilter("all");
                           setEventFilter("all");
@@ -596,6 +621,7 @@ export default function SocietyReports() {
                         Clear All Filters
                       </Button>
                       <Button 
+                        size="lg"
                         className="w-full"
                         onClick={() => setShowReportFilters(false)}
                       >
@@ -669,31 +695,31 @@ export default function SocietyReports() {
                   return (
                     <Card 
                       key={report.id} 
-                      className="relative overflow-hidden hover:shadow-lg transition-all duration-300 group"
+                      className="relative overflow-hidden hover:shadow-md transition-all duration-300 group border-2 hover:border-primary/30"
                     >
-                      {/* Severity Accent Bar */}
-                      <div className={`absolute left-0 top-0 bottom-0 w-1 ${getSeverityAccentColor(report.severity)} group-hover:w-1.5 transition-all`} />
+                      {/* Status Accent Bar */}
+                      <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${getStatusAccentColor(report.status)} group-hover:w-2 transition-all`} />
                       
-                      <CardContent className="p-6 pl-7">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 space-y-3">
+                      <CardContent className="p-6 pl-8">
+                        <div className="flex items-start justify-between gap-6">
+                          <div className="flex-1 space-y-4">
                             {/* Status and Severity - Primary Badges */}
                             <div className="flex items-center gap-2 flex-wrap">
                               {isNew && (
                                 <div className="relative flex items-center">
-                                  <span className="flex h-2 w-2 absolute -left-1 -top-1">
+                                  <span className="flex h-2.5 w-2.5 absolute -left-1 -top-1">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
                                   </span>
                                 </div>
                               )}
-                              <Badge variant="outline" className={`${getStatusColor(report.status)} font-medium tracking-wide`}>
+                              <Badge variant="outline" className={`${getStatusColor(report.status)} font-semibold tracking-wide text-sm px-3 py-1`}>
                                 {report.status === "new" ? "New" : 
                                  report.status === "in_progress" ? "In Progress" :
                                  report.status === "under_review" ? "Under Review" :
                                  report.status === "resolved" ? "Resolved" : "Closed"}
                               </Badge>
-                              <Badge variant="outline" className={`${getSeverityColor(report.severity)} tracking-wide`}>
+                              <Badge variant="outline" className={`${getSeverityColor(report.severity)} tracking-wide text-sm px-3 py-1`}>
                                 {report.severity === "critical" && "🚨 "}
                                 {report.severity.charAt(0).toUpperCase() + report.severity.slice(1)}
                               </Badge>
@@ -701,21 +727,21 @@ export default function SocietyReports() {
 
                             {/* Event Title & Time */}
                             <div>
-                              <p className="font-semibold text-foreground/90">
+                              <p className="font-semibold text-lg text-foreground">
                                 {report.events.title}
                               </p>
-                              <p className="text-xs text-muted-foreground/70 mt-0.5">
+                              <p className="text-sm text-muted-foreground mt-1">
                                 {formatDistanceToNow(new Date(report.submitted_at), { addSuffix: true })}
                               </p>
                             </div>
 
                             {/* Category & Response Badge */}
                             <div className="flex items-center gap-2 flex-wrap">
-                              <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-xs">
+                              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 text-xs font-medium">
                                 {CONCERN_TYPE_LABELS[report.concern_type]}
                               </Badge>
                               {needsResponse && (
-                                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
+                                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-medium">
                                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5" />
                                   Needs Response
                                 </Badge>
@@ -723,7 +749,7 @@ export default function SocietyReports() {
                             </div>
 
                             {/* Description */}
-                            <p className="text-sm text-foreground/80 line-clamp-2 leading-relaxed pt-1">
+                            <p className="text-sm text-foreground/90 line-clamp-2 leading-relaxed pt-1">
                               {report.description}
                             </p>
                           </div>
@@ -731,7 +757,8 @@ export default function SocietyReports() {
                           <Button
                             onClick={() => handleViewDetails(report.id)}
                             variant="outline"
-                            className="shrink-0 hover:bg-primary hover:text-primary-foreground transition-colors"
+                            size="lg"
+                            className="shrink-0 hover:bg-primary hover:text-primary-foreground transition-all border-2 font-medium"
                           >
                             View Details
                           </Button>
@@ -750,11 +777,15 @@ export default function SocietyReports() {
               <div className="flex items-center justify-between">
                 <Sheet open={showFeedbackFilters} onOpenChange={setShowFeedbackFilters}>
                   <SheetTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="default" 
+                      className="gap-2 border-2 hover:bg-accent hover:border-primary/30 transition-all shadow-sm"
+                    >
                       <Filter className="h-4 w-4" />
-                      Filters
+                      <span className="font-medium">Filters</span>
                       {getActiveFeedbackFiltersCount() > 0 && (
-                        <Badge variant="secondary" className="ml-1 rounded-full h-5 w-5 p-0 flex items-center justify-center text-xs">
+                        <Badge className="ml-1 rounded-full h-5 w-5 p-0 flex items-center justify-center text-xs bg-primary text-primary-foreground">
                           {getActiveFeedbackFiltersCount()}
                         </Badge>
                       )}
@@ -763,20 +794,22 @@ export default function SocietyReports() {
                   
                   <SheetContent 
                     side="right" 
-                    className="w-[90vw] sm:w-[400px] h-full overflow-y-auto flex flex-col"
+                    className="w-[90vw] sm:w-[440px] h-full overflow-y-auto flex flex-col"
                   >
-                    <SheetHeader className="text-left">
-                      <SheetTitle className="flex items-center gap-2">
-                        <Filter className="h-5 w-5" />
-                        Filter Feedback
+                    <SheetHeader className="text-left pb-6 border-b">
+                      <SheetTitle className="flex items-center gap-3 text-xl">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <Filter className="h-5 w-5 text-primary" />
+                        </div>
+                        <span>Filter Feedback</span>
                       </SheetTitle>
                     </SheetHeader>
                     
                     <div className="flex-1 space-y-6 py-6">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Event</label>
+                      <div className="space-y-3">
+                        <label className="text-sm font-semibold text-foreground">Event</label>
                         <Select value={feedbackEventFilter} onValueChange={setFeedbackEventFilter}>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-11 border-2">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -790,55 +823,56 @@ export default function SocietyReports() {
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Safety Rating</label>
+                      <div className="space-y-3">
+                        <label className="text-sm font-semibold text-foreground">Safety Rating</label>
                         <Select value={feedbackSafetyFilter} onValueChange={setFeedbackSafetyFilter}>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-11 border-2">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Ratings</SelectItem>
-                            <SelectItem value="very_safe">Very Safe 😊</SelectItem>
-                            <SelectItem value="mostly_safe">Mostly Safe 🙂</SelectItem>
-                            <SelectItem value="somewhat_safe">Somewhat Safe 😐</SelectItem>
-                            <SelectItem value="unsafe">Unsafe 😟</SelectItem>
-                            <SelectItem value="very_unsafe">Very Unsafe 😢</SelectItem>
+                            <SelectItem value="very_safe">😊 Very Safe</SelectItem>
+                            <SelectItem value="mostly_safe">🙂 Mostly Safe</SelectItem>
+                            <SelectItem value="somewhat_safe">😐 Somewhat Safe</SelectItem>
+                            <SelectItem value="unsafe">😟 Unsafe</SelectItem>
+                            <SelectItem value="very_unsafe">😢 Very Unsafe</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Contact Status</label>
+                      <div className="space-y-3">
+                        <label className="text-sm font-semibold text-foreground">Contact Status</label>
                         <Select value={feedbackContactFilter} onValueChange={setFeedbackContactFilter}>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-11 border-2">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Feedback</SelectItem>
-                            <SelectItem value="with_contact">With Contact</SelectItem>
-                            <SelectItem value="anonymous">Anonymous</SelectItem>
+                            <SelectItem value="with_contact">📧 With Contact</SelectItem>
+                            <SelectItem value="anonymous">🔒 Anonymous</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Search</label>
+                      <div className="space-y-3">
+                        <label className="text-sm font-semibold text-foreground">Search</label>
                         <div className="relative">
                           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             placeholder="Search suggestions..."
                             value={feedbackSearchQuery}
                             onChange={(e) => setFeedbackSearchQuery(e.target.value)}
-                            className="pl-9"
+                            className="pl-10 h-11 border-2"
                           />
                         </div>
                       </div>
                     </div>
                     
-                    <SheetFooter className="flex-col sm:flex-col gap-2 mt-auto pt-6 border-t">
+                    <SheetFooter className="flex-col sm:flex-col gap-3 mt-auto pt-6 border-t">
                       <Button 
                         variant="outline" 
-                        className="w-full"
+                        size="lg"
+                        className="w-full border-2"
                         onClick={() => {
                           setFeedbackEventFilter("all");
                           setFeedbackSafetyFilter("all");
@@ -849,6 +883,7 @@ export default function SocietyReports() {
                         Clear All Filters
                       </Button>
                       <Button 
+                        size="lg"
                         className="w-full"
                         onClick={() => setShowFeedbackFilters(false)}
                       >
