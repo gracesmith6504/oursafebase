@@ -33,13 +33,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { eventId, reportId, concernType, isAnonymous }: ReportNotificationRequest = await req.json();
 
-    console.log("Processing report notification:", {
-      eventId,
-      reportId,
-      concernType,
-      isAnonymous,
-    });
-
     // Get event and society details
     const { data: event, error: eventError } = await supabaseClient
       .from("events")
@@ -73,8 +66,6 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    console.log(`Found ${committeeMembers.length} committee members`);
-
     // Get emails for committee members and de-duplicate
     const committeeEmailsSet = new Set<string>();
     for (const member of committeeMembers) {
@@ -93,10 +84,6 @@ const handler = async (req: Request): Promise<Response> => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    console.log(`Sending email to ${committeeEmails.length} unique committee members using BCC`);
-    console.log(`From: ${FROM_NAME} <${FROM_EMAIL}>`);
-    console.log(`BCC recipients: ${committeeEmails.length}`);
 
     // Filter out the FROM_EMAIL from BCC to avoid duplicate
     const safeBcc = committeeEmails.filter(e => e.toLowerCase() !== FROM_EMAIL.toLowerCase());
@@ -145,25 +132,20 @@ const handler = async (req: Request): Promise<Response> => {
         `,
       });
 
-      if (result.data) {
-        console.log(`✓ Email sent successfully (ID: ${result.data.id})`);
-        console.log(`Delivered to ${committeeEmails.length} committee members`);
-      } else {
-        console.error(`✗ Failed to send email:`, result.error);
+      if (result.error) {
+        console.error(`Failed to send email:`, result.error);
         return new Response(JSON.stringify({ error: "Failed to send email", details: result.error }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     } catch (error: any) {
-      console.error(`✗ Error sending email:`, error.message);
+      console.error(`Error sending email:`, error.message);
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    
-    console.log(`Email notification completed for report ${reportId}`);
 
     return new Response(
       JSON.stringify({

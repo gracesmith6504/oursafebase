@@ -35,8 +35,15 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim()) {
+    const trimmedName = name.trim();
+    
+    if (!trimmedName) {
       toast.error("Please enter a society name");
+      return;
+    }
+    
+    if (trimmedName.length > 150) {
+      toast.error("Society name must be less than 150 characters");
       return;
     }
 
@@ -48,7 +55,7 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
     const { data: society, error: societyError } = await supabase
       .from("societies")
       .insert({
-        name: name.trim(),
+        name: trimmedName,
         slug,
       })
       .select()

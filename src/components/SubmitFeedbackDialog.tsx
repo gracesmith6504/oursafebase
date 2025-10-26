@@ -20,12 +20,29 @@ const feedbackSchema = z.object({
   feltSafeComfortable: z.enum(["yes_completely", "mostly", "few_issues", "no"], {
     required_error: "Please select an option"
   }),
-  improvements: z.string().trim().max(1000, "Improvements must be less than 1000 characters").optional().or(z.literal("")),
+  improvements: z.string()
+    .trim()
+    .max(2000, "Improvements must be less than 2000 characters")
+    .optional()
+    .or(z.literal("")),
   isAnonymous: z.boolean(),
-  name: z.string().trim().max(100, "Name must be less than 100 characters").optional().or(z.literal("")),
-  email: z.string().trim().email("Please enter a valid email").max(255, "Email must be less than 255 characters").optional().or(z.literal("")),
+  name: z.string()
+    .trim()
+    .max(100, "Name must be less than 100 characters")
+    .optional()
+    .or(z.literal("")),
+  email: z.string()
+    .trim()
+    .email("Please enter a valid email")
+    .max(255, "Email must be less than 255 characters")
+    .optional()
+    .or(z.literal("")),
   countryCode: z.string().optional().or(z.literal("")),
-  phone: z.string().trim().max(20, "Phone must be less than 20 characters").optional().or(z.literal(""))
+  phone: z.string()
+    .trim()
+    .regex(/^$|^[0-9\s\+\-\(\)]{7,20}$/, "Phone must be 7-20 characters with only numbers and symbols")
+    .optional()
+    .or(z.literal(""))
 }).refine(data => {
   if (!data.isAnonymous) {
     return data.email && data.email.length > 0;

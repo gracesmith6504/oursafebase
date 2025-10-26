@@ -470,6 +470,20 @@ const Landing = () => {
           </div>
         </section>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-border/40 bg-muted/30 backdrop-blur-sm mt-20">
+        <div className="container mx-auto px-6 py-8">
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-full">
+              <span className="text-xs font-medium text-amber-600 dark:text-amber-400">🥈 2nd Place - ZEEUS Social Impact Hackathon 2025</span>
+            </div>
+            <p className="text-center text-sm text-muted-foreground">
+              © {new Date().getFullYear()} OurSafeBase. Empowering safer events.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

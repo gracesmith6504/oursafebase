@@ -38,19 +38,28 @@ export function EditNoteDialog({ note, open, onOpenChange, onSuccess }: EditNote
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!content.trim()) {
+    const trimmedContent = content.trim();
+    
+    if (!trimmedContent) {
       toast.error("Note content is required");
+      return;
+    }
+    
+    if (trimmedContent.length > 5000) {
+      toast.error("Note content must be less than 5000 characters");
       return;
     }
 
     setLoading(true);
 
     try {
+      const tagArray = tags.split(",").map(t => t.trim()).filter(t => t).slice(0, 20);
+      
       const { error } = await supabase
         .from("event_notes")
         .update({
-          content: content.trim(),
-          tags: tags.split(",").map(t => t.trim()).filter(t => t),
+          content: trimmedContent,
+          tags: tagArray,
         })
         .eq("id", note.id);
 

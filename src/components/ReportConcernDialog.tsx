@@ -18,11 +18,27 @@ const reportSchema = z.object({
   concernType: z.enum(["harassment", "safety", "code_violation", "other"], {
     required_error: "Please select a concern type"
   }),
-  description: z.string().trim().min(1, "Please provide a description").max(1000, "Description must be less than 1000 characters"),
+  description: z.string()
+    .trim()
+    .min(10, "Please provide more details (at least 10 characters)")
+    .max(2000, "Description must be less than 2000 characters"),
   isAnonymous: z.boolean(),
-  name: z.string().trim().max(100, "Name must be less than 100 characters").optional().or(z.literal("")),
-  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters").optional().or(z.literal("")),
-  phone: z.string().trim().max(20, "Phone must be less than 20 characters").optional().or(z.literal(""))
+  name: z.string()
+    .trim()
+    .max(100, "Name must be less than 100 characters")
+    .optional()
+    .or(z.literal("")),
+  email: z.string()
+    .trim()
+    .email("Invalid email address")
+    .max(255, "Email must be less than 255 characters")
+    .optional()
+    .or(z.literal("")),
+  phone: z.string()
+    .trim()
+    .regex(/^$|^[0-9\s\+\-\(\)]{7,20}$/, "Phone must be 7-20 characters with only numbers and symbols")
+    .optional()
+    .or(z.literal(""))
 }).refine(data => data.isAnonymous || (data.email && data.email.length > 0), {
   message: "Email is required when not submitting anonymously",
   path: ["email"]
