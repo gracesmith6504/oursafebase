@@ -116,7 +116,7 @@ export function SubmitFeedbackDialog({
         onOpenChange(false);
       }, 2500);
     } catch (error) {
-      console.error("Error submitting feedback:", error);
+      // Don't log error details to protect user privacy
       toast({
         title: "Error",
         description: "Failed to submit feedback. Please try again.",

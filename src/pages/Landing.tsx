@@ -143,7 +143,7 @@ const Landing = () => {
                 </li>
                 <li className="flex gap-3">
                   <span className="text-primary">✓</span>
-                  <span>Respond to concerns with care and accountability</span>
+                  <span>Respond to concerns with care and accountability (instant email notifications)</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-primary">✓</span>
@@ -440,6 +440,20 @@ const Landing = () => {
               </Card>
             </div>
           </div>
+        </section>
+
+        {/* Disclaimer */}
+        <section className="py-12 max-w-4xl mx-auto">
+          <Card className="bg-muted/50 border-muted-foreground/20">
+            <CardContent className="pt-6 text-center space-y-3">
+              <div className="flex items-start gap-3 text-sm text-muted-foreground leading-relaxed text-left">
+                <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5 text-muted-foreground/70" />
+                <p>
+                  <strong className="text-foreground">Important:</strong> OurSafeBase is a support tool for student societies and is not a substitute for professional medical, legal, or emergency services. If you're in immediate danger, please contact emergency services (999/112) or professional support services. All data is handled in accordance with GDPR and our privacy policy.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Final CTA */}

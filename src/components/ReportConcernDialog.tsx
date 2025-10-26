@@ -20,9 +20,9 @@ const reportSchema = z.object({
   }),
   description: z.string().trim().min(1, "Please provide a description").max(1000, "Description must be less than 1000 characters"),
   isAnonymous: z.boolean(),
-  name: z.string().trim().max(100).optional().or(z.literal("")),
-  email: z.string().trim().email("Invalid email address").max(255).optional().or(z.literal("")),
-  phone: z.string().trim().max(20).optional().or(z.literal(""))
+  name: z.string().trim().max(100, "Name must be less than 100 characters").optional().or(z.literal("")),
+  email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters").optional().or(z.literal("")),
+  phone: z.string().trim().max(20, "Phone must be less than 20 characters").optional().or(z.literal(""))
 }).refine(data => data.isAnonymous || (data.email && data.email.length > 0), {
   message: "Email is required when not submitting anonymously",
   path: ["email"]
@@ -91,7 +91,7 @@ export function ReportConcernDialog({
             isAnonymous: data.isAnonymous
           }
         });
-        console.log("Email notification response:", notificationResponse);
+        // Don't log notification response to protect privacy
         if (notificationResponse.data?.emailsSent > 0) {
           toast({
             title: "Report submitted",
@@ -99,7 +99,7 @@ export function ReportConcernDialog({
           });
         }
       } catch (emailError) {
-        console.error("Failed to send email notification:", emailError);
+        // Don't log email error details to protect privacy
         // Don't fail the whole submission if email fails
       }
 
@@ -111,7 +111,7 @@ export function ReportConcernDialog({
       setShowSuccess(true);
       form.reset();
     } catch (error) {
-      console.error("Error submitting report:", error);
+      // Don't log error details to protect user privacy
       toast({
         title: "Error",
         description: "Failed to submit your concern. Please try again.",

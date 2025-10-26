@@ -607,6 +607,20 @@ const EventSafetyPage = () => {
         onOpenChange={setShowMembershipAlert}
       />
 
+      {/* Disclaimer */}
+      <div className="mt-12 mb-6">
+        <Card className="bg-muted/30 border-muted-foreground/20">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-start gap-3 text-xs text-muted-foreground leading-relaxed">
+              <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5 text-muted-foreground/70" />
+              <p>
+                <strong className="text-foreground">Important:</strong> OurSafeBase is a support tool and is not a substitute for professional medical, legal, or emergency services. If you're in immediate danger, please contact emergency services (999/112).
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* View CoC Dialog (no acceptance required) */}
       {showViewCoCDialog && codeOfConduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowViewCoCDialog(false)}>
