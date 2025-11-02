@@ -54,9 +54,10 @@ const Profile = () => {
       fetchUserEmail();
     }
   }, [user]);
-
   const fetchUserEmail = async () => {
-    const { data } = await supabase.auth.getUser();
+    const {
+      data
+    } = await supabase.auth.getUser();
     if (data?.user?.email) {
       setUserEmail(data.user.email);
     }
@@ -87,20 +88,17 @@ const Profile = () => {
       setSocieties(data as any);
     }
   };
-
   const handleNotificationToggle = async (membershipId: string, enabled: boolean) => {
     // Optimistic update: Update UI immediately
-    setSocieties(prev => prev.map(m => 
-      m.id === membershipId 
-        ? { ...m, email_notifications_enabled: enabled }
-        : m
-    ));
-
-    const { error } = await supabase
-      .from("society_members")
-      .update({ email_notifications_enabled: enabled })
-      .eq("id", membershipId);
-
+    setSocieties(prev => prev.map(m => m.id === membershipId ? {
+      ...m,
+      email_notifications_enabled: enabled
+    } : m));
+    const {
+      error
+    } = await supabase.from("society_members").update({
+      email_notifications_enabled: enabled
+    }).eq("id", membershipId);
     if (error) {
       toast.error("Failed to update notification preferences");
       console.error(error);
@@ -197,12 +195,10 @@ const Profile = () => {
       toast.error("An unexpected error occurred");
     }
   };
-  
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
-  
   const getInitials = (name: string | null) => {
     if (!name) return "U";
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
@@ -291,14 +287,7 @@ const Profile = () => {
                 {/* Email Address (read-only) */}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    value={userEmail} 
-                    readOnly 
-                    disabled
-                    className="bg-muted"
-                  />
+                  <Input id="email" type="email" value={userEmail} readOnly disabled className="bg-muted" />
                   <p className="text-xs text-muted-foreground">
                     Email cannot be changed. Contact support if needed.
                   </p>
@@ -320,8 +309,7 @@ const Profile = () => {
             </Card>
 
             {/* Notification Preferences */}
-            {societies.some(m => m.role === 'committee') && (
-              <Card>
+            {societies.some(m => m.role === 'committee') && <Card>
                 <CardHeader>
                   <CardTitle>Notification Preferences</CardTitle>
                   <CardDescription>
@@ -330,8 +318,7 @@ const Profile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {societies.filter(m => m.role === 'committee').map(membership => (
-                      <div key={membership.id} className="flex items-center justify-between rounded-lg border p-4">
+                    {societies.filter(m => m.role === 'committee').map(membership => <div key={membership.id} className="flex items-center justify-between rounded-lg border p-4">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                           <Bell className="h-5 w-5 text-muted-foreground shrink-0" />
                           <div className="flex-1 min-w-0">
@@ -341,16 +328,11 @@ const Profile = () => {
                             </p>
                           </div>
                         </div>
-                        <Switch
-                          checked={membership.email_notifications_enabled}
-                          onCheckedChange={(checked) => handleNotificationToggle(membership.id, checked)}
-                        />
-                      </div>
-                    ))}
+                        <Switch checked={membership.email_notifications_enabled} onCheckedChange={checked => handleNotificationToggle(membership.id, checked)} />
+                      </div>)}
                   </div>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
             {/* Society Memberships */}
             <Card>
@@ -367,9 +349,7 @@ const Profile = () => {
                     {societies.map(membership => <div key={membership.id} className="flex items-center justify-between rounded-lg border p-4">
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold break-words">{membership.society.name}</h3>
-                          <p className="text-sm text-muted-foreground break-words">
-                            {membership.society.description || "No description"}
-                          </p>
+                          
                         </div>
                         <Button variant="destructive" size="sm" onClick={() => setSocietyToLeave(membership.society)} className="mx-[10px]">
                           Leave
@@ -412,10 +392,7 @@ const Profile = () => {
               <AlertDialogTitle>Log out of your account?</AlertDialogTitle>
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
-              <AlertDialogAction
-                onClick={handleSignOut}
-                className="w-full border border-input bg-background text-destructive hover:bg-accent hover:text-destructive"
-              >
+              <AlertDialogAction onClick={handleSignOut} className="w-full border border-input bg-background text-destructive hover:bg-accent hover:text-destructive">
                 Log Out
               </AlertDialogAction>
               <AlertDialogCancel className="w-full mt-0">
