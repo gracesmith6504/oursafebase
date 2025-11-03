@@ -20,7 +20,7 @@ const reportSchema = z.object({
   }),
   description: z.string()
     .trim()
-    .min(10, "Please provide more details (at least 10 characters)")
+    .min(1, "Description is required")
     .max(2000, "Description must be less than 2000 characters"),
   isAnonymous: z.boolean(),
   name: z.string()
