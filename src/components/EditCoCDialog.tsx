@@ -77,8 +77,18 @@ export const EditCoCDialog = ({
       return;
     }
 
+    if (name.trim().length > 150) {
+      toast.error("Template name must be less than 150 characters");
+      return;
+    }
+
     if (uploadMode === 'text' && !content.trim()) {
       toast.error("Please enter code of conduct content");
+      return;
+    }
+
+    if (uploadMode === 'text' && content.trim().length > 50000) {
+      toast.error("Content must be less than 50,000 characters");
       return;
     }
 

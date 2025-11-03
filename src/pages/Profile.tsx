@@ -124,6 +124,11 @@ const Profile = () => {
     }
   };
   const handleSaveProfile = async () => {
+    if (profile.display_name && profile.display_name.trim().length > 100) {
+      toast.error("Display name must be less than 100 characters");
+      return;
+    }
+
     setSaving(true);
     try {
       let avatarUrl = profile.avatar_url;

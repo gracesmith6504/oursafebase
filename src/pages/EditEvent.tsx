@@ -291,6 +291,11 @@ const EditEvent = () => {
       return;
     }
 
+    if (externalName.trim().length > 100) {
+      toast.error("Name must be less than 100 characters");
+      return;
+    }
+
     setExternalContacts([
       ...externalContacts,
       {
@@ -343,8 +348,18 @@ const EditEvent = () => {
       return;
     }
 
+    if (eventName.trim().length > 200) {
+      toast.error("Event name must be less than 200 characters");
+      return;
+    }
+
     if (!eventDate) {
       toast.error("Event date is required");
+      return;
+    }
+
+    if (location.trim().length > 300) {
+      toast.error("Location must be less than 300 characters");
       return;
     }
 
