@@ -18,6 +18,7 @@ import { CalendarIcon } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { CreateCoCDialog } from "@/components/CreateCoCDialog";
 import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
+import { generateUniqueSlug } from "@/lib/eventHelpers";
 
 interface Society {
   id: string;
@@ -270,12 +271,6 @@ const CreateEvent = () => {
     }
   };
 
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  };
 
   const handleMemberSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const member = members.find((m) => m.user_id === e.target.value);
@@ -394,8 +389,8 @@ const CreateEvent = () => {
         }
       }
 
-      // Create event
-      const eventSlug = generateSlug(eventName);
+      // Create event with unique slug
+      const eventSlug = await generateUniqueSlug(eventName, society.id);
       const { data: eventData, error: eventError } = await supabase
         .from("events")
         .insert({
