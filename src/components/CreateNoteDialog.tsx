@@ -31,13 +31,7 @@ export function CreateNoteDialog({ eventId, open, onOpenChange, onSuccess }: Cre
     
     const trimmedContent = content.trim();
     
-    if (!trimmedContent) {
-      toast.error("Note content is required");
-      return;
-    }
-    
-    if (trimmedContent.length > 5000) {
-      toast.error("Note content must be less than 5000 characters");
+    if (!trimmedContent || trimmedContent.length > 5000) {
       return;
     }
 
@@ -57,14 +51,12 @@ export function CreateNoteDialog({ eventId, open, onOpenChange, onSuccess }: Cre
 
       if (error) throw error;
 
-      toast.success("Note created successfully");
       setContent("");
       setTags("");
       onOpenChange(false);
       onSuccess();
     } catch (error) {
       console.error("Error creating note:", error);
-      toast.error("Failed to create note");
     } finally {
       setLoading(false);
     }

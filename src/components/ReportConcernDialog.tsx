@@ -20,7 +20,7 @@ const reportSchema = z.object({
   }),
   description: z.string()
     .trim()
-    .min(10, "Please provide more details (at least 10 characters)")
+    .min(1, "Description is required")
     .max(2000, "Description must be less than 2000 characters"),
   isAnonymous: z.boolean(),
   name: z.string()
@@ -108,12 +108,6 @@ export function ReportConcernDialog({
           }
         });
         // Don't log notification response to protect privacy
-        if (notificationResponse.data?.emailsSent > 0) {
-          toast({
-            title: "Report submitted",
-            description: "Your report was submitted and the committee has been notified."
-          });
-        }
       } catch (emailError) {
         // Don't log email error details to protect privacy
         // Don't fail the whole submission if email fails
@@ -128,21 +122,13 @@ export function ReportConcernDialog({
       form.reset();
     } catch (error) {
       // Don't log error details to protect user privacy
-      toast({
-        title: "Error",
-        description: "Failed to submit your concern. Please try again.",
-        variant: "destructive"
-      });
+      console.error("Failed to submit report");
     } finally {
       setIsSubmitting(false);
     }
   };
   const copyReferenceId = () => {
     navigator.clipboard.writeText(referenceId);
-    toast({
-      title: "Copied!",
-      description: "Reference ID copied to clipboard"
-    });
   };
   const handleClose = () => {
     setShowSuccess(false);

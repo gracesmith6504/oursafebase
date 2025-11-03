@@ -37,13 +37,7 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
 
     const trimmedName = name.trim();
     
-    if (!trimmedName) {
-      toast.error("Please enter a society name");
-      return;
-    }
-    
-    if (trimmedName.length > 150) {
-      toast.error("Society name must be less than 150 characters");
+    if (!trimmedName || trimmedName.length > 150) {
       return;
     }
 
@@ -62,7 +56,6 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
       .single();
 
     if (societyError) {
-      toast.error("Failed to create society. This name might already be taken.");
       console.error(societyError);
       setLoading(false);
       return;
@@ -78,13 +71,11 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
       });
 
     if (memberError) {
-      toast.error("Failed to join society");
       console.error(memberError);
       setLoading(false);
       return;
     }
 
-    toast.success("Society created successfully!");
     setName("");
     setLoading(false);
     onOpenChange(false);

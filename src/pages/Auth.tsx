@@ -68,17 +68,14 @@ const Auth = () => {
     e.preventDefault();
     
     if (!name || !email || !password || !confirmPassword) {
-      toast.error("Please fill in all fields");
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
       return;
     }
 
     if (password.length < 6) {
-      toast.error("Password must be at least 6 characters");
       return;
     }
 
@@ -99,15 +96,11 @@ const Auth = () => {
       });
 
       if (error) {
-        toast.error(error.message);
         setLoading(false);
         return;
       }
-
-      toast.success("Account created! Please check your email to verify.");
     } catch (error) {
       console.error("Signup error:", error);
-      toast.error("An error occurred during signup");
     }
     
     setLoading(false);
@@ -117,7 +110,6 @@ const Auth = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast.error("Please fill in all fields");
       return;
     }
 
@@ -127,10 +119,6 @@ const Auth = () => {
       email,
       password,
     });
-
-    if (error) {
-      toast.error(error.message);
-    }
     
     setLoading(false);
   };

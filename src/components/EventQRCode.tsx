@@ -37,7 +37,6 @@ export const EventQRCode = ({ eventId, eventTitle, societySlug, eventSlug, size 
         a.download = `${eventTitle.replace(/\s+/g, "-")}-qr-code.png`;
         a.click();
         URL.revokeObjectURL(url);
-        toast.success("QR code downloaded");
       });
     };
 
@@ -104,7 +103,6 @@ export const EventQRCode = ({ eventId, eventTitle, societySlug, eventSlug, size 
 
   const copyLink = () => {
     navigator.clipboard.writeText(eventUrl);
-    toast.success("Event link copied to clipboard");
   };
 
   return (
