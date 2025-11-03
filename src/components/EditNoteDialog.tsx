@@ -40,7 +40,13 @@ export function EditNoteDialog({ note, open, onOpenChange, onSuccess }: EditNote
     
     const trimmedContent = content.trim();
     
-    if (!trimmedContent || trimmedContent.length > 5000) {
+    if (!trimmedContent) {
+      toast.error("Note content is required");
+      return;
+    }
+    
+    if (trimmedContent.length > 5000) {
+      toast.error("Note content must be less than 5000 characters");
       return;
     }
 
@@ -59,10 +65,12 @@ export function EditNoteDialog({ note, open, onOpenChange, onSuccess }: EditNote
 
       if (error) throw error;
 
+      toast.success("Note updated successfully");
       onOpenChange(false);
       onSuccess();
     } catch (error) {
       console.error("Error updating note:", error);
+      toast.error("Failed to update note");
     } finally {
       setLoading(false);
     }

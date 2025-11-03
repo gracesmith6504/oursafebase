@@ -145,10 +145,12 @@ const CoCAcceptanceDialog = ({
 
     if (error) {
       console.error("Error accepting CoC:", error);
+      toast.error("Failed to accept Code of Conduct");
       setLoading(false);
       return;
     }
 
+    toast.success("Code of Conduct accepted");
     setLoading(false);
     onAccepted();
   };

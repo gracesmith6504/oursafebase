@@ -43,6 +43,7 @@ export const CreateCoCDialog = ({
 
     const validation = validateFile(file);
     if (!validation.valid) {
+      toast.error(validation.error);
       return;
     }
 
@@ -54,15 +55,28 @@ export const CreateCoCDialog = ({
   };
 
   const handleCreate = async () => {
-    if (!name.trim() || name.trim().length > 150) {
+    if (!name.trim()) {
+      toast.error("Please enter a template name");
       return;
     }
 
-    if (uploadMode === 'text' && (!content.trim() || content.trim().length > 50000)) {
+    if (name.trim().length > 150) {
+      toast.error("Template name must be less than 150 characters");
+      return;
+    }
+
+    if (uploadMode === 'text' && !content.trim()) {
+      toast.error("Please enter code of conduct content");
+      return;
+    }
+
+    if (uploadMode === 'text' && content.trim().length > 50000) {
+      toast.error("Content must be less than 50,000 characters");
       return;
     }
 
     if (uploadMode === 'file' && !selectedFile) {
+      toast.error("Please select a file to upload");
       return;
     }
 
@@ -81,6 +95,7 @@ export const CreateCoCDialog = ({
         .upload(filePath, selectedFile);
 
       if (uploadError) {
+        toast.error('Failed to upload file');
         setLoading(false);
         return;
       }
@@ -120,9 +135,11 @@ export const CreateCoCDialog = ({
     setLoading(false);
 
     if (error) {
+      toast.error("Failed to create Code of Conduct");
       return;
     }
 
+    toast.success("Code of Conduct created successfully");
     setName("");
     setContent("");
     setSelectedFile(null);

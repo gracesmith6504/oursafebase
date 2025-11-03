@@ -56,9 +56,11 @@ export function NoteCard({ note, onUpdate, currentUserId }: NoteCardProps) {
 
       if (error) throw error;
 
+      toast.success(note.is_pinned ? "Note unpinned" : "Note pinned");
       onUpdate();
     } catch (error) {
       console.error("Error toggling pin:", error);
+      toast.error("Failed to update note");
     } finally {
       setLoading(false);
     }
@@ -74,9 +76,11 @@ export function NoteCard({ note, onUpdate, currentUserId }: NoteCardProps) {
 
       if (error) throw error;
 
+      toast.success("Note deleted");
       onUpdate();
     } catch (error) {
       console.error("Error deleting note:", error);
+      toast.error("Failed to delete note");
     } finally {
       setLoading(false);
     }

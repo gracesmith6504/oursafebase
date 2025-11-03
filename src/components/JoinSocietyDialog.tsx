@@ -30,6 +30,7 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
     e.preventDefault();
 
     if (!inviteCode.trim()) {
+      toast.error("Please enter an invite code");
       return;
     }
 
@@ -40,6 +41,7 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
       .rpc("validate_invite_code", { invite_code: inviteCode.trim() });
 
     if (validationError || !validationResult || validationResult.length === 0) {
+      toast.error("Invalid invite code");
       setLoading(false);
       return;
     }
@@ -68,6 +70,7 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
       .maybeSingle();
 
     if (existing) {
+      toast.error("You're already a member of this society");
       setLoading(false);
       return;
     }
@@ -82,11 +85,13 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
       });
 
     if (memberError) {
+      toast.error("Failed to join society");
       console.error(memberError);
       setLoading(false);
       return;
     }
 
+    toast.success(`Joined ${society.name}!`);
     setInviteCode("");
     setLoading(false);
     onOpenChange(false);

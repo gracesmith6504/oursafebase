@@ -263,6 +263,7 @@ const EditEvent = () => {
 
     const exists = selectedContacts.some(c => c.userId === selectedMember.user_id);
     if (exists) {
+      toast.error("Contact already added");
       setSelectedMember(null);
       setTempRole("");
       return;
@@ -285,7 +286,13 @@ const EditEvent = () => {
   };
 
   const handleAddExternalContact = () => {
-    if (!externalName.trim() || !externalPhone.trim() || externalName.trim().length > 100) {
+    if (!externalName.trim() || !externalPhone.trim()) {
+      toast.error("Please provide name and phone number");
+      return;
+    }
+
+    if (externalName.trim().length > 100) {
+      toast.error("Name must be less than 100 characters");
       return;
     }
 
@@ -712,8 +719,7 @@ const EditEvent = () => {
                     </select>
 
                     {selectedMember && (
-                      <div className="rounded-lg border-2 border-primary bg-primary/5 p-4 space-y-3">
-                        <p className="text-sm font-medium text-primary">→ Click "Add Contact" below to save this member</p>
+                      <div className="rounded-lg border bg-muted p-3 space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="font-medium">{selectedMember.profile?.display_name || "Anonymous"}</p>
                           <Button
@@ -783,8 +789,7 @@ const EditEvent = () => {
                     </div>
                   )}
 
-                  <div className="space-y-3 rounded-lg border-2 border-primary bg-primary/5 p-4">
-                    <p className="text-sm font-medium text-primary">→ Fill details and click "Add External Contact" below</p>
+                  <div className="space-y-3 rounded-lg border bg-muted p-3">
                     <div className="space-y-2">
                       <Label htmlFor="externalName">Name *</Label>
                       <Input

@@ -72,6 +72,7 @@ const CommitteeOnboarding = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
+        toast.error("Image must be less than 2MB");
         return;
       }
       setAvatarFile(file);
@@ -83,6 +84,7 @@ const CommitteeOnboarding = () => {
     e.preventDefault();
     
     if (!displayName || !phoneNumber) {
+      toast.error("Please provide your display name and phone number");
       return;
     }
 
@@ -100,6 +102,7 @@ const CommitteeOnboarding = () => {
           .upload(fileName, avatarFile);
 
         if (uploadError) {
+          toast.error("Failed to upload avatar");
           setLoading(false);
           return;
         }
@@ -121,6 +124,7 @@ const CommitteeOnboarding = () => {
         .eq('id', user!.id);
 
       if (profileError) {
+        toast.error("Failed to update profile");
         setLoading(false);
         return;
       }
@@ -128,6 +132,7 @@ const CommitteeOnboarding = () => {
       navigate(`/invite/${inviteCode}`);
     } catch (error) {
       console.error("Onboarding error:", error);
+      toast.error("An error occurred");
       setLoading(false);
     }
   };
