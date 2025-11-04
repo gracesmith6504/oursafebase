@@ -93,6 +93,26 @@ const InviteJoin = () => {
       .maybeSingle();
 
     if (existing) {
+      // If user is upgrading from attendee to committee, update their role
+      if (existing.role === 'attendee' && role === 'committee') {
+        const { error: updateError } = await supabase
+          .from("society_members")
+          .update({ role: 'committee' })
+          .eq("id", existing.id);
+
+        if (updateError) {
+          console.error("Role update error:", updateError);
+          toast.error("Failed to update role");
+          navigate("/dashboard");
+          return;
+        }
+
+        toast.success(`Welcome to ${society.name} committee!`);
+        navigate(`/society/${society.slug}/dashboard`);
+        return;
+      }
+
+      // Already have the same or higher role
       toast.success(`You're already a member of ${society.name}`);
       const destination = existing.role === 'committee' 
         ? `/society/${society.slug}/dashboard` 
