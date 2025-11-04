@@ -22,6 +22,9 @@ import CommitteeOnboarding from "./pages/CommitteeOnboarding";
 import EventSummary from "./pages/EventSummary";
 import CodeOfConductView from "./pages/CodeOfConductView";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import Contact from "./pages/Contact";
 import { ScrollToTop } from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -56,6 +59,9 @@ const App = () => (
           <Route path="/society/:slug/events/:eventId/summary" element={<EventSummary />} />
           <Route path="/society/:slug/reports" element={<SocietyReports />} />
           <Route path="/society/:slug/codes-of-conduct" element={<SocietyCodesOfConduct />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/contact" element={<Contact />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
