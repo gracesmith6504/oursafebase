@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
-import { ArrowLeft, Upload, Bell, LogOut } from "lucide-react";
+import { ArrowLeft, Upload, Bell, LogOut, Download } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import logo from "@/assets/logo.png";
@@ -47,6 +47,7 @@ const Profile = () => {
   const [societyToLeave, setSocietyToLeave] = useState<Society | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
   useEffect(() => {
     if (user) {
       fetchProfile();
@@ -204,6 +205,57 @@ const Profile = () => {
     await supabase.auth.signOut();
     navigate("/");
   };
+  const handleExportData = async () => {
+    if (!user) return;
+
+    setExporting(true);
+    try {
+      // Fetch all user data
+      const [profileData, societiesData, eventsData, reportsData, feedbackData, acceptancesData, notesData, bookmarksData] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", user.id).single(),
+        supabase.from("society_members").select("*, society:societies(*)").eq("user_id", user.id),
+        supabase.from("events").select("*").eq("created_by", user.id),
+        supabase.from("reports").select("*").eq("reporter_email", userEmail),
+        supabase.from("event_feedback").select("*").eq("contact_email", userEmail),
+        supabase.from("code_acceptances").select("*").eq("user_id", user.id),
+        supabase.from("event_notes").select("*").eq("user_id", user.id),
+        supabase.from("report_bookmarks").select("*").eq("user_id", user.id)
+      ]);
+
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        userId: user.id,
+        userEmail: userEmail,
+        profile: profileData.data,
+        societyMemberships: societiesData.data,
+        eventsCreated: eventsData.data,
+        reportsSubmitted: reportsData.data,
+        feedbackSubmitted: feedbackData.data,
+        codeAcceptances: acceptancesData.data,
+        eventNotes: notesData.data,
+        reportBookmarks: bookmarksData.data,
+      };
+
+      // Create JSON blob and download
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `oursafebase-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success("Data exported successfully");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export data");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const getInitials = (name: string | null) => {
     if (!name) return "U";
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
@@ -338,6 +390,25 @@ const Profile = () => {
                   </div>
                 </CardContent>
               </Card>}
+
+            {/* Data Export (GDPR) */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Data Export</CardTitle>
+                <CardDescription>
+                  Download all your data in JSON format (GDPR Article 20)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Export includes: profile, society memberships, events created, reports, feedback, code acceptances, and notes.
+                </p>
+                <Button onClick={handleExportData} disabled={exporting} variant="outline">
+                  <Download className="mr-2 h-4 w-4" />
+                  {exporting ? "Exporting..." : "Export My Data"}
+                </Button>
+              </CardContent>
+            </Card>
 
             {/* Society Memberships */}
             <Card>

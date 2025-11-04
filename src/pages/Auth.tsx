@@ -111,7 +111,7 @@ const Auth = () => {
         return;
       }
 
-      toast.success("Account created! Please check your email to verify.");
+      toast.success("Account created! Please check your email to confirm your address before signing in.", { duration: 6000 });
     } catch (error) {
       console.error("Signup error:", error);
       toast.error("An error occurred during signup");
