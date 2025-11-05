@@ -240,7 +240,7 @@ const Auth = () => {
       toast.error(error.message);
     } else {
       toast.success("Confirmation email sent! Check your inbox.");
-      setResendCooldown(60); // Start 60 second cooldown
+      setResendCooldown(10); // Start 10 second cooldown
     }
     setLoading(false);
   };
