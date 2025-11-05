@@ -54,6 +54,15 @@ export const Footer = () => {
                 <Button 
                   variant="link" 
                   className="h-auto p-0 text-muted-foreground hover:text-primary"
+                  onClick={() => navigate("/faq")}
+                >
+                  FAQ
+                </Button>
+              </li>
+              <li>
+                <Button 
+                  variant="link" 
+                  className="h-auto p-0 text-muted-foreground hover:text-primary"
                   onClick={() => navigate("/contact")}
                 >
                   Contact Us
