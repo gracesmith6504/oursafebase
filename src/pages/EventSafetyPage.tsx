@@ -341,6 +341,19 @@ const EventSafetyPage = () => {
   }
 
   const customEmergencyFields = emergencyInfo?.custom_emergency_info || [];
+  
+  // Check if there's any emergency information to display
+  const hasEmergencyInfo = emergencyInfo && (
+    emergencyInfo.nearest_hospital ||
+    emergencyInfo.hospital_address ||
+    emergencyInfo.hospital_phone ||
+    emergencyInfo.nearest_pharmacy ||
+    emergencyInfo.pharmacy_address ||
+    emergencyInfo.pharmacy_phone ||
+    emergencyInfo.on_duty_contact ||
+    emergencyInfo.on_duty_phone ||
+    customEmergencyFields.length > 0
+  );
 
   const handleBackClick = () => {
     if (!society) return;
@@ -451,7 +464,7 @@ const EventSafetyPage = () => {
         )}
 
         {/* Emergency Information */}
-        {emergencyInfo && customEmergencyFields.length > 0 && (
+        {hasEmergencyInfo && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
