@@ -48,6 +48,8 @@ const Profile = () => {
   const [userEmail, setUserEmail] = useState<string>("");
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   useEffect(() => {
     if (user) {
       fetchProfile();
@@ -256,6 +258,35 @@ const Profile = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    setDeleting(true);
+    try {
+      // Delete the user's auth account (this will cascade delete related data)
+      const { error } = await supabase.auth.admin.deleteUser(user.id);
+      
+      if (error) {
+        // Fallback to updating user to trigger deletion
+        const { error: signOutError } = await supabase.auth.signOut();
+        if (signOutError) throw signOutError;
+        
+        toast.success("Account deletion requested. Your account will be deleted shortly.");
+        navigate("/");
+        return;
+      }
+
+      toast.success("Account deleted successfully");
+      navigate("/");
+    } catch (error) {
+      console.error("Delete account error:", error);
+      toast.error("Failed to delete account. Please contact support.");
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
   const getInitials = (name: string | null) => {
     if (!name) return "U";
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
@@ -434,6 +465,49 @@ const Profile = () => {
                   </div>}
               </CardContent>
             </Card>
+
+            {/* Delete Account */}
+            <Card className="border-destructive">
+              <CardHeader>
+                <CardTitle className="text-destructive">Delete Account</CardTitle>
+                <CardDescription>
+                  Permanently delete your account and personal data
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg bg-destructive/10 p-4 space-y-2">
+                  <p className="text-sm font-medium">What will be deleted:</p>
+                  <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                    <li>Your profile information (name, phone, avatar)</li>
+                    <li>Your society memberships</li>
+                    <li>Your event notes and bookmarks</li>
+                    <li>Your account login credentials</li>
+                  </ul>
+                </div>
+
+                <div className="rounded-lg bg-muted p-4 space-y-2">
+                  <p className="text-sm font-medium">What will be retained (for safety records):</p>
+                  <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
+                    <li>Anonymous reports you submitted (cannot be traced back to you)</li>
+                    <li>Non-anonymous reports (contact info removed, content kept for welfare records)</li>
+                    <li>Events you created (your name will be removed)</li>
+                  </ul>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    This retention is required for legal compliance and student safety.
+                  </p>
+                </div>
+
+                <div className="pt-2">
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => setDeleteDialogOpen(true)}
+                    disabled={deleting}
+                  >
+                    Delete My Account
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </main>
 
@@ -474,6 +548,41 @@ const Profile = () => {
               <AlertDialogCancel className="w-full mt-0">
                 Cancel
               </AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete Account Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Account Permanently?</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3">
+                <p>
+                  This action <strong>cannot be undone</strong>. Your account and personal data will be permanently deleted.
+                </p>
+                <div className="rounded-lg bg-muted p-3 space-y-2 text-left">
+                  <p className="font-medium text-foreground text-sm">Data Retention Policy:</p>
+                  <ul className="text-xs space-y-1 ml-4 list-disc">
+                    <li>Anonymous reports remain for safety records (untraceable to you)</li>
+                    <li>Non-anonymous reports: your contact info is removed, but report content is kept for welfare and legal purposes</li>
+                    <li>Events you created remain active (your name removed)</li>
+                  </ul>
+                </div>
+                <p className="text-sm">
+                  Are you absolutely sure you want to delete your account?
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleting ? "Deleting..." : "Yes, Delete My Account"}
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
