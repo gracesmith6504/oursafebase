@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/logo.png";
@@ -20,6 +22,7 @@ const Auth = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   const [societyInfo, setSocietyInfo] = useState<{
     name: string;
     role: string;
@@ -99,7 +102,7 @@ const Auth = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/auth`,
           data: {
             display_name: displayName,
           },
@@ -112,7 +115,7 @@ const Auth = () => {
         return;
       }
 
-      toast.success("Account created! Please check your email to confirm your address before signing in.", { duration: 6000 });
+      setShowEmailConfirmation(true);
     } catch (error) {
       console.error("Signup error:", error);
       toast.error("An error occurred during signup");
@@ -146,7 +149,46 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-muted">
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+        {showEmailConfirmation ? (
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="mb-4 flex justify-center">
+                <div className="rounded-full bg-primary/10 p-4">
+                  <Mail className="h-12 w-12 text-primary" />
+                </div>
+              </div>
+              <CardTitle className="text-2xl">Check Your Email</CardTitle>
+              <CardDescription>
+                We've sent a confirmation link to
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert>
+                <Mail className="h-4 w-4" />
+                <AlertDescription className="ml-2">
+                  <strong className="block mb-2">{email}</strong>
+                  Please click the confirmation link in the email to activate your account.
+                  The link will expire in 24 hours.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>📧 Check your inbox and spam folder</p>
+                <p>⏱️ The email should arrive within a few minutes</p>
+                <p>🔒 You must confirm your email before you can sign in</p>
+              </div>
+
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowEmailConfirmation(false)}
+              >
+                Back to Sign In
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">
             <img src={logo} alt="OurSafeBase" className="h-16" />
@@ -295,6 +337,7 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
+        )}
       </div>
       <Footer />
     </div>
