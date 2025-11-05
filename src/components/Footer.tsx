@@ -6,7 +6,7 @@ export const Footer = () => {
   const navigate = useNavigate();
 
   return (
-    <footer className="border-t border-border/50 bg-card/30 backdrop-blur-sm mt-20">
+    <footer className="border-t border-border/50 bg-card/30 backdrop-blur-sm mt-12">
       <div className="container mx-auto px-4 py-12">
         <div className="grid md:grid-cols-4 gap-8">
           {/* About */}
@@ -84,6 +84,15 @@ export const Footer = () => {
           <div className="space-y-3">
             <h3 className="font-heading font-semibold">Platform</h3>
             <ul className="space-y-2 text-sm">
+              <li>
+                <Button 
+                  variant="link" 
+                  className="h-auto p-0 text-muted-foreground hover:text-primary"
+                  onClick={() => navigate("/about")}
+                >
+                  About Us
+                </Button>
+              </li>
               <li>
                 <Button 
                   variant="link" 

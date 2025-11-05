@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, ArrowLeft, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import { Footer } from "@/components/Footer";
 
 const PrivacyPolicy = () => {
   const navigate = useNavigate();
@@ -270,6 +271,7 @@ const PrivacyPolicy = () => {
           </Button>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

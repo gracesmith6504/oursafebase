@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, ArrowLeft, Mail, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import { Footer } from "@/components/Footer";
 
 const TermsOfService = () => {
   const navigate = useNavigate();
@@ -280,6 +281,7 @@ const TermsOfService = () => {
           </Button>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

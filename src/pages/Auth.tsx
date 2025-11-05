@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/logo.png";
+import { Footer } from "@/components/Footer";
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -143,8 +144,9 @@ const Auth = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-muted">
+      <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-4">
+        <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">
             <img src={logo} alt="OurSafeBase" className="h-16" />
@@ -293,6 +295,8 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
+      </div>
+      <Footer />
     </div>
   );
 };
