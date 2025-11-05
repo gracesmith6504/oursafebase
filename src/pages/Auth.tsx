@@ -23,6 +23,9 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [passwordResetSent, setPasswordResetSent] = useState(false);
   const [societyInfo, setSocietyInfo] = useState<{
     name: string;
     role: string;
@@ -146,6 +149,50 @@ const Auth = () => {
     setLoading(false);
   };
 
+  const handleResendConfirmation = async () => {
+    if (!email) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth`,
+      }
+    });
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Confirmation email sent! Check your inbox.");
+    }
+    setLoading(false);
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!resetEmail) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setPasswordResetSent(true);
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-muted">
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-4">
@@ -178,13 +225,103 @@ const Auth = () => {
                 <p>🔒 You must confirm your email before you can sign in</p>
               </div>
 
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => setShowEmailConfirmation(false)}
-              >
-                Back to Sign In
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={handleResendConfirmation}
+                  disabled={loading}
+                >
+                  Resend Email
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setShowEmailConfirmation(false)}
+                >
+                  Back to Sign In
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : showPasswordReset ? (
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <div className="mb-4 flex justify-center">
+                <div className="rounded-full bg-primary/10 p-4">
+                  <Mail className="h-12 w-12 text-primary" />
+                </div>
+              </div>
+              <CardTitle className="text-2xl">
+                {passwordResetSent ? "Check Your Email" : "Reset Password"}
+              </CardTitle>
+              <CardDescription>
+                {passwordResetSent 
+                  ? "We've sent you a password reset link"
+                  : "Enter your email to receive a password reset link"
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {passwordResetSent ? (
+                <>
+                  <Alert>
+                    <Mail className="h-4 w-4" />
+                    <AlertDescription className="ml-2">
+                      <strong className="block mb-2">{resetEmail}</strong>
+                      Click the link in the email to reset your password.
+                      The link will expire in 1 hour.
+                    </AlertDescription>
+                  </Alert>
+                  
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    <p>📧 Check your inbox and spam folder</p>
+                    <p>⏱️ The email should arrive within a few minutes</p>
+                    <p>🔒 The link is single-use and expires after 1 hour</p>
+                  </div>
+
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      setShowPasswordReset(false);
+                      setPasswordResetSent(false);
+                      setResetEmail("");
+                    }}
+                  >
+                    Back to Sign In
+                  </Button>
+                </>
+              ) : (
+                <form onSubmit={handlePasswordReset} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email</Label>
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="you@university.edu"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      disabled={loading}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Sending..." : "Send Reset Link"}
+                  </Button>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      setShowPasswordReset(false);
+                      setResetEmail("");
+                    }}
+                  >
+                    Back to Sign In
+                  </Button>
+                </form>
+              )}
             </CardContent>
           </Card>
         ) : (
@@ -248,6 +385,15 @@ const Auth = () => {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordReset(true)}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
               </form>
             </TabsContent>
             
