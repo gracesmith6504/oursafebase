@@ -301,7 +301,7 @@ const Auth = () => {
                 <AlertDescription className="ml-2">
                   <strong className="block mb-2">{email}</strong>
                   Please click the confirmation link in the email to activate your account.
-                  The link will expire in 24 hours.
+                  University emails may take longer to reach
                 </AlertDescription>
               </Alert>
               
@@ -356,7 +356,7 @@ const Auth = () => {
                     <AlertDescription className="ml-2">
                       <strong className="block mb-2">{resetEmail}</strong>
                       Click the link in the email to reset your password.
-                      The link will expire in 1 hour.
+                      Uniersity emails may take longer to reach.
                     </AlertDescription>
                   </Alert>
                   
