@@ -43,58 +43,88 @@ const Auth = () => {
   const redirectPath = searchParams.get("redirect");
 
   useEffect(() => {
-    // Check for auth callback parameters in URL hash
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    
-    // Check for successful confirmation FIRST - this prevents showing error messages when auth succeeded
-    const accessToken = hashParams.get('access_token');
-    if (accessToken) {
-      setAuthSuccess(true);
-      toast.success('Email confirmed successfully!');
+    (async () => {
+      // Check for auth callback parameters in URL hash
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
       
-      // Clean up the URL but preserve query params
-      const queryParams = inviteCode ? `?invite=${inviteCode}` : '';
-      window.history.replaceState({}, document.title, window.location.pathname + queryParams);
-      
-      // User is now authenticated, redirect after a brief delay
-      setTimeout(() => {
-        if (inviteCode) {
-          // Handle invite flows
-          if (societyInfo?.role === 'committee') {
-            navigate(`/onboarding?invite=${inviteCode}`);
+      // Success-first: if access_token exists, treat as success and skip error handling
+      const accessToken = hashParams.get('access_token');
+      if (accessToken) {
+        setAuthError(null);
+        setAuthSuccess(true);
+        toast.success('Email confirmed successfully!');
+        
+        // Clean up the URL but preserve query params
+        const queryParams = inviteCode ? `?invite=${inviteCode}` : '';
+        window.history.replaceState({}, document.title, window.location.pathname + queryParams);
+        
+        // Redirect after a brief delay
+        setTimeout(() => {
+          if (inviteCode) {
+            if (societyInfo?.role === 'committee') {
+              navigate(`/onboarding?invite=${inviteCode}`);
+            } else {
+              navigate(`/invite/${inviteCode}`);
+            }
+          } else if (redirectPath) {
+            navigate(redirectPath);
           } else {
-            navigate(`/invite/${inviteCode}`);
+            navigate("/dashboard");
           }
-        } else if (redirectPath) {
-          navigate(redirectPath);
-        } else {
-          navigate("/dashboard");
-        }
-      }, 1500);
-      return; // Exit early, don't check for errors
-    }
-    
-    // ONLY check for errors if there was NO access_token
-    const error = hashParams.get('error');
-    const errorDescription = hashParams.get('error_description');
-    const errorCode = hashParams.get('error_code');
-    
-    if (error) {
-      let errorMessage = errorDescription || error;
-      
-      // Provide user-friendly messages for common errors
-      if (errorCode === 'otp_expired') {
-        errorMessage = 'This confirmation link has expired. Please request a new confirmation email.';
-      } else if (error === 'access_denied') {
-        errorMessage = 'Email confirmation failed. The link may be invalid or already used.';
+        }, 1500);
+        return;
       }
       
-      setAuthError(errorMessage);
-      toast.error(errorMessage);
+      // ONLY check for errors if there was NO access_token
+      const error = hashParams.get('error');
+      const errorDescription = hashParams.get('error_description');
+      const errorCode = hashParams.get('error_code');
       
-      // Clean up the URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
+      if (error) {
+        // If a valid session already exists, suppress errors and redirect
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setAuthError(null);
+          setAuthSuccess(true);
+          
+          const queryParams = inviteCode ? `?invite=${inviteCode}` : '';
+          window.history.replaceState({}, document.title, window.location.pathname + queryParams);
+          
+          setTimeout(() => {
+            if (inviteCode) {
+              if (societyInfo?.role === 'committee') {
+                navigate(`/onboarding?invite=${inviteCode}`);
+              } else {
+                navigate(`/invite/${inviteCode}`);
+              }
+            } else if (redirectPath) {
+              navigate(redirectPath);
+            } else {
+              navigate("/dashboard");
+            }
+          }, 1000);
+          return;
+        }
+
+        // Specifically suppress the "otp_expired" popup entirely
+        if (errorCode === 'otp_expired') {
+          // Clean up URL and do not show any popup
+          window.history.replaceState({}, document.title, window.location.pathname);
+          return;
+        }
+
+        let errorMessage = errorDescription || error;
+        if (error === 'access_denied') {
+          errorMessage = 'Email confirmation failed. The link may be invalid or already used.';
+        }
+        
+        setAuthError(errorMessage);
+        toast.error(errorMessage);
+        
+        // Clean up the URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    })();
   }, [inviteCode, redirectPath, societyInfo, navigate]);
 
   // Cooldown timer for resend button
@@ -270,7 +300,7 @@ const Auth = () => {
     <div className="min-h-screen bg-muted">
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-4">
         <div className="w-full max-w-md space-y-4">
-          {authError && !showEmailConfirmation && !showPasswordReset && (
+          {authError && !authSuccess && !showEmailConfirmation && !showPasswordReset && (
             <Alert variant="destructive">
               <AlertDescription>{authError}</AlertDescription>
             </Alert>
