@@ -263,16 +263,12 @@ const Profile = () => {
 
     setDeleting(true);
     try {
-      // Delete the user's auth account (this will cascade delete related data)
-      const { error } = await supabase.auth.admin.deleteUser(user.id);
+      // Call the secure edge function to delete the account
+      const { data, error } = await supabase.functions.invoke('delete-account');
       
       if (error) {
-        // Fallback to updating user to trigger deletion
-        const { error: signOutError } = await supabase.auth.signOut();
-        if (signOutError) throw signOutError;
-        
-        toast.success("Account deletion requested. Your account will be deleted shortly.");
-        navigate("/");
+        console.error("Delete account error:", error);
+        toast.error("Failed to delete account. Please contact support.");
         return;
       }
 
