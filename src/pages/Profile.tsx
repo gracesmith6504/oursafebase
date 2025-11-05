@@ -269,15 +269,23 @@ const Profile = () => {
       if (error) {
         console.error("Delete account error:", error);
         toast.error("Failed to delete account. Please contact support.");
+        setDeleting(false);
+        setDeleteDialogOpen(false);
         return;
       }
 
-      toast.success("Account deleted successfully");
-      navigate("/");
+      toast.success("Account deleted successfully. Redirecting...");
+      
+      // Sign out to clear the session
+      await supabase.auth.signOut();
+      
+      // Navigate to home page after a brief delay
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
     } catch (error) {
       console.error("Delete account error:", error);
       toast.error("Failed to delete account. Please contact support.");
-    } finally {
       setDeleting(false);
       setDeleteDialogOpen(false);
     }

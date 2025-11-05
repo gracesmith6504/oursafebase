@@ -71,12 +71,28 @@ const Auth = () => {
     const accessToken = hashParams.get('access_token');
     if (accessToken) {
       setAuthSuccess(true);
-      toast.success('Email confirmed successfully! You can now sign in.');
+      toast.success('Email confirmed successfully!');
       
       // Clean up the URL
       window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // User is now authenticated, redirect after a brief delay
+      setTimeout(() => {
+        if (inviteCode) {
+          // Handle invite flows
+          if (societyInfo?.role === 'committee') {
+            navigate(`/onboarding?invite=${inviteCode}`);
+          } else {
+            navigate(`/invite/${inviteCode}`);
+          }
+        } else if (redirectPath) {
+          navigate(redirectPath);
+        } else {
+          navigate("/dashboard");
+        }
+      }, 1500);
     }
-  }, []);
+  }, [inviteCode, redirectPath, societyInfo, navigate]);
 
   useEffect(() => {
     const fetchSocietyInfo = async () => {
@@ -241,19 +257,20 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-muted">
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-4">
-        {authError && !showEmailConfirmation && !showPasswordReset && (
-          <Alert variant="destructive" className="mb-4 max-w-md">
-            <AlertDescription>{authError}</AlertDescription>
-          </Alert>
-        )}
+        <div className="w-full max-w-md space-y-4">
+          {authError && !showEmailConfirmation && !showPasswordReset && (
+            <Alert variant="destructive">
+              <AlertDescription>{authError}</AlertDescription>
+            </Alert>
+          )}
 
-        {authSuccess && !showEmailConfirmation && !showPasswordReset && (
-          <Alert className="mb-4 max-w-md">
-            <AlertDescription>✅ Email confirmed! Please sign in below.</AlertDescription>
-          </Alert>
-        )}
+          {authSuccess && !showEmailConfirmation && !showPasswordReset && (
+            <Alert>
+              <AlertDescription>✅ Email confirmed! Redirecting...</AlertDescription>
+            </Alert>
+          )}
 
-        {showEmailConfirmation ? (
+          {showEmailConfirmation ? (
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
               <div className="mb-4 flex justify-center">
@@ -541,6 +558,7 @@ const Auth = () => {
         </CardContent>
       </Card>
         )}
+        </div>
       </div>
       <Footer />
     </div>
