@@ -34,6 +34,7 @@ const Auth = () => {
     role: string;
   } | null>(null);
   const [loadingSocietyInfo, setLoadingSocietyInfo] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
@@ -73,8 +74,9 @@ const Auth = () => {
       setAuthSuccess(true);
       toast.success('Email confirmed successfully!');
       
-      // Clean up the URL
-      window.history.replaceState({}, document.title, window.location.pathname);
+      // Clean up the URL but preserve query params
+      const queryParams = inviteCode ? `?invite=${inviteCode}` : '';
+      window.history.replaceState({}, document.title, window.location.pathname + queryParams);
       
       // User is now authenticated, redirect after a brief delay
       setTimeout(() => {
@@ -93,6 +95,14 @@ const Auth = () => {
       }, 1500);
     }
   }, [inviteCode, redirectPath, societyInfo, navigate]);
+
+  // Cooldown timer for resend button
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
 
   useEffect(() => {
     const fetchSocietyInfo = async () => {
@@ -229,6 +239,7 @@ const Auth = () => {
       toast.error(error.message);
     } else {
       toast.success("Confirmation email sent! Check your inbox.");
+      setResendCooldown(60); // Start 60 second cooldown
     }
     setLoading(false);
   };
@@ -304,9 +315,9 @@ const Auth = () => {
                   variant="outline" 
                   className="flex-1"
                   onClick={handleResendConfirmation}
-                  disabled={loading}
+                  disabled={loading || resendCooldown > 0}
                 >
-                  Resend Email
+                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Email"}
                 </Button>
                 <Button 
                   variant="outline" 

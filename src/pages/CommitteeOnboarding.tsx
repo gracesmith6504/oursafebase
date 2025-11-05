@@ -78,6 +78,8 @@ const CommitteeOnboarding = () => {
       setAvatarFile(file);
       setAvatarPreview(URL.createObjectURL(file));
     }
+    // Reset the input value to allow selecting the same file again
+    e.target.value = '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
