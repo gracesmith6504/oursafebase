@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/logo.png";
 import { Footer } from "@/components/Footer";
+import { getAppUrl } from "@/lib/constants";
 
 const Auth = () => {
   const [loading, setLoading] = useState(false);
@@ -26,6 +27,8 @@ const Auth = () => {
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [passwordResetSent, setPasswordResetSent] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<boolean>(false);
   const [societyInfo, setSocietyInfo] = useState<{
     name: string;
     role: string;
@@ -37,6 +40,43 @@ const Auth = () => {
   
   const inviteCode = searchParams.get("invite");
   const redirectPath = searchParams.get("redirect");
+
+  useEffect(() => {
+    // Check for auth callback parameters in URL hash
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    
+    // Check for errors
+    const error = hashParams.get('error');
+    const errorDescription = hashParams.get('error_description');
+    const errorCode = hashParams.get('error_code');
+    
+    if (error) {
+      let errorMessage = errorDescription || error;
+      
+      // Provide user-friendly messages for common errors
+      if (errorCode === 'otp_expired') {
+        errorMessage = 'This confirmation link has expired. Please request a new confirmation email.';
+      } else if (error === 'access_denied') {
+        errorMessage = 'Email confirmation failed. The link may be invalid or already used.';
+      }
+      
+      setAuthError(errorMessage);
+      toast.error(errorMessage);
+      
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    // Check for successful confirmation
+    const accessToken = hashParams.get('access_token');
+    if (accessToken) {
+      setAuthSuccess(true);
+      toast.success('Email confirmed successfully! You can now sign in.');
+      
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchSocietyInfo = async () => {
@@ -59,8 +99,13 @@ const Auth = () => {
   }, [inviteCode]);
 
   useEffect(() => {
+    // Don't redirect if we're processing an auth callback
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const hasAuthCallback = hashParams.has('access_token') || hashParams.has('error');
+    
     // Don't redirect until society info is loaded (if invite code exists)
-    if (user && (!inviteCode || !loadingSocietyInfo)) {
+    // AND we're not processing an auth callback
+    if (user && (!inviteCode || !loadingSocietyInfo) && !hasAuthCallback) {
       if (inviteCode && societyInfo?.role === 'committee') {
         navigate(`/onboarding?invite=${inviteCode}`);
       } else if (inviteCode) {
@@ -105,7 +150,7 @@ const Auth = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
+          emailRedirectTo: `${getAppUrl()}/auth`,
           data: {
             display_name: displayName,
           },
@@ -160,7 +205,7 @@ const Auth = () => {
       type: 'signup',
       email: email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth`,
+        emailRedirectTo: `${getAppUrl()}/auth`,
       }
     });
 
@@ -182,7 +227,7 @@ const Auth = () => {
 
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/auth`,
+      redirectTo: `${getAppUrl()}/auth`,
     });
 
     if (error) {
@@ -196,6 +241,18 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-muted">
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-4">
+        {authError && !showEmailConfirmation && !showPasswordReset && (
+          <Alert variant="destructive" className="mb-4 max-w-md">
+            <AlertDescription>{authError}</AlertDescription>
+          </Alert>
+        )}
+
+        {authSuccess && !showEmailConfirmation && !showPasswordReset && (
+          <Alert className="mb-4 max-w-md">
+            <AlertDescription>✅ Email confirmed! Please sign in below.</AlertDescription>
+          </Alert>
+        )}
+
         {showEmailConfirmation ? (
           <Card className="w-full max-w-md">
             <CardHeader className="text-center">
