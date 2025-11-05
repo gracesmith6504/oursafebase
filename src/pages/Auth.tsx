@@ -215,6 +215,21 @@ const Auth = () => {
       });
 
       if (error) {
+        // Check if the error is about email already being registered
+        if (error.message.toLowerCase().includes('already registered') || 
+            error.message.toLowerCase().includes('already been registered')) {
+          toast.error("This email is already registered. Please sign in instead.");
+          setLoading(false);
+          // Switch to sign-in tab after a brief delay
+          setTimeout(() => {
+            const signInTab = document.querySelector('[value="signin"]');
+            if (signInTab) {
+              (signInTab as HTMLElement).click();
+            }
+          }, 1500);
+          return;
+        }
+        
         toast.error(error.message);
         setLoading(false);
         return;
