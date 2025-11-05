@@ -46,29 +46,7 @@ const Auth = () => {
     // Check for auth callback parameters in URL hash
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     
-    // Check for errors
-    const error = hashParams.get('error');
-    const errorDescription = hashParams.get('error_description');
-    const errorCode = hashParams.get('error_code');
-    
-    if (error) {
-      let errorMessage = errorDescription || error;
-      
-      // Provide user-friendly messages for common errors
-      if (errorCode === 'otp_expired') {
-        errorMessage = 'This confirmation link has expired. Please request a new confirmation email.';
-      } else if (error === 'access_denied') {
-        errorMessage = 'Email confirmation failed. The link may be invalid or already used.';
-      }
-      
-      setAuthError(errorMessage);
-      toast.error(errorMessage);
-      
-      // Clean up the URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-    
-    // Check for successful confirmation
+    // Check for successful confirmation FIRST - this prevents showing error messages when auth succeeded
     const accessToken = hashParams.get('access_token');
     if (accessToken) {
       setAuthSuccess(true);
@@ -93,6 +71,29 @@ const Auth = () => {
           navigate("/dashboard");
         }
       }, 1500);
+      return; // Exit early, don't check for errors
+    }
+    
+    // ONLY check for errors if there was NO access_token
+    const error = hashParams.get('error');
+    const errorDescription = hashParams.get('error_description');
+    const errorCode = hashParams.get('error_code');
+    
+    if (error) {
+      let errorMessage = errorDescription || error;
+      
+      // Provide user-friendly messages for common errors
+      if (errorCode === 'otp_expired') {
+        errorMessage = 'This confirmation link has expired. Please request a new confirmation email.';
+      } else if (error === 'access_denied') {
+        errorMessage = 'Email confirmation failed. The link may be invalid or already used.';
+      }
+      
+      setAuthError(errorMessage);
+      toast.error(errorMessage);
+      
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [inviteCode, redirectPath, societyInfo, navigate]);
 
