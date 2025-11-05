@@ -166,7 +166,7 @@ const Auth = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${getAppUrl()}/auth`,
+          emailRedirectTo: `${getAppUrl()}/auth${inviteCode ? `?invite=${inviteCode}` : ''}`,
           data: {
             display_name: displayName,
           },
@@ -221,7 +221,7 @@ const Auth = () => {
       type: 'signup',
       email: email,
       options: {
-        emailRedirectTo: `${getAppUrl()}/auth`,
+        emailRedirectTo: `${getAppUrl()}/auth${inviteCode ? `?invite=${inviteCode}` : ''}`,
       }
     });
 
@@ -243,7 +243,7 @@ const Auth = () => {
 
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${getAppUrl()}/auth`,
+      redirectTo: `${getAppUrl()}/auth${inviteCode ? `?invite=${inviteCode}` : ''}`,
     });
 
     if (error) {
