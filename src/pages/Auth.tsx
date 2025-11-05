@@ -356,7 +356,7 @@ const Auth = () => {
                     <AlertDescription className="ml-2">
                       <strong className="block mb-2">{resetEmail}</strong>
                       Click the link in the email to reset your password.
-                      Uniersity emails may take longer to reach.
+                      University emails may take longer to reach.
                     </AlertDescription>
                   </Alert>
                   
@@ -385,7 +385,7 @@ const Auth = () => {
                     <Input
                       id="reset-email"
                       type="email"
-                      placeholder="you@university.edu"
+                      placeholder="you@gmail.com"
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                       disabled={loading}
@@ -452,7 +452,7 @@ const Auth = () => {
                   <Input
                     id="signin-email"
                     type="email"
-                    placeholder="you@university.edu"
+                    placeholder="you@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -502,7 +502,7 @@ const Auth = () => {
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="you@university.edu"
+                    placeholder="you@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={loading}
