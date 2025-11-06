@@ -36,6 +36,7 @@ const Auth = () => {
   } | null>(null);
   const [loadingSocietyInfo, setLoadingSocietyInfo] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [hasAuthCallback, setHasAuthCallback] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
@@ -50,17 +51,14 @@ const Auth = () => {
       
       // Success-first: if access_token exists, treat as success and skip error handling
       const accessToken = hashParams.get('access_token');
-      if (accessToken) {
-        setAuthError(null);
-        setAuthSuccess(true);
-        toast.success('Email confirmed successfully!');
-        
-        // Clean up the URL but preserve query params
-        const queryParams = inviteCode ? `?invite=${inviteCode}` : '';
-        window.history.replaceState({}, document.title, window.location.pathname + queryParams);
-        // Don't redirect here - let the second useEffect handle it after society info loads
-        return;
-      }
+    if (accessToken) {
+      setAuthError(null);
+      setAuthSuccess(true);
+      setHasAuthCallback(true);
+      // Do NOT clean the URL here; let the redirect effect handle it after session is set
+      toast.success('Email confirmed successfully!');
+      return;
+    }
       
       // ONLY check for errors if there was NO access_token
       const error = hashParams.get('error');
@@ -139,7 +137,12 @@ const Auth = () => {
     // If there's an invite code, wait for society info to load
     if (inviteCode && loadingSocietyInfo) return;
     
-    // Now we can safely redirect
+    // Now we can safely clean the URL and redirect
+    const cleaned = new URLSearchParams();
+    if (inviteCode) cleaned.set('invite', inviteCode);
+    if (redirectPath) cleaned.set('redirect', redirectPath);
+    const newUrl = `${window.location.pathname}${cleaned.toString() ? `?${cleaned.toString()}` : ''}`;
+    window.history.replaceState({}, document.title, newUrl)
     if (inviteCode && societyInfo?.role === 'committee') {
       navigate(`/onboarding?invite=${inviteCode}`);
     } else if (inviteCode) {
@@ -292,7 +295,7 @@ const Auth = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${getAppUrl()}/auth${inviteCode ? `?invite=${inviteCode}` : ''}`,
+        redirectTo: `${window.location.origin}/auth${inviteCode ? `?invite=${inviteCode}` : ''}`,
       }
     });
 
@@ -316,6 +319,12 @@ const Auth = () => {
           {authSuccess && !showEmailConfirmation && !showPasswordReset && (
             <Alert>
               <AlertDescription>✅ Email confirmed! Redirecting...</AlertDescription>
+            </Alert>
+          )}
+
+          {hasAuthCallback && !user && (
+            <Alert>
+              <AlertDescription>Signing you in…</AlertDescription>
             </Alert>
           )}
 
