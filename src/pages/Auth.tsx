@@ -17,6 +17,26 @@ import logo from "@/assets/logo.png";
 import { Footer } from "@/components/Footer";
 import { getAppUrl } from "@/lib/constants";
 
+// Detect if user is using an in-app browser (WebView)
+const detectInAppBrowser = () => {
+  const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+  
+  // Common in-app browsers that block Google OAuth
+  const inAppBrowsers = [
+    /Instagram/i,
+    /FBAN|FBAV/i,           // Facebook
+    /musical_ly|TikTok/i,    // TikTok
+    /Line\//i,               // LINE
+    /MicroMessenger/i,       // WeChat
+    /LinkedInApp/i,          // LinkedIn
+    /GSA\//i,                // Google Search App (Gmail in-app)
+    /twitter/i,              // Twitter
+    /snapchat/i,             // Snapchat
+  ];
+  
+  return inAppBrowsers.some(pattern => pattern.test(ua));
+};
+
 const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -37,12 +57,18 @@ const Auth = () => {
   const [loadingSocietyInfo, setLoadingSocietyInfo] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [hasAuthCallback, setHasAuthCallback] = useState(false);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   
   const inviteCode = searchParams.get("invite");
   const redirectPath = searchParams.get("redirect");
+
+  // Check if user is on an in-app browser on mount
+  useEffect(() => {
+    setIsInAppBrowser(detectInAppBrowser());
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -310,6 +336,18 @@ const Auth = () => {
     <div className="min-h-screen bg-muted">
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-4">
         <div className="w-full max-w-md space-y-4">
+          {isInAppBrowser && !showEmailConfirmation && !showPasswordReset && (
+            <Alert variant="destructive" className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
+              <AlertDescription className="text-sm">
+                <strong className="block mb-1">⚠️ Please open in your browser</strong>
+                <p className="mb-2">Google sign-in won't work in this app's browser.</p>
+                <p className="text-xs">
+                  Tap the <strong>three dots (⋯)</strong> menu and select <strong>"Open in Safari"</strong> or <strong>"Open in Chrome"</strong>
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {authError && !authSuccess && !showEmailConfirmation && !showPasswordReset && (
             <Alert variant="destructive">
               <AlertDescription>{authError}</AlertDescription>
