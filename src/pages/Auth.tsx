@@ -58,21 +58,7 @@ const Auth = () => {
         // Clean up the URL but preserve query params
         const queryParams = inviteCode ? `?invite=${inviteCode}` : '';
         window.history.replaceState({}, document.title, window.location.pathname + queryParams);
-        
-        // Redirect after a brief delay
-        setTimeout(() => {
-          if (inviteCode) {
-            if (societyInfo?.role === 'committee') {
-              navigate(`/onboarding?invite=${inviteCode}`);
-            } else {
-              navigate(`/invite/${inviteCode}`);
-            }
-          } else if (redirectPath) {
-            navigate(redirectPath);
-          } else {
-            navigate("/dashboard");
-          }
-        }, 1500);
+        // Don't redirect here - let the second useEffect handle it after society info loads
         return;
       }
       
@@ -82,7 +68,7 @@ const Auth = () => {
       const errorCode = hashParams.get('error_code');
       
       if (error) {
-        // If a valid session already exists, suppress errors and redirect
+        // If a valid session already exists, suppress errors
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           setAuthError(null);
@@ -90,20 +76,7 @@ const Auth = () => {
           
           const queryParams = inviteCode ? `?invite=${inviteCode}` : '';
           window.history.replaceState({}, document.title, window.location.pathname + queryParams);
-          
-          setTimeout(() => {
-            if (inviteCode) {
-              if (societyInfo?.role === 'committee') {
-                navigate(`/onboarding?invite=${inviteCode}`);
-              } else {
-                navigate(`/invite/${inviteCode}`);
-              }
-            } else if (redirectPath) {
-              navigate(redirectPath);
-            } else {
-              navigate("/dashboard");
-            }
-          }, 1000);
+          // Don't redirect here - let the second useEffect handle it after society info loads
           return;
         }
 
@@ -126,7 +99,7 @@ const Auth = () => {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     })();
-  }, [inviteCode, redirectPath, societyInfo, navigate]);
+  }, [inviteCode, redirectPath, navigate]);
 
   // Cooldown timer for resend button
   useEffect(() => {
@@ -157,22 +130,24 @@ const Auth = () => {
   }, [inviteCode]);
 
   useEffect(() => {
-    // Don't redirect if we're processing an auth callback
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const hasAuthCallback = hashParams.has('access_token') || hashParams.has('error');
+    // Only redirect when:
+    // 1. User is authenticated
+    // 2. Society info is loaded (if invite code exists)
+    // 3. We're not currently loading society info
+    if (!user) return;
     
-    // Don't redirect until society info is loaded (if invite code exists)
-    // AND we're not processing an auth callback
-    if (user && (!inviteCode || !loadingSocietyInfo) && !hasAuthCallback) {
-      if (inviteCode && societyInfo?.role === 'committee') {
-        navigate(`/onboarding?invite=${inviteCode}`);
-      } else if (inviteCode) {
-        navigate(`/invite/${inviteCode}`);
-      } else if (redirectPath) {
-        navigate(redirectPath);
-      } else {
-        navigate("/dashboard");
-      }
+    // If there's an invite code, wait for society info to load
+    if (inviteCode && loadingSocietyInfo) return;
+    
+    // Now we can safely redirect
+    if (inviteCode && societyInfo?.role === 'committee') {
+      navigate(`/onboarding?invite=${inviteCode}`);
+    } else if (inviteCode) {
+      navigate(`/invite/${inviteCode}`);
+    } else if (redirectPath) {
+      navigate(redirectPath);
+    } else {
+      navigate("/dashboard");
     }
   }, [user, navigate, inviteCode, redirectPath, societyInfo, loadingSocietyInfo]);
 
