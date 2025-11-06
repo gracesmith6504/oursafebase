@@ -48,17 +48,15 @@ const Auth = () => {
       // Check for auth callback parameters in URL hash
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       
-      // Success-first: if access_token exists, treat as success and skip error handling
+      // Success-first: if access_token exists, treat as success
       const accessToken = hashParams.get('access_token');
       if (accessToken) {
         setAuthError(null);
         setAuthSuccess(true);
-        toast.success('Email confirmed successfully!');
-        
-        // Clean up the URL but preserve query params
-        const queryParams = inviteCode ? `?invite=${inviteCode}` : '';
-        window.history.replaceState({}, document.title, window.location.pathname + queryParams);
-        // Don't redirect here - let the second useEffect handle it after society info loads
+        toast.success('Authentication successful!');
+        // DON'T clean URL yet - Supabase needs the hash to process the session
+        // The session will be processed by Supabase's onAuthStateChange
+        // and the redirect useEffect will handle navigation once user is set
         return;
       }
       
@@ -73,10 +71,7 @@ const Auth = () => {
         if (session) {
           setAuthError(null);
           setAuthSuccess(true);
-          
-          const queryParams = inviteCode ? `?invite=${inviteCode}` : '';
-          window.history.replaceState({}, document.title, window.location.pathname + queryParams);
-          // Don't redirect here - let the second useEffect handle it after society info loads
+          // Session exists, redirect will be handled by the main redirect useEffect
           return;
         }
 
@@ -138,6 +133,12 @@ const Auth = () => {
     
     // If there's an invite code, wait for society info to load
     if (inviteCode && loadingSocietyInfo) return;
+    
+    // Clean up URL hash if present (from OAuth callback)
+    if (window.location.hash) {
+      const queryParams = inviteCode ? `?invite=${inviteCode}` : '';
+      window.history.replaceState({}, document.title, window.location.pathname + queryParams);
+    }
     
     // Now we can safely redirect
     if (inviteCode && societyInfo?.role === 'committee') {
