@@ -553,6 +553,9 @@ const Auth = () => {
                     disabled={loading}
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    💡 Use a personal email like @gmail.com for best experience (university emails may be slower)
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
