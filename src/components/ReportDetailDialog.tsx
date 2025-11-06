@@ -221,7 +221,15 @@ export function ReportDetailDialog({ open, onOpenChange, reportId, onUpdate }: R
             <h3 className="font-semibold text-sm sm:text-base break-words">{event.title}</h3>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
               <Calendar className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-              <span className="break-words">{format(new Date(event.event_date), "PPP 'at' p")}</span>
+              <span className="break-words">
+                {(() => {
+                  const date = new Date(event.event_date);
+                  const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0;
+                  return hasTime 
+                    ? format(date, "PPP 'at' p")
+                    : format(date, "PPP");
+                })()}
+              </span>
             </div>
             {event.location && (
               <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">

@@ -129,7 +129,13 @@ const SocietyAttendee = () => {
                             <CardDescription className="space-y-1">
                               <div className="flex items-center gap-2 text-sm">
                                 <Calendar className="h-4 w-4" />
-                                {format(new Date(event.event_date), "PPP 'at' p")}
+                                {(() => {
+                                  const date = new Date(event.event_date);
+                                  const hasTime = date.getHours() !== 0 || date.getMinutes() !== 0;
+                                  return hasTime 
+                                    ? format(date, "PPP 'at' p")
+                                    : format(date, "PPP");
+                                })()}
                               </div>
                               {event.location && (
                                 <div className="text-sm">📍 {event.location}</div>
