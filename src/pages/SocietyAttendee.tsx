@@ -63,14 +63,12 @@ const SocietyAttendee = () => {
 
     setSociety(societyData);
 
-    // Fetch upcoming events (including today)
-    const today = startOfDay(new Date()).toISOString();
+    // Fetch all events (upcoming and past)
     const { data: eventsData, error: eventsError } = await supabase
       .from("events")
       .select("id, title, slug, event_date, location, description")
       .eq("society_id", societyData.id)
-      .gte("event_date", today)
-      .order("event_date", { ascending: true });
+      .order("event_date", { ascending: false });
 
     if (eventsError) {
       toast.error("Failed to load events");
@@ -102,7 +100,7 @@ const SocietyAttendee = () => {
                 </Button>
                 <div>
                   <h1 className="text-3xl font-bold">{society?.name}</h1>
-                  <p className="text-muted-foreground">Upcoming events</p>
+                  <p className="text-muted-foreground">Recent events</p>
                 </div>
               </div>
 
@@ -111,40 +109,48 @@ const SocietyAttendee = () => {
                   <CardContent className="py-12 text-center">
                     <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                     <p className="text-muted-foreground">
-                      No upcoming events scheduled
+                      No events found
                     </p>
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-4">
-                  {events.map((event) => (
-                    <Card key={event.id} className="transition-shadow hover:shadow-md">
-                      <CardHeader>
-                        <CardTitle className="text-xl">{event.title}</CardTitle>
-                        <CardDescription className="space-y-1">
-                          <div className="flex items-center gap-2 text-sm">
-                            <Calendar className="h-4 w-4" />
-                            {format(new Date(event.event_date), "PPP 'at' p")}
-                          </div>
-                          {event.location && (
-                            <div className="text-sm">📍 {event.location}</div>
-                          )}
-                          {event.description && (
-                            <div className="mt-2 text-sm">{event.description}</div>
-                          )}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <Button
-                          onClick={() => navigate(`/${society?.slug}/${event.slug}`)}
-                          className="w-full"
-                        >
-                          View Safety Page →
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                  <div className="space-y-4">
+                    {events.map((event) => {
+                      const status = getEventStatus(event.event_date);
+                      return (
+                        <Card key={event.id} className="transition-shadow hover:shadow-md">
+                          <CardHeader>
+                            <div className="flex items-start justify-between gap-2">
+                              <CardTitle className="text-xl">{event.title}</CardTitle>
+                              <Badge variant={status === 'upcoming' ? 'default' : status === 'ongoing' ? 'secondary' : 'outline'}>
+                                {status}
+                              </Badge>
+                            </div>
+                            <CardDescription className="space-y-1">
+                              <div className="flex items-center gap-2 text-sm">
+                                <Calendar className="h-4 w-4" />
+                                {format(new Date(event.event_date), "PPP 'at' p")}
+                              </div>
+                              {event.location && (
+                                <div className="text-sm">📍 {event.location}</div>
+                              )}
+                              {event.description && (
+                                <div className="mt-2 text-sm">{event.description}</div>
+                              )}
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <Button
+                              onClick={() => navigate(`/${society?.slug}/${event.slug}`)}
+                              className="w-full"
+                            >
+                              View Safety Page →
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
               )}
             </>
           )}
