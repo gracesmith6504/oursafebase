@@ -48,6 +48,25 @@
 
   <body>
     <div id="root"></div>
+    <noscript>
+      <footer style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb;">
+        <a href="https://oursafebase.com/privacy" style="color: #2563eb; text-decoration: underline;">Privacy Policy</a>
+      </footer>
+    </noscript>
+    <footer id="static-footer" style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; font-size: 14px;">
+      <a href="https://oursafebase.com/privacy" style="color: #2563eb; text-decoration: underline;">Privacy Policy</a>
+    </footer>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Hide static footer once React loads
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+          var footer = document.getElementById('static-footer');
+          if (footer && document.getElementById('root').children.length > 0) {
+            footer.style.display = 'none';
+          }
+        }, 100);
+      });
+    </script>
   </body>
 </html>
