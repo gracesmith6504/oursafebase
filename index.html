@@ -50,23 +50,17 @@
     <div id="root"></div>
     <noscript>
       <footer style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb;">
-        <a href="https://oursafebase.com/privacy" style="color: #2563eb; text-decoration: underline;">Privacy Policy</a>
+        <a href="https://oursafebase.com/privacy" style="color: #2563eb; text-decoration: underline;">Privacy Policy</a> | 
+        <a href="https://oursafebase.com/terms" style="color: #2563eb; text-decoration: underline;">Terms of Service</a> | 
+        <a href="https://oursafebase.com/contact" style="color: #2563eb; text-decoration: underline;">Contact</a>
       </footer>
     </noscript>
-    <footer id="static-footer" style="text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; font-size: 14px;">
-      <a href="https://oursafebase.com/privacy" style="color: #2563eb; text-decoration: underline;">Privacy Policy</a>
+    <!-- Static footer for OAuth verification - hidden by CSS -->
+    <footer id="static-footer" style="display: none; text-align: center; padding: 20px; border-top: 1px solid #e5e7eb; font-size: 14px;">
+      <a href="https://oursafebase.com/privacy" style="color: #2563eb; text-decoration: underline;">Privacy Policy</a> | 
+      <a href="https://oursafebase.com/terms" style="color: #2563eb; text-decoration: underline;">Terms of Service</a> | 
+      <a href="https://oursafebase.com/contact" style="color: #2563eb; text-decoration: underline;">Contact</a>
     </footer>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      // Hide static footer once React loads
-      document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-          var footer = document.getElementById('static-footer');
-          if (footer && document.getElementById('root').children.length > 0) {
-            footer.style.display = 'none';
-          }
-        }, 100);
-      });
-    </script>
   </body>
 </html>
