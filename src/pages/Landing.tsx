@@ -35,11 +35,11 @@ const Landing = () => {
         {/* Header */}
         <header className="flex items-center justify-between pb-4 md:pb-8 mb-4 md:mb-8 bg-card/80 backdrop-blur-sm shadow-sm border-b border-border/50 rounded-b-2xl sticky top-0 z-50 px-3 md:px-6 py-3 md:py-4 -mx-4">
           <div className="flex items-center gap-2 md:gap-3">
-            <img 
-              src={logo} 
-              alt="OurSafeBase" 
+            <img
+              src={logo}
+              alt="OurSafeBase"
               className="h-8 md:h-12 w-auto object-contain"
-              style={{ maxWidth: '48px', maxHeight: '48px' }}
+              style={{ maxWidth: "48px", maxHeight: "48px" }}
               loading="eager"
               decoding="async"
               width="48"
@@ -66,7 +66,8 @@ const Landing = () => {
             Student Events. <span className="text-primary">Made Safer Together.</span>
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed">
-            OurSafeBase helps students create safer, more supportive events by bringing welfare contacts, codes of conduct, emergency info and anonymous reporting together in one place, making safety simple and accessible.
+            Bring welfare contacts, codes of conduct, emergency info, and anonymous reporting together in one place to
+            make event safety simple and accessible.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Button
@@ -333,7 +334,9 @@ const Landing = () => {
                   <MessageCircle className="h-6 w-6 text-primary" />
                 </div>
                 <h4 className="text-lg font-heading font-semibold">Track & Follow Up</h4>
-                <p className="text-sm text-muted-foreground">Review concerns with care and accountability. See who's accepted your code of conduct.</p>
+                <p className="text-sm text-muted-foreground">
+                  Review concerns with care and accountability. See who's accepted your code of conduct.
+                </p>
               </CardContent>
             </Card>
 
@@ -453,7 +456,10 @@ const Landing = () => {
               <div className="flex items-start gap-3 text-sm text-muted-foreground leading-relaxed text-left">
                 <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5 text-muted-foreground/70" />
                 <p>
-                  <strong className="text-foreground">Important:</strong> OurSafeBase is a support tool for student societies and is not a substitute for professional medical, legal, or emergency services. If you're in immediate danger, please contact emergency services (999/112) or professional support services. All data is handled in accordance with GDPR and our privacy policy.
+                  <strong className="text-foreground">Important:</strong> OurSafeBase is a support tool for student
+                  societies and is not a substitute for professional medical, legal, or emergency services. If you're in
+                  immediate danger, please contact emergency services (999/112) or professional support services. All
+                  data is handled in accordance with GDPR and our privacy policy.
                 </p>
               </div>
             </CardContent>
@@ -478,7 +484,9 @@ const Landing = () => {
       {/* Achievement Banner */}
       <div className="container mx-auto px-6 py-4 text-center">
         <div className="flex items-center justify-center gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-full inline-flex">
-          <span className="text-xs font-medium text-amber-600 dark:text-amber-400">🥈 2nd Place - ZEEUS Social Impact Hackathon 2025</span>
+          <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+            🥈 2nd Place - ZEEUS Social Impact Hackathon 2025
+          </span>
         </div>
       </div>
 
