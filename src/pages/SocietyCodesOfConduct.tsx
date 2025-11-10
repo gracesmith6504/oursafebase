@@ -6,7 +6,16 @@ import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Shield, Plus, Edit, Trash2, FileText, Image } from "lucide-react";
+import { ArrowLeft, Shield, Plus, Edit, Trash2, FileText, Image, ChevronRight } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
 import { CreateCoCDialog } from "@/components/CreateCoCDialog";
@@ -216,14 +225,37 @@ const SocietyCodesOfConduct = () => {
     <ProtectedRoute>
       <div className="min-h-screen bg-muted">
         <header className="border-b bg-background">
-          <div className="container mx-auto flex items-center gap-4 px-4 py-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/society/${slug}/dashboard`)}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <img src={logo} alt="OurSafeBase" className="h-8" />
-            <div>
-              <h1 className="text-xl font-bold">{society?.name}</h1>
-              <p className="text-sm text-muted-foreground">Code of Conduct Templates</p>
+          <div className="container mx-auto px-4 py-4">
+            {/* Breadcrumbs */}
+            <Breadcrumb className="mb-4">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/dashboard">Dashboard</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to={`/society/${slug}/dashboard`}>{society?.name}</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Codes of Conduct</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" onClick={() => navigate(`/society/${slug}/dashboard`)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <img src={logo} alt="OurSafeBase" className="h-8" />
+              <div>
+                <h1 className="text-xl font-bold">{society?.name}</h1>
+                <p className="text-sm text-muted-foreground">Code of Conduct Templates</p>
+              </div>
             </div>
           </div>
         </header>

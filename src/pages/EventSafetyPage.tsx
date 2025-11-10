@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy, Loader2, ArrowLeft, Share2 } from "lucide-react";
+import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy, Loader2, ArrowLeft, Share2, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
@@ -16,6 +16,16 @@ import { useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EventQRCodeDialog } from "@/components/EventQRCodeDialog";
+import { EventShareCard } from "@/components/EventShareCard";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Link } from "react-router-dom";
 
 interface Event {
   id: string;
@@ -370,6 +380,31 @@ const EventSafetyPage = () => {
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6">
+          {/* Breadcrumbs */}
+          {society && (
+            <Breadcrumb className="mb-4">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/dashboard">Dashboard</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to={isCommittee ? `/society/${society.slug}/dashboard` : `/society/${society.slug}`}>
+                      {isCommittee ? 'Society Dashboard' : 'Society'}
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{event.title}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          )}
+
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               {society && (
@@ -396,19 +431,21 @@ const EventSafetyPage = () => {
                 </p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setQrDialogOpen(true)}
-              className="h-8 w-8 shrink-0"
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
+        {/* Share Event Card */}
+        {society && (
+          <EventShareCard
+            societySlug={society.slug}
+            eventSlug={eventSlug || event.slug}
+            eventTitle={event.title}
+            onShowQRCode={() => setQrDialogOpen(true)}
+          />
+        )}
+
         {/* Important Contacts */}
         {welfareContacts.length > 0 && (
           <Card>

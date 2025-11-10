@@ -13,7 +13,16 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter
 import { Switch } from "@/components/ui/switch";
 import { ReportDetailDialog } from "@/components/ReportDetailDialog";
 import { FeedbackDetailDialog } from "@/components/FeedbackDetailDialog";
-import { ArrowLeft, Search, Filter, AlertCircle, X, Bookmark } from "lucide-react";
+import { ArrowLeft, Search, Filter, AlertCircle, X, Bookmark, ChevronRight } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Link } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
@@ -528,7 +537,28 @@ export default function SocietyReports() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-background">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
+        <div className="container mx-auto px-4 py-4">
+          {/* Breadcrumbs */}
+          <Breadcrumb className="mb-4">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/dashboard">Dashboard</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to={`/society/${slug}/dashboard`}>{societyName}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+              <BreadcrumbItem>
+                <BreadcrumbPage>Reports</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate(`/society/${slug}/dashboard`)}>
               <ArrowLeft className="h-5 w-5" />

@@ -9,8 +9,17 @@ import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { 
   ArrowLeft, FileText, MessageSquare, Eye, Shield, TrendingUp, 
-  AlertTriangle, Plus, ExternalLink 
+  AlertTriangle, Plus, ExternalLink, ChevronRight
 } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { 
@@ -204,6 +213,35 @@ const EventSummary = () => {
       <div className="min-h-screen bg-muted">
         <header className="border-b bg-background">
           <div className="container mx-auto px-4 py-4">
+            {/* Breadcrumbs */}
+            {event && (
+              <Breadcrumb className="mb-4">
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/dashboard">Dashboard</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to={`/society/${slug}/dashboard`}>Society</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to={`/society/${slug}/events`}>Events</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{event.title} Summary</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            )}
+
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"

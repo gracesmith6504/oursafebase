@@ -5,7 +5,15 @@ import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, AlertCircle, Shield, ArrowLeft } from "lucide-react";
+import { Calendar, Users, AlertCircle, Shield, ArrowLeft, ChevronRight } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
 
@@ -137,7 +145,22 @@ const SocietyDashboard = () => {
     <ProtectedRoute>
       <div className="min-h-screen bg-muted">
         <header className="border-b bg-background">
-          <div className="container mx-auto flex items-center justify-between px-4 py-4">
+          <div className="container mx-auto px-4 py-4">
+            {/* Breadcrumbs */}
+            <Breadcrumb className="mb-4">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/dashboard">Dashboard</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{society?.name}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
                 <ArrowLeft className="h-5 w-5" />

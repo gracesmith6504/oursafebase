@@ -9,7 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Copy, Check, Bell, QrCode } from "lucide-react";
+import { ArrowLeft, Copy, Check, Bell, QrCode, ChevronRight } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Link } from "react-router-dom";
 import { SocietyInviteQRCodeDialog } from "@/components/SocietyInviteQRCodeDialog";
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
@@ -170,7 +179,28 @@ const SocietyMembers = () => {
     <ProtectedRoute>
       <div className="min-h-screen bg-muted">
         <header className="border-b bg-background">
-          <div className="container mx-auto flex items-center justify-between px-4 py-4">
+          <div className="container mx-auto px-4 py-4">
+            {/* Breadcrumbs */}
+            <Breadcrumb className="mb-4">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/dashboard">Dashboard</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to={`/society/${slug}/dashboard`}>{society?.name}</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Members</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" onClick={() => navigate(`/society/${slug}/dashboard`)}>
                 <ArrowLeft className="h-5 w-5" />
