@@ -66,8 +66,7 @@ const Landing = () => {
             Student Events. <span className="text-primary">Made Safer Together.</span>
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed">
-            Bring welfare contacts, codes of conduct, emergency info, and anonymous reporting together in one place to
-            make event safety simple and accessible.
+            Bring welfare contacts, emergency info, codes of conduct and reporting together in one place for safer events.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Button
