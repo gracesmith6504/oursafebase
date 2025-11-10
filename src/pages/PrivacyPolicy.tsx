@@ -12,16 +12,19 @@ const PrivacyPolicy = () => {
     <div className="min-h-screen bg-gradient-subtle">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="OurSafeBase" className="h-10 w-auto" />
-            <h1 className="text-2xl font-heading font-bold text-primary">OurSafeBase</h1>
+        <header className="mb-8 border-b bg-background pb-4">
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+              <ArrowLeft className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">Back</span>
+            </Button>
+            <div className="flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => navigate("/")}>
+              <img src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
+              <h1 className="text-lg md:text-xl font-bold">OurSafeBase</h1>
+            </div>
+            <div className="w-20" /> {/* Spacer for centering */}
           </div>
-          <Button onClick={() => navigate("/")} variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Home
-          </Button>
-        </div>
+        </header>
 
         <Card>
           <CardHeader>
