@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy, Loader2, ArrowLeft, Share2, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -431,21 +432,30 @@ const EventSafetyPage = () => {
                 </p>
               </div>
             </div>
+            
+            {/* Share Button */}
+            {society && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-9 w-9 shrink-0">
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-auto p-0">
+                  <EventShareCard
+                    societySlug={society.slug}
+                    eventSlug={eventSlug || event.slug}
+                    eventTitle={event.title}
+                    onShowQRCode={() => setQrDialogOpen(true)}
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
         </div>
       </header>
 
       <main className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
-        {/* Share Event Card */}
-        {society && (
-          <EventShareCard
-            societySlug={society.slug}
-            eventSlug={eventSlug || event.slug}
-            eventTitle={event.title}
-            onShowQRCode={() => setQrDialogOpen(true)}
-          />
-        )}
-
         {/* Important Contacts */}
         {welfareContacts.length > 0 && (
           <Card>

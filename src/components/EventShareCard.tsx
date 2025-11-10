@@ -45,11 +45,7 @@ export const EventShareCard = ({ societySlug, eventSlug, eventTitle, onShowQRCod
   };
 
   return (
-    <Card className="border-primary/20">
-      <CardHeader>
-        <CardTitle className="text-lg">Share Event</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="w-80 p-4 space-y-4">
         {/* Event Link */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-muted-foreground">Event Link</label>
@@ -129,7 +125,6 @@ export const EventShareCard = ({ societySlug, eventSlug, eventTitle, onShowQRCod
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 };
