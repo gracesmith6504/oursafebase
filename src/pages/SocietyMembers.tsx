@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Copy, Check, Bell } from "lucide-react";
+import { ArrowLeft, Copy, Check, Bell, QrCode } from "lucide-react";
+import { SocietyInviteQRCodeDialog } from "@/components/SocietyInviteQRCodeDialog";
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
 import { getAppUrl } from "@/lib/constants";
@@ -45,6 +46,7 @@ const SocietyMembers = () => {
   const [loading, setLoading] = useState(true);
   const [copiedCommittee, setCopiedCommittee] = useState(false);
   const [copiedAttendee, setCopiedAttendee] = useState(false);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
 
   const committeeInviteUrl = society ? `${getAppUrl()}/invite/committee/${society.committee_invite_code}` : "";
   const attendeeInviteUrl = society ? `${getAppUrl()}/invite/attendee/${society.attendee_invite_code}` : "";
@@ -224,6 +226,9 @@ const SocietyMembers = () => {
                   <Button onClick={copyAttendeeLink} variant="outline" size="icon">
                     {copiedAttendee ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
+                  <Button onClick={() => setQrDialogOpen(true)} variant="outline" size="icon">
+                    <QrCode className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
               <div className="space-y-2">
@@ -337,6 +342,14 @@ const SocietyMembers = () => {
             </CardContent>
           </Card>
         </main>
+
+        <SocietyInviteQRCodeDialog
+          open={qrDialogOpen}
+          onOpenChange={setQrDialogOpen}
+          societyName={society?.name || ""}
+          inviteUrl={attendeeInviteUrl}
+          inviteType="attendee"
+        />
       </div>
     </ProtectedRoute>
   );

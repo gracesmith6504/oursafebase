@@ -66,7 +66,7 @@ const Landing = () => {
             Student Events. <span className="text-primary">Made Safer Together.</span>
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed">
-            Connect welfare support, report concerns, and build trust, all in one place.
+            OurSafeBase helps students create safer, more supportive events by bringing welfare contacts, codes of conduct, emergency info and anonymous reporting together in one place, making safety simple and accessible.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Button
@@ -137,6 +137,9 @@ const Landing = () => {
               <CardTitle className="text-3xl font-heading">If You're Organising an Event</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <p className="text-muted-foreground leading-relaxed">
+                Give your society the tools to stay safe, connected, and cared for at every event.
+              </p>
               <ul className="space-y-3 text-muted-foreground">
                 <li className="flex gap-3">
                   <span className="text-primary">✓</span>
