@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Copy, Check, Bell, QrCode, ChevronRight } from "lucide-react";
+import { ArrowLeft, Copy, Check, Bell, QrCode, ChevronRight, Search } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -56,12 +56,25 @@ const SocietyMembers = () => {
   const [copiedCommittee, setCopiedCommittee] = useState(false);
   const [copiedAttendee, setCopiedAttendee] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [committeeQrDialogOpen, setCommitteeQrDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const committeeInviteUrl = society ? `${getAppUrl()}/invite/committee/${society.committee_invite_code}` : "";
   const attendeeInviteUrl = society ? `${getAppUrl()}/invite/attendee/${society.attendee_invite_code}` : "";
 
   const committeeCount = members.filter(m => m.role === 'committee').length;
   const attendeeCount = members.filter(m => m.role === 'attendee').length;
+
+  const filteredAttendees = useMemo(() => {
+    if (!searchTerm) return members.filter(m => m.role === 'attendee');
+    
+    const lowerSearch = searchTerm.toLowerCase();
+    return members
+      .filter(m => m.role === 'attendee')
+      .filter(m => 
+        m.profiles?.display_name?.toLowerCase().includes(lowerSearch)
+      );
+  }, [members, searchTerm]);
 
   useEffect(() => {
     if (user && slug) {
@@ -230,6 +243,9 @@ const SocietyMembers = () => {
                   <Button onClick={copyCommitteeLink} variant="outline" size="icon">
                     {copiedCommittee ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
+                  <Button onClick={() => setCommitteeQrDialogOpen(true)} variant="outline" size="icon">
+                    <QrCode className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
               <div className="space-y-2">
@@ -345,8 +361,22 @@ const SocietyMembers = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-4 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search attendees by name..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
               <div className="space-y-4">
-                {members.filter(m => m.role === 'attendee').map((member) => (
+                {filteredAttendees.length === 0 && searchTerm ? (
+                  <p className="text-center text-muted-foreground py-4">
+                    No attendees found matching "{searchTerm}"
+                  </p>
+                ) : (
+                  filteredAttendees.map((member) => (
                   <div
                     key={member.id}
                     className="flex items-center gap-4 rounded-lg border p-4"
@@ -367,7 +397,8 @@ const SocietyMembers = () => {
                     </div>
                     <Badge variant="secondary">Attendee</Badge>
                   </div>
-                ))}
+                ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -379,6 +410,13 @@ const SocietyMembers = () => {
           societyName={society?.name || ""}
           inviteUrl={attendeeInviteUrl}
           inviteType="attendee"
+        />
+        <SocietyInviteQRCodeDialog
+          open={committeeQrDialogOpen}
+          onOpenChange={setCommitteeQrDialogOpen}
+          societyName={society?.name || ""}
+          inviteUrl={committeeInviteUrl}
+          inviteType="committee"
         />
       </div>
     </ProtectedRoute>
