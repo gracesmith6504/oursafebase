@@ -22,8 +22,8 @@ export const Footer = () => {
             <h3 className="font-heading font-semibold">Navigation</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Button 
-                  variant="link" 
+                <Button
+                  variant="link"
                   className="h-auto p-0 text-muted-foreground hover:text-primary"
                   onClick={() => navigate("/")}
                 >
@@ -31,8 +31,8 @@ export const Footer = () => {
                 </Button>
               </li>
               <li>
-                <Button 
-                  variant="link" 
+                <Button
+                  variant="link"
                   className="h-auto p-0 text-muted-foreground hover:text-primary"
                   onClick={() => navigate("/about")}
                 >
@@ -47,8 +47,8 @@ export const Footer = () => {
             <h3 className="font-heading font-semibold">Support</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Button 
-                  variant="link" 
+                <Button
+                  variant="link"
                   className="h-auto p-0 text-muted-foreground hover:text-primary"
                   onClick={() => navigate("/faq")}
                 >
@@ -56,8 +56,8 @@ export const Footer = () => {
                 </Button>
               </li>
               <li>
-                <Button 
-                  variant="link" 
+                <Button
+                  variant="link"
                   className="h-auto p-0 text-muted-foreground hover:text-primary"
                   onClick={() => navigate("/contact")}
                 >
@@ -72,8 +72,8 @@ export const Footer = () => {
             <h3 className="font-heading font-semibold">Legal</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Button 
-                  variant="link" 
+                <Button
+                  variant="link"
                   className="h-auto p-0 text-muted-foreground hover:text-primary"
                   onClick={() => navigate("/privacy")}
                 >
@@ -81,8 +81,8 @@ export const Footer = () => {
                 </Button>
               </li>
               <li>
-                <Button 
-                  variant="link" 
+                <Button
+                  variant="link"
                   className="h-auto p-0 text-muted-foreground hover:text-primary"
                   onClick={() => navigate("/terms")}
                 >
@@ -97,7 +97,7 @@ export const Footer = () => {
             <h3 className="font-heading font-semibold">Connect</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <a 
+                <a
                   href="mailto:oursafebase@gmail.com"
                   className="text-muted-foreground hover:text-primary flex items-center gap-2"
                 >
@@ -106,8 +106,8 @@ export const Footer = () => {
                 </a>
               </li>
               <li>
-                <a 
-                  href="#"
+                <a
+                  href="https://www.linkedin.com/company/oursafebase/"
                   className="text-muted-foreground hover:text-primary flex items-center gap-2"
                   target="_blank"
                   rel="noopener noreferrer"
