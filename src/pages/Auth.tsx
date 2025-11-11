@@ -118,9 +118,17 @@ const Auth = () => {
           return;
         }
 
-        // Specifically suppress the "otp_expired" popup entirely
-        if (errorCode === "otp_expired") {
-          // Clean up URL and do not show any popup
+        // Handle expired/invalid recovery links explicitly
+        if (
+          errorCode === "otp_expired" ||
+          (errorDescription && /invalid|expired/i.test(errorDescription))
+        ) {
+          const emailFromHash = hashParams.get("email");
+          if (emailFromHash) setResetEmail(emailFromHash);
+          setAuthError("Your password reset link is invalid or has expired. Please request a new reset email.");
+          setShowPasswordReset(true);
+          toast.error("Reset link expired. Please request a new one.");
+          // Clean up URL
           window.history.replaceState({}, document.title, window.location.pathname);
           return;
         }
