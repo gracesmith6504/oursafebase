@@ -81,6 +81,8 @@ const Auth = () => {
 
       // Check for password recovery flow
       if (type === "recovery") {
+        const emailFromHash = hashParams.get("email");
+        if (emailFromHash) setResetEmail(emailFromHash);
         setShowPasswordUpdate(true);
         setAuthError(null);
         toast.success("Please enter your new password");
@@ -179,7 +181,11 @@ const Auth = () => {
     // 1. User is authenticated
     // 2. Society info is loaded (if invite code exists)
     // 3. We're not currently loading society info
+    // 4. We're not in password recovery mode
     if (!user) return;
+
+    // Don't redirect if we're showing the password update form or recovery is in progress
+    if (showPasswordUpdate || window.location.hash.includes("type=recovery")) return;
 
     // If there's an invite code, wait for society info to load
     if (inviteCode && loadingSocietyInfo) return;
@@ -199,7 +205,7 @@ const Auth = () => {
     } else {
       navigate("/dashboard");
     }
-  }, [user, navigate, inviteCode, redirectPath, societyInfo, loadingSocietyInfo]);
+  }, [user, navigate, inviteCode, redirectPath, societyInfo, loadingSocietyInfo, showPasswordUpdate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -383,12 +389,12 @@ const Auth = () => {
       setLoading(false);
     } else {
       toast.success("Password updated successfully!");
-      // Clean up URL and redirect
-      window.history.replaceState({}, document.title, "/auth");
       setShowPasswordUpdate(false);
       setNewPassword("");
       setConfirmNewPassword("");
       setLoading(false);
+      // Clean up URL hash
+      window.history.replaceState({}, document.title, window.location.pathname);
       // User will be redirected by the auth useEffect
     }
   };
