@@ -81,9 +81,33 @@ const Auth = () => {
       // Check for auth callback parameters in URL hash
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const type = hashParams.get("type");
+      const hashError = hashParams.get("error");
+      const hashErrorCode = hashParams.get("error_code");
+      const hashErrorDescription = hashParams.get("error_description");
 
       // Check for password recovery flow
       if (type === "recovery") {
+        // Check if the recovery link has expired or is invalid
+        if (hashError === "access_denied" || hashErrorCode === "otp_expired") {
+          // Extract email if available from hash
+          const emailFromHash = hashParams.get("email");
+          
+          // Show friendly error message
+          setAuthError("Your password reset link has expired or is invalid. Please request a new one.");
+          toast.error("Password reset link expired. Please request a new reset link.");
+          
+          // Auto-open password reset form and prefill email if available
+          setShowPasswordReset(true);
+          if (emailFromHash) {
+            setResetEmail(emailFromHash);
+          }
+          
+          // Clean the URL hash
+          window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+          return;
+        }
+        
+        // Valid recovery link
         setShowPasswordUpdate(true);
         setAuthError(null);
         toast.success("Please enter your new password");
@@ -101,11 +125,8 @@ const Auth = () => {
         return;
       }
 
-      // ONLY check for errors if there was NO access_token
-      const error = hashParams.get("error");
-      const errorDescription = hashParams.get("error_description");
-      const errorCode = hashParams.get("error_code");
-      if (error) {
+      // ONLY check for errors if there was NO access_token and NO recovery flow
+      if (hashError) {
         // If a valid session already exists, suppress errors
         const {
           data: {
@@ -122,13 +143,13 @@ const Auth = () => {
         }
 
         // Specifically suppress the "otp_expired" popup entirely
-        if (errorCode === "otp_expired") {
+        if (hashErrorCode === "otp_expired") {
           // Clean up URL and do not show any popup
           window.history.replaceState({}, document.title, window.location.pathname);
           return;
         }
-        let errorMessage = errorDescription || error;
-        if (error === "access_denied") {
+        let errorMessage = hashErrorDescription || hashError;
+        if (hashError === "access_denied") {
           errorMessage = "Email confirmation failed. The link may be invalid or already used.";
         }
         setAuthError(errorMessage);
