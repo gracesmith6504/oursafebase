@@ -48,6 +48,9 @@ const Auth = () => {
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [passwordResetSent, setPasswordResetSent] = useState(false);
+  const [showPasswordUpdate, setShowPasswordUpdate] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<boolean>(false);
   const [societyInfo, setSocietyInfo] = useState<{
@@ -74,6 +77,15 @@ const Auth = () => {
     (async () => {
       // Check for auth callback parameters in URL hash
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const type = hashParams.get("type");
+
+      // Check for password recovery flow
+      if (type === "recovery") {
+        setShowPasswordUpdate(true);
+        setAuthError(null);
+        toast.success("Please enter your new password");
+        return;
+      }
 
       // Success-first: if access_token exists, treat as success and skip error handling
       const accessToken = hashParams.get("access_token");
@@ -335,6 +347,44 @@ const Auth = () => {
     // Don't set loading to false on success - user will be redirected
   };
 
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!newPassword || !confirmNewPassword) {
+      toast.error("Please fill in both password fields");
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+    } else {
+      toast.success("Password updated successfully!");
+      // Clean up URL and redirect
+      window.history.replaceState({}, document.title, "/auth");
+      setShowPasswordUpdate(false);
+      setNewPassword("");
+      setConfirmNewPassword("");
+      setLoading(false);
+      // User will be redirected by the auth useEffect
+    }
+  };
+
   return (
     <div className="min-h-screen bg-muted">
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-4">
@@ -370,7 +420,43 @@ const Auth = () => {
             </Alert>
           )}
 
-          {showEmailConfirmation ? (
+          {showPasswordUpdate ? (
+            <Card className="w-full max-w-md">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Update Your Password</CardTitle>
+                <CardDescription>Enter your new password below</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handlePasswordUpdate} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <PasswordInput
+                      id="new-password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      disabled={loading}
+                      required
+                      placeholder="Enter new password"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                    <PasswordInput
+                      id="confirm-new-password"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      disabled={loading}
+                      required
+                      placeholder="Re-enter new password"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Updating..." : "Update Password"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          ) : showEmailConfirmation ? (
             <Card className="w-full max-w-md">
               <CardHeader className="text-center">
                 <div className="mb-4 flex justify-center">
