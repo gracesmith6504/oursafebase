@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -112,43 +112,52 @@ const MyEvents = () => {
     );
     setSocieties(uniqueSocieties);
 
-    // For each event, check if there's a CoC and if user has accepted it
-    const eventsWithCoC = await Promise.all(
-      eventsData.map(async (event) => {
-        // Only check for event-level CoC (not society templates)
-        const { data: coc } = await supabase
-          .from("code_of_conduct")
-          .select("id, version")
-          .eq("event_id", event.id)
-          .eq("is_active", true)
-          .maybeSingle();
+    // Batch fetch all CoCs and acceptances for better performance
+    const eventIds = eventsData.map(e => e.id);
+    
+    // Fetch all active CoCs for these events in one query
+    const { data: cocsData } = await supabase
+      .from("code_of_conduct")
+      .select("id, version, event_id")
+      .in("event_id", eventIds)
+      .eq("is_active", true);
 
-        let userAcceptance = null;
-        if (coc) {
-          // Check if user has accepted current version
-          const { data: acceptance } = await supabase
-            .from("code_acceptances")
-            .select("accepted_version")
-            .eq("user_id", user!.id)
-            .eq("code_of_conduct_id", coc.id)
-            .gte("accepted_version", coc.version)
-            .maybeSingle();
-          userAcceptance = acceptance;
-        }
+    // Create a map of event_id -> CoC
+    const cocMap = new Map(cocsData?.map(coc => [coc.event_id, coc]) || []);
+    
+    // If there are CoCs, fetch all acceptances in one query
+    const cocIds = cocsData?.map(c => c.id) || [];
+    let acceptancesMap = new Map();
+    
+    if (cocIds.length > 0) {
+      const { data: acceptancesData } = await supabase
+        .from("code_acceptances")
+        .select("code_of_conduct_id, accepted_version")
+        .eq("user_id", user!.id)
+        .in("code_of_conduct_id", cocIds);
+      
+      acceptancesMap = new Map(
+        acceptancesData?.map(acc => [acc.code_of_conduct_id, acc]) || []
+      );
+    }
 
-        return {
-          ...event,
-          code_of_conduct: coc,
-          user_acceptance: userAcceptance,
-        };
-      })
-    );
+    // Combine the data
+    const eventsWithCoC = eventsData.map(event => {
+      const coc = cocMap.get(event.id);
+      const userAcceptance = coc ? acceptancesMap.get(coc.id) : null;
+      
+      return {
+        ...event,
+        code_of_conduct: coc || null,
+        user_acceptance: userAcceptance || null,
+      };
+    });
 
     setEvents(eventsWithCoC);
     setLoading(false);
   };
 
-  const getCoCStatus = (event: Event) => {
+  const getCoCStatus = useCallback((event: Event) => {
     if (!event.code_of_conduct) {
       return { required: false, accepted: true, label: null };
     }
@@ -161,23 +170,25 @@ const MyEvents = () => {
       accepted: !!accepted,
       label: accepted ? "Code of Conduct Accepted" : "Accept Code of Conduct Required",
     };
-  };
+  }, []);
 
-  const filteredEvents = events.filter((event) => {
-    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesSociety = selectedSociety === "all" || event.society.id === selectedSociety;
-    
-    // Filter by date status
-    const eventStatus = getEventStatus(event.event_date);
-    let matchesDate = true;
-    if (dateFilter === "upcoming") {
-      matchesDate = eventStatus === "upcoming" || eventStatus === "ongoing";
-    } else if (dateFilter === "past") {
-      matchesDate = eventStatus === "past";
-    }
-    
-    return matchesSearch && matchesSociety && matchesDate;
-  });
+  const filteredEvents = useMemo(() => {
+    return events.filter((event) => {
+      const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSociety = selectedSociety === "all" || event.society.id === selectedSociety;
+      
+      // Filter by date status
+      const eventStatus = getEventStatus(event.event_date);
+      let matchesDate = true;
+      if (dateFilter === "upcoming") {
+        matchesDate = eventStatus === "upcoming" || eventStatus === "ongoing";
+      } else if (dateFilter === "past") {
+        matchesDate = eventStatus === "past";
+      }
+      
+      return matchesSearch && matchesSociety && matchesDate;
+    });
+  }, [events, searchQuery, selectedSociety, dateFilter]);
 
   if (authLoading || !user) {
     return (

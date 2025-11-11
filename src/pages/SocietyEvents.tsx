@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -111,28 +111,45 @@ const SocietyEvents = () => {
   };
 
   const fetchMetrics = async (eventIds: string[]) => {
-    const metricsData: Record<string, EventMetrics> = {};
-
-    for (const eventId of eventIds) {
-      const [reports, feedback, pageViews, codeAcceptances] = await Promise.all([
-        supabase.from("reports").select("id", { count: "exact", head: true }).eq("event_id", eventId),
-        supabase.from("event_feedback").select("id", { count: "exact", head: true }).eq("event_id", eventId),
-        supabase.from("safety_page_views").select("id", { count: "exact", head: true }).eq("event_id", eventId),
-        supabase.from("code_acceptances").select("id", { count: "exact", head: true }).eq("event_id", eventId),
-      ]);
-
-      metricsData[eventId] = {
-        reports: reports.count || 0,
-        feedback: feedback.count || 0,
-        pageViews: pageViews.count || 0,
-        codeAcceptances: codeAcceptances.count || 0,
-      };
+    if (eventIds.length === 0) {
+      setMetrics({});
+      return;
     }
+
+    // Batch all queries together instead of sequential queries
+    const [reports, feedback, pageViews, codeAcceptances] = await Promise.all([
+      supabase.from("reports").select("event_id", { count: "exact" }).in("event_id", eventIds),
+      supabase.from("event_feedback").select("event_id", { count: "exact" }).in("event_id", eventIds),
+      supabase.from("safety_page_views").select("event_id", { count: "exact" }).in("event_id", eventIds),
+      supabase.from("code_acceptances").select("event_id", { count: "exact" }).in("event_id", eventIds),
+    ]);
+
+    // Group counts by event_id
+    const metricsData: Record<string, EventMetrics> = {};
+    
+    // Initialize all events with zero counts
+    eventIds.forEach(id => {
+      metricsData[id] = { reports: 0, feedback: 0, pageViews: 0, codeAcceptances: 0 };
+    });
+
+    // Aggregate counts from the batched queries
+    reports.data?.forEach((r: any) => {
+      if (metricsData[r.event_id]) metricsData[r.event_id].reports++;
+    });
+    feedback.data?.forEach((f: any) => {
+      if (metricsData[f.event_id]) metricsData[f.event_id].feedback++;
+    });
+    pageViews.data?.forEach((p: any) => {
+      if (metricsData[p.event_id]) metricsData[p.event_id].pageViews++;
+    });
+    codeAcceptances.data?.forEach((c: any) => {
+      if (metricsData[c.event_id]) metricsData[c.event_id].codeAcceptances++;
+    });
 
     setMetrics(metricsData);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = useCallback((status: string) => {
     switch (status) {
       case "upcoming":
         return "bg-primary/20 text-primary";
@@ -143,7 +160,25 @@ const SocietyEvents = () => {
       default:
         return "bg-muted text-muted-foreground";
     }
-  };
+  }, []);
+
+  const handleOpenQRDialog = useCallback((event: Event) => {
+    setSelectedEvent(event);
+    setQrDialogOpen(true);
+  }, []);
+
+  const handleShare = useCallback((event: Event) => {
+    const eventUrl = `${getAppUrl()}/event/${societySlug}/${event.slug}`;
+    if (navigator.share) {
+      navigator.share({
+        title: event.title,
+        url: eventUrl,
+      }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(eventUrl);
+      toast.success("Event link copied to clipboard");
+    }
+  }, [societySlug]);
 
   if (loading || roleLoading) {
     return (
@@ -306,10 +341,7 @@ const SocietyEvents = () => {
                         <Button 
                           variant="outline"
                           size="sm"
-                          onClick={() => {
-                            setSelectedEvent(event);
-                            setQrDialogOpen(true);
-                          }}
+                          onClick={() => handleOpenQRDialog(event)}
                         >
                           <Share2 className="h-4 w-4" />
                         </Button>
