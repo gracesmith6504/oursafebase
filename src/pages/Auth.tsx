@@ -51,9 +51,6 @@ const Auth = () => {
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [passwordResetSent, setPasswordResetSent] = useState(false);
-  const [showPasswordUpdate, setShowPasswordUpdate] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<boolean>(false);
   const [societyInfo, setSocietyInfo] = useState<{
@@ -84,35 +81,6 @@ const Auth = () => {
       const hashError = hashParams.get("error");
       const hashErrorCode = hashParams.get("error_code");
       const hashErrorDescription = hashParams.get("error_description");
-
-      // Check for password recovery flow
-      if (type === "recovery") {
-        // Check if the recovery link has expired or is invalid
-        if (hashError === "access_denied" || hashErrorCode === "otp_expired") {
-          // Extract email if available from hash
-          const emailFromHash = hashParams.get("email");
-          
-          // Show friendly error message
-          setAuthError("Your password reset link has expired or is invalid. Please request a new one.");
-          toast.error("Password reset link expired. Please request a new reset link.");
-          
-          // Auto-open password reset form and prefill email if available
-          setShowPasswordReset(true);
-          if (emailFromHash) {
-            setResetEmail(emailFromHash);
-          }
-          
-          // Clean the URL hash
-          window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-          return;
-        }
-        
-        // Valid recovery link
-        setShowPasswordUpdate(true);
-        setAuthError(null);
-        toast.success("Please enter your new password");
-        return;
-      }
 
       // Success-first: if access_token exists, treat as success and skip error handling
       const accessToken = hashParams.get("access_token");
@@ -323,7 +291,7 @@ const Auth = () => {
     const {
       error
     } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${getAppUrl()}/auth${inviteCode ? `?invite=${inviteCode}` : ""}`
+      redirectTo: `https://oursafebase.com/auth/reset-password`
     });
     if (error) {
       toast.error(error.message);
@@ -348,40 +316,7 @@ const Auth = () => {
     }
     // Don't set loading to false on success - user will be redirected
   };
-  const handlePasswordUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newPassword || !confirmNewPassword) {
-      toast.error("Please fill in both password fields");
-      return;
-    }
-    if (newPassword !== confirmNewPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-    if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
-    }
-    setLoading(true);
-    const {
-      error
-    } = await supabase.auth.updateUser({
-      password: newPassword
-    });
-    if (error) {
-      toast.error(error.message);
-      setLoading(false);
-    } else {
-      toast.success("Password updated successfully!");
-      // Clean up URL and redirect
-      window.history.replaceState({}, document.title, "/auth");
-      setShowPasswordUpdate(false);
-      setNewPassword("");
-      setConfirmNewPassword("");
-      setLoading(false);
-      // User will be redirected by the auth useEffect
-    }
-  };
+  
   return <div className="min-h-screen bg-muted">
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-4">
         <div className="w-full max-w-md space-y-4">
@@ -408,27 +343,7 @@ const Auth = () => {
               <AlertDescription>Signing you in…</AlertDescription>
             </Alert>}
 
-          {showPasswordUpdate ? <Card className="w-full max-w-md">
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl">Update Your Password</CardTitle>
-                <CardDescription>Enter your new password below</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handlePasswordUpdate} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="new-password">New Password</Label>
-                    <PasswordInput id="new-password" value={newPassword} onChange={e => setNewPassword(e.target.value)} disabled={loading} required placeholder="Enter new password" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-new-password">Confirm New Password</Label>
-                    <PasswordInput id="confirm-new-password" value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)} disabled={loading} required placeholder="Re-enter new password" />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Updating..." : "Update Password"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card> : showEmailConfirmation ? <Card className="w-full max-w-md">
+          {showEmailConfirmation ? <Card className="w-full max-w-md">
               <CardHeader className="text-center">
                 <div className="mb-4 flex justify-center">
                   <div className="rounded-full bg-primary/10 p-4">
