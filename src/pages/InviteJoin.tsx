@@ -107,7 +107,7 @@ const InviteJoin = () => {
           return;
         }
 
-        toast.success(`Welcome to ${society.name} committee!`);
+        toast.success(`Joined ${society.name}!`);
         navigate(`/society/${society.slug}/dashboard`);
         return;
       }
@@ -143,9 +143,7 @@ const InviteJoin = () => {
       
       if (checkMember) {
         // User was added successfully, proceed with success message
-        toast.success(role === 'committee'
-          ? `Welcome to ${society.name} committee!`
-          : `Welcome to ${society.name}! You can now view events.`);
+        toast.success(`Joined ${society.name}!`);
         
         const destination = role === 'committee' 
           ? `/society/${society.slug}/dashboard` 
@@ -160,11 +158,7 @@ const InviteJoin = () => {
       return;
     }
 
-    const successMessage = role === 'committee'
-      ? `Welcome to ${society.name} committee!`
-      : `Welcome to ${society.name}! You can now view events.`;
-    
-    toast.success(successMessage);
+    toast.success(`Joined ${society.name}!`);
     
     // Redirect based on role
     const destination = role === 'committee' 

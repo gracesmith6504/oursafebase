@@ -454,12 +454,19 @@ const Auth = () => {
         return;
       }
 
-      toast.success("Thank you for accepting our terms!");
       setShowConsentScreen(false);
       setRecordingConsent(false);
 
-      // Redirect directly to dashboard after consent
-      navigate("/dashboard");
+      // Redirect based on invite code and role
+      if (inviteCode) {
+        if (societyInfo?.role === 'committee') {
+          navigate(`/onboarding?invite=${inviteCode}`);
+        } else {
+          navigate(`/invite/${inviteCode}`);
+        }
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       console.error("Error recording consent:", error);
       toast.error("An error occurred. Please try again.");
