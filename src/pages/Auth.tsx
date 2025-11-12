@@ -65,6 +65,8 @@ const Auth = () => {
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [recordingConsent, setRecordingConsent] = useState(false);
   const [checkingConsent, setCheckingConsent] = useState(false);
+  const [processingAuth, setProcessingAuth] = useState(false);
+  const [authLoadingMessage, setAuthLoadingMessage] = useState("Signing you in...");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
@@ -85,15 +87,26 @@ const Auth = () => {
       const hashError = hashParams.get("error");
       const hashErrorCode = hashParams.get("error_code");
       const hashErrorDescription = hashParams.get("error_description");
+      const accessToken = hashParams.get("access_token");
+
+      // If we detect any auth callback, show loading state immediately
+      if (accessToken || type || hashError) {
+        setProcessingAuth(true);
+        
+        // Set appropriate loading message based on type
+        if (type === "recovery") {
+          setAuthLoadingMessage("Confirming your email...");
+        } else if (accessToken) {
+          setAuthLoadingMessage("Signing you in...");
+        }
+      }
 
       // Success-first: if access_token exists, treat as success and skip error handling
-      const accessToken = hashParams.get("access_token");
       if (accessToken) {
         setAuthError(null);
         setAuthSuccess(true);
         setHasAuthCallback(true);
         // Do NOT clean the URL here; let the redirect effect handle it after session is set
-        toast.success("Email confirmed successfully!");
         return;
       }
 
@@ -118,14 +131,16 @@ const Auth = () => {
         if (hashErrorCode === "otp_expired") {
           // Clean up URL and do not show any popup
           window.history.replaceState({}, document.title, window.location.pathname);
+          setProcessingAuth(false);
           return;
         }
+        
         let errorMessage = hashErrorDescription || hashError;
         if (hashError === "access_denied") {
-          errorMessage = "Email confirmation failed. The link may be invalid or already used.";
+          errorMessage = "We couldn't sign you in. Please try again.";
         }
         setAuthError(errorMessage);
-        toast.error(errorMessage);
+        setProcessingAuth(false);
 
         // Clean up the URL
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -165,16 +180,19 @@ const Auth = () => {
     const checkConsent = async () => {
       if (!user) {
         setCheckingConsent(false);
+        setProcessingAuth(false);
         return;
       }
 
       // Don't check consent if we're still in the middle of showing other UI states
       if (showEmailConfirmation || showPasswordReset || loading) {
         setCheckingConsent(false);
+        setProcessingAuth(false);
         return;
       }
 
       setCheckingConsent(true);
+      setProcessingAuth(false); // Stop showing the auth processing screen
 
       const { data: consent } = await supabase
         .from("user_consents" as any)
@@ -449,6 +467,19 @@ const Auth = () => {
     }
   };
   
+  // Show loading spinner while processing auth callback (Google OAuth, email confirmation)
+  if (processingAuth && !authError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted">
+        <div className="text-center space-y-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
+          <p className="text-lg font-medium text-foreground">{authLoadingMessage}</p>
+          <p className="text-sm text-muted-foreground">Please wait a moment...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Show loading spinner while checking consent
   if (checkingConsent) {
     return (
@@ -539,14 +570,6 @@ const Auth = () => {
 
           {authError && !authSuccess && !showEmailConfirmation && !showPasswordReset && <Alert variant="destructive">
               <AlertDescription>{authError}</AlertDescription>
-            </Alert>}
-
-          {authSuccess && !showEmailConfirmation && !showPasswordReset && <Alert>
-              <AlertDescription>✅ Email confirmed! Redirecting...</AlertDescription>
-            </Alert>}
-
-          {hasAuthCallback && !user && <Alert>
-              <AlertDescription>Signing you in…</AlertDescription>
             </Alert>}
 
           {showEmailConfirmation ? <Card className="w-full max-w-md">
