@@ -196,9 +196,19 @@ const Auth = () => {
         return;
       }
 
+      // Check if user signed in with Google OAuth
+      const isGoogleUser = user.app_metadata?.provider === 'google';
+
       // Check if user accepted terms during email signup (stored in metadata)
       const acceptedTermsInMetadata = user.user_metadata?.accepted_terms;
       
+      // For Google OAuth users without consent, show consent screen
+      if (isGoogleUser && !consent) {
+        setShowConsentScreen(true);
+        return;
+      }
+
+      // For email signup users with accepted terms in metadata, auto-record consent
       if (acceptedTermsInMetadata) {
         // Auto-record consent for email signups
         const { error: insertError } = await supabase.from("user_consents" as any).insert({
@@ -229,9 +239,25 @@ const Auth = () => {
         }
       }
 
-      // If no consent record and no metadata, show consent screen (for Google OAuth users)
-      // This will show after Google OAuth redirect completes and user is authenticated
-      setShowConsentScreen(true);
+      // For any other case (shouldn't normally happen), just redirect
+      if (!isGoogleUser && !consent) {
+        if (inviteCode && loadingSocietyInfo) return;
+        
+        const cleaned = new URLSearchParams();
+        if (inviteCode) cleaned.set("invite", inviteCode);
+        if (redirectPath) cleaned.set("redirect", redirectPath);
+        const newUrl = `${window.location.pathname}${cleaned.toString() ? `?${cleaned.toString()}` : ""}`;
+        window.history.replaceState({}, document.title, newUrl);
+        if (inviteCode && societyInfo?.role === "committee") {
+          navigate(`/onboarding?invite=${inviteCode}`);
+        } else if (inviteCode) {
+          navigate(`/invite/${inviteCode}`);
+        } else if (redirectPath) {
+          navigate(redirectPath);
+        } else {
+          navigate("/dashboard");
+        }
+      }
     };
 
     checkConsent();
