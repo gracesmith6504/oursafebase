@@ -110,19 +110,19 @@ const SortableContactItem = ({ contact, onUpdateRole, onUpdatePhone, onRemove, p
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-start gap-2 rounded-lg border bg-muted p-3"
+      className="flex items-start gap-1.5 sm:gap-2 rounded-lg border bg-muted p-2 sm:p-3"
     >
       <button
         type="button"
-        className="cursor-grab active:cursor-grabbing mt-1 touch-none"
+        className="cursor-grab active:cursor-grabbing mt-0.5 touch-none"
         {...attributes}
         {...listeners}
       >
-        <GripVertical className="h-5 w-5 text-muted-foreground" />
+        <GripVertical className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
       </button>
-      <div className="flex-1 space-y-2">
-        <p className="font-medium">{contact.displayName}</p>
-        <div className="space-y-2">
+      <div className="flex-1 space-y-1.5 sm:space-y-2 min-w-0">
+        <p className="font-medium text-sm sm:text-base">{contact.displayName}</p>
+        <div className="space-y-1.5 sm:space-y-2">
           <div className="space-y-1">
             <Label htmlFor={`role-${contact.userId}`} className="text-xs text-muted-foreground">
               Role (optional)
@@ -135,23 +135,25 @@ const SortableContactItem = ({ contact, onUpdateRole, onUpdatePhone, onRemove, p
               className="h-8 text-sm"
             />
           </div>
-          <div className="space-y-1">
-            <Label htmlFor={`phone-${contact.userId}`} className="text-xs text-muted-foreground">
-              Phone {profilePhone ? "(override profile phone)" : "(required for display)"}
-            </Label>
-            <Input
-              id={`phone-${contact.userId}`}
-              value={contact.phone || ""}
-              onChange={(e) => onUpdatePhone(contact.userId, e.target.value)}
-              placeholder={profilePhone || "e.g., +353 87 123 4567"}
-              className="h-8 text-sm"
-            />
-            {profilePhone && !contact.phone && (
-              <p className="text-xs text-muted-foreground">
-                Will use profile phone: {profilePhone}
-              </p>
-            )}
-          </div>
+          {profilePhone ? (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Phone</Label>
+              <p className="text-sm px-3 py-1.5 rounded-md bg-background border">{profilePhone}</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <Label htmlFor={`phone-${contact.userId}`} className="text-xs text-muted-foreground">
+                Phone (optional)
+              </Label>
+              <Input
+                id={`phone-${contact.userId}`}
+                value={contact.phone || ""}
+                onChange={(e) => onUpdatePhone(contact.userId, e.target.value)}
+                placeholder="e.g., +353 87 123 4567"
+                className="h-8 text-sm"
+              />
+            </div>
+          )}
         </div>
       </div>
       <Button
@@ -159,7 +161,7 @@ const SortableContactItem = ({ contact, onUpdateRole, onUpdatePhone, onRemove, p
         variant="ghost"
         size="icon"
         onClick={() => onRemove(contact.userId)}
-        className="shrink-0"
+        className="shrink-0 h-8 w-8"
       >
         <X className="h-4 w-4" />
       </Button>
@@ -945,7 +947,7 @@ const CreateEvent = () => {
                         ))}
                     </select>
                     <p className="text-xs text-muted-foreground">
-                      Select to add. Drag to reorder. Changes save automatically.
+                      Select to add instantly. Drag to reorder. Changes save automatically.
                     </p>
                   </div>
                 </div>
