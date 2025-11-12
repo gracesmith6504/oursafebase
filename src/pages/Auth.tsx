@@ -61,6 +61,9 @@ const Auth = () => {
   const [resendCooldown, setResendCooldown] = useState(0);
   const [hasAuthCallback, setHasAuthCallback] = useState(false);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  const [showConsentScreen, setShowConsentScreen] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(false);
+  const [recordingConsent, setRecordingConsent] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
@@ -157,30 +160,77 @@ const Auth = () => {
     fetchSocietyInfo();
   }, [inviteCode]);
   useEffect(() => {
-    // Only redirect when:
-    // 1. User is authenticated
-    // 2. Society info is loaded (if invite code exists)
-    // 3. We're not currently loading society info
-    if (!user) return;
+    // Check if user needs to provide consent
+    const checkConsent = async () => {
+      if (!user) return;
 
-    // If there's an invite code, wait for society info to load
-    if (inviteCode && loadingSocietyInfo) return;
+      const { data: consent } = await supabase
+        .from("user_consents")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-    // Now we can safely clean the URL and redirect
-    const cleaned = new URLSearchParams();
-    if (inviteCode) cleaned.set("invite", inviteCode);
-    if (redirectPath) cleaned.set("redirect", redirectPath);
-    const newUrl = `${window.location.pathname}${cleaned.toString() ? `?${cleaned.toString()}` : ""}`;
-    window.history.replaceState({}, document.title, newUrl);
-    if (inviteCode && societyInfo?.role === "committee") {
-      navigate(`/onboarding?invite=${inviteCode}`);
-    } else if (inviteCode) {
-      navigate(`/invite/${inviteCode}`);
-    } else if (redirectPath) {
-      navigate(redirectPath);
-    } else {
-      navigate("/dashboard");
-    }
+      // If consent already exists, proceed with redirect
+      if (consent) {
+        // If there's an invite code, wait for society info to load
+        if (inviteCode && loadingSocietyInfo) return;
+
+        // Now we can safely clean the URL and redirect
+        const cleaned = new URLSearchParams();
+        if (inviteCode) cleaned.set("invite", inviteCode);
+        if (redirectPath) cleaned.set("redirect", redirectPath);
+        const newUrl = `${window.location.pathname}${cleaned.toString() ? `?${cleaned.toString()}` : ""}`;
+        window.history.replaceState({}, document.title, newUrl);
+        if (inviteCode && societyInfo?.role === "committee") {
+          navigate(`/onboarding?invite=${inviteCode}`);
+        } else if (inviteCode) {
+          navigate(`/invite/${inviteCode}`);
+        } else if (redirectPath) {
+          navigate(redirectPath);
+        } else {
+          navigate("/dashboard");
+        }
+        return;
+      }
+
+      // Check if user accepted terms during email signup (stored in metadata)
+      const acceptedTermsInMetadata = user.user_metadata?.accepted_terms;
+      
+      if (acceptedTermsInMetadata) {
+        // Auto-record consent for email signups
+        const { error: insertError } = await supabase.from("user_consents").insert({
+          user_id: user.id,
+          accepted_terms: true,
+          user_agent: navigator.userAgent,
+        });
+
+        if (!insertError) {
+          // Proceed with redirect after recording consent
+          if (inviteCode && loadingSocietyInfo) return;
+
+          const cleaned = new URLSearchParams();
+          if (inviteCode) cleaned.set("invite", inviteCode);
+          if (redirectPath) cleaned.set("redirect", redirectPath);
+          const newUrl = `${window.location.pathname}${cleaned.toString() ? `?${cleaned.toString()}` : ""}`;
+          window.history.replaceState({}, document.title, newUrl);
+          if (inviteCode && societyInfo?.role === "committee") {
+            navigate(`/onboarding?invite=${inviteCode}`);
+          } else if (inviteCode) {
+            navigate(`/invite/${inviteCode}`);
+          } else if (redirectPath) {
+            navigate(redirectPath);
+          } else {
+            navigate("/dashboard");
+          }
+          return;
+        }
+      }
+
+      // If no consent record and no metadata, show consent screen (for Google OAuth users)
+      setShowConsentScreen(true);
+    };
+
+    checkConsent();
   }, [user, navigate, inviteCode, redirectPath, societyInfo, loadingSocietyInfo]);
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,7 +261,8 @@ const Auth = () => {
         options: {
           emailRedirectTo: `${getAppUrl()}/auth${inviteCode ? `?invite=${inviteCode}` : ""}`,
           data: {
-            display_name: displayName
+            display_name: displayName,
+            accepted_terms: true // Store consent in user metadata
           }
         }
       });
@@ -234,6 +285,9 @@ const Auth = () => {
         return;
       }
       setShowEmailConfirmation(true);
+      
+      // For email signups, consent will be recorded automatically when they first sign in
+      // after email confirmation (via the consent check in useEffect)
     } catch (error) {
       console.error("Signup error:", error);
       toast.error("An error occurred during signup");
@@ -316,11 +370,109 @@ const Auth = () => {
     }
     // Don't set loading to false on success - user will be redirected
   };
+
+  const handleConsentContinue = async () => {
+    if (!consentAccepted) {
+      toast.error("Please accept the Terms of Service and Privacy Policy to continue");
+      return;
+    }
+
+    setRecordingConsent(true);
+
+    try {
+      // Record consent in database
+      const { error } = await supabase.from("user_consents").insert({
+        user_id: user!.id,
+        accepted_terms: true,
+        ip_address: null, // Could fetch from an API if needed
+        user_agent: navigator.userAgent,
+      });
+
+      if (error) {
+        toast.error("Failed to record consent. Please try again.");
+        setRecordingConsent(false);
+        return;
+      }
+
+      setShowConsentScreen(false);
+      setRecordingConsent(false);
+
+      // Proceed with redirect logic
+      if (inviteCode && societyInfo?.role === "committee") {
+        navigate(`/onboarding?invite=${inviteCode}`);
+      } else if (inviteCode) {
+        navigate(`/invite/${inviteCode}`);
+      } else if (redirectPath) {
+        navigate(redirectPath);
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      console.error("Error recording consent:", error);
+      toast.error("An error occurred. Please try again.");
+      setRecordingConsent(false);
+    }
+  };
   
   return <div className="min-h-screen bg-muted">
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-4">
         <div className="w-full max-w-md space-y-4">
-          {isInAppBrowser && !showEmailConfirmation && !showPasswordReset && <Alert variant="destructive" className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
+          {showConsentScreen ? (
+            <Card className="w-full max-w-md">
+              <CardHeader className="text-center">
+                <div className="mb-4 flex justify-center">
+                  <img src={logo} alt="OurSafeBase" className="h-16" />
+                </div>
+                <CardTitle className="text-2xl">Terms and Conditions</CardTitle>
+                <CardDescription>
+                  Please review and accept OurSafeBase's Terms of Service and Privacy Policy before continuing.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-start space-x-3 rounded-lg border border-border bg-muted/50 p-4">
+                  <Checkbox
+                    id="consent-terms"
+                    checked={consentAccepted}
+                    onCheckedChange={(checked) => setConsentAccepted(checked === true)}
+                    className="mt-1"
+                  />
+                  <label
+                    htmlFor="consent-terms"
+                    className="text-sm leading-relaxed cursor-pointer"
+                  >
+                    I agree to the{" "}
+                    <a
+                      href="/terms-of-service"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline font-medium"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Terms of Service
+                    </a>{" "}
+                    and{" "}
+                    <a
+                      href="/privacy-policy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline font-medium"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Privacy Policy
+                    </a>
+                  </label>
+                </div>
+
+                <Button
+                  className="w-full"
+                  onClick={handleConsentContinue}
+                  disabled={!consentAccepted || recordingConsent}
+                >
+                  {recordingConsent ? "Please wait..." : "Continue"}
+                </Button>
+              </CardContent>
+            </Card>
+          ) : isInAppBrowser && !showEmailConfirmation && !showPasswordReset && <Alert variant="destructive" className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
               <AlertDescription className="text-sm">
                 <strong className="block mb-1">⚠️ Please open in external browser</strong>
                 <p className="mb-2">Google sign-in won't work in this app's browser.</p>
