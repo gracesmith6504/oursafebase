@@ -30,6 +30,7 @@ import FAQ from "./pages/FAQ";
 import About from "./pages/About";
 import AdminSocieties from "./pages/AdminSocieties";
 import SocietySettings from "./pages/SocietySettings";
+import SocietyAnalytics from "./pages/SocietyAnalytics";
 import { ScrollToTop } from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,7 @@ const App = () => (
           <Route path="/society/:slug" element={<SocietyAttendee />} />
           <Route path="/society/:slug/dashboard" element={<SocietyDashboard />} />
           <Route path="/society/:slug/settings" element={<SocietySettings />} />
+          <Route path="/society/:slug/analytics" element={<SocietyAnalytics />} />
           <Route path="/society/:slug/members" element={<SocietyMembers />} />
           <Route path="/society/:slug/events" element={<SocietyEvents />} />
           <Route path="/society/:slug/events/new" element={<CreateEvent />} />

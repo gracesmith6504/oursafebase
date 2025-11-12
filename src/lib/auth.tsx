@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
+import { updateLastLogin } from "./activityLogger";
 
 export const useAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -12,10 +13,15 @@ export const useAuth = () => {
     // Listen for auth changes FIRST to avoid missing events
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Log login activity when user signs in
+      if (event === 'SIGNED_IN' && session?.user) {
+        updateLastLogin();
+      }
     });
 
     // THEN check for an existing session

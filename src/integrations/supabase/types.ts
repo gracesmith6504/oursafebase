@@ -367,12 +367,54 @@ export type Database = {
           },
         ]
       }
+      invite_code_usage: {
+        Row: {
+          id: string
+          invite_code: string
+          ip_address: unknown
+          referrer_url: string | null
+          role_type: string
+          society_id: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          id?: string
+          invite_code: string
+          ip_address?: unknown
+          referrer_url?: string | null
+          role_type: string
+          society_id: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          id?: string
+          invite_code?: string
+          ip_address?: unknown
+          referrer_url?: string | null
+          role_type?: string
+          society_id?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invite_code_usage_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string | null
           display_name: string | null
           id: string
+          last_login_at: string | null
           phone_number: string | null
         }
         Insert: {
@@ -380,6 +422,7 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           id: string
+          last_login_at?: string | null
           phone_number?: string | null
         }
         Update: {
@@ -387,6 +430,7 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           id?: string
+          last_login_at?: string | null
           phone_number?: string | null
         }
         Relationships: []
@@ -420,11 +464,50 @@ export type Database = {
           },
         ]
       }
+      report_status_history: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          id: string
+          new_status: string
+          notes: string | null
+          old_status: string | null
+          report_id: string
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          new_status: string
+          notes?: string | null
+          old_status?: string | null
+          report_id: string
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          new_status?: string
+          notes?: string | null
+          old_status?: string | null
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_status_history_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           concern_type: string
           description: string
           event_id: string
+          first_response_at: string | null
           id: string
           is_anonymous: boolean | null
           notes: string | null
@@ -432,6 +515,7 @@ export type Database = {
           reporter_name: string | null
           reporter_phone: string | null
           resolved_at: string | null
+          response_time_minutes: number | null
           severity: string | null
           status: string | null
           submitted_at: string | null
@@ -440,6 +524,7 @@ export type Database = {
           concern_type: string
           description: string
           event_id: string
+          first_response_at?: string | null
           id?: string
           is_anonymous?: boolean | null
           notes?: string | null
@@ -447,6 +532,7 @@ export type Database = {
           reporter_name?: string | null
           reporter_phone?: string | null
           resolved_at?: string | null
+          response_time_minutes?: number | null
           severity?: string | null
           status?: string | null
           submitted_at?: string | null
@@ -455,6 +541,7 @@ export type Database = {
           concern_type?: string
           description?: string
           event_id?: string
+          first_response_at?: string | null
           id?: string
           is_anonymous?: boolean | null
           notes?: string | null
@@ -462,6 +549,7 @@ export type Database = {
           reporter_name?: string | null
           reporter_phone?: string | null
           resolved_at?: string | null
+          response_time_minutes?: number | null
           severity?: string | null
           status?: string | null
           submitted_at?: string | null
@@ -510,6 +598,7 @@ export type Database = {
       }
       societies: {
         Row: {
+          activation_date: string | null
           attendee_invite_code: string
           committee_invite_code: string
           created_at: string | null
@@ -520,9 +609,11 @@ export type Database = {
           member_count: number
           name: string
           slug: string
+          university_name: string | null
           updated_at: string | null
         }
         Insert: {
+          activation_date?: string | null
           attendee_invite_code?: string
           committee_invite_code?: string
           created_at?: string | null
@@ -533,9 +624,11 @@ export type Database = {
           member_count?: number
           name: string
           slug: string
+          university_name?: string | null
           updated_at?: string | null
         }
         Update: {
+          activation_date?: string | null
           attendee_invite_code?: string
           committee_invite_code?: string
           created_at?: string | null
@@ -546,6 +639,7 @@ export type Database = {
           member_count?: number
           name?: string
           slug?: string
+          university_name?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -588,6 +682,51 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_activity_logs: {
+        Row: {
+          activity_type: string
+          created_at: string | null
+          event_id: string | null
+          id: string
+          metadata: Json | null
+          society_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          metadata?: Json | null
+          society_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          metadata?: Json | null
+          society_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activity_logs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_activity_logs_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
             referencedColumns: ["id"]
           },
         ]
@@ -637,6 +776,66 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_metrics: {
+        Row: {
+          active_societies: number | null
+          active_users: number | null
+          avg_safety_score: number | null
+          created_at: string | null
+          id: string
+          new_events: number | null
+          new_feedback: number | null
+          new_reports: number | null
+          new_societies: number | null
+          new_users: number | null
+          resolved_reports: number | null
+          total_events: number | null
+          total_feedback: number | null
+          total_reports: number | null
+          total_societies: number | null
+          total_users: number | null
+          week_start: string
+        }
+        Insert: {
+          active_societies?: number | null
+          active_users?: number | null
+          avg_safety_score?: number | null
+          created_at?: string | null
+          id?: string
+          new_events?: number | null
+          new_feedback?: number | null
+          new_reports?: number | null
+          new_societies?: number | null
+          new_users?: number | null
+          resolved_reports?: number | null
+          total_events?: number | null
+          total_feedback?: number | null
+          total_reports?: number | null
+          total_societies?: number | null
+          total_users?: number | null
+          week_start: string
+        }
+        Update: {
+          active_societies?: number | null
+          active_users?: number | null
+          avg_safety_score?: number | null
+          created_at?: string | null
+          id?: string
+          new_events?: number | null
+          new_feedback?: number | null
+          new_reports?: number | null
+          new_societies?: number | null
+          new_users?: number | null
+          resolved_reports?: number | null
+          total_events?: number | null
+          total_feedback?: number | null
+          total_reports?: number | null
+          total_societies?: number | null
+          total_users?: number | null
+          week_start?: string
         }
         Relationships: []
       }

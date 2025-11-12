@@ -6,7 +6,8 @@ import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Users, AlertCircle, Shield, ArrowLeft, ChevronRight, Settings } from "lucide-react";
+import { Calendar, Users, AlertCircle, Shield, ArrowLeft, ChevronRight, Settings, BarChart3 } from "lucide-react";
+import { logActivity } from "@/lib/activityLogger";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -51,6 +52,7 @@ const SocietyDashboard = () => {
   useEffect(() => {
     if (society?.id) {
       fetchStats();
+      logActivity({ activityType: 'view_dashboard', societyId: society.id });
     }
   }, [society?.id]);
 
@@ -267,6 +269,17 @@ const SocietyDashboard = () => {
               </CardHeader>
               <CardContent>
                 <Button className="w-full">Manage CoCs</Button>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer transition-all hover:shadow-lg" onClick={() => navigate(`/society/${slug}/analytics`)}>
+              <CardHeader>
+                <BarChart3 className="mb-2 h-10 w-10 text-primary" />
+                <CardTitle>Analytics</CardTitle>
+                <CardDescription>View detailed insights and performance metrics</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full">View Analytics</Button>
               </CardContent>
             </Card>
           </div>
