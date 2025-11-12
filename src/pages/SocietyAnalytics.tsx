@@ -8,14 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   ArrowLeft, 
-  TrendingUp, 
   Users, 
   Calendar, 
   AlertCircle,
   Clock,
-  CheckCircle,
-  Activity,
-  BarChart3
+  CheckCircle
 } from "lucide-react";
 import {
   Breadcrumb,
@@ -240,34 +237,56 @@ const SocietyAnalytics = () => {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const monthlyData: Record<string, number> = {};
+    // Create array of last 6 months
+    const months: Array<{ date: string; count: number }> = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const monthKey = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      months.push({ date: monthKey, count: 0 });
+    }
     
+    // Count members joined in each month
     members.forEach(member => {
       const joinDate = new Date(member.joined_at);
       if (joinDate >= sixMonthsAgo) {
         const monthKey = joinDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
+        const monthEntry = months.find(m => m.date === monthKey);
+        if (monthEntry) {
+          monthEntry.count += 1;
+        }
       }
     });
 
-    return Object.entries(monthlyData).map(([date, count]) => ({ date, count }));
+    return months;
   };
 
   const calculateEventFrequency = (events: any[]) => {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const monthlyData: Record<string, number> = {};
+    // Create array of last 6 months
+    const months: Array<{ month: string; count: number }> = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const monthKey = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      months.push({ month: monthKey, count: 0 });
+    }
     
+    // Count events created in each month
     events.forEach(event => {
       const eventDate = new Date(event.created_at);
       if (eventDate >= sixMonthsAgo) {
         const monthKey = eventDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
+        const monthEntry = months.find(m => m.month === monthKey);
+        if (monthEntry) {
+          monthEntry.count += 1;
+        }
       }
     });
 
-    return Object.entries(monthlyData).map(([month, count]) => ({ month, count }));
+    return months;
   };
 
   if (loading || roleLoading) {
@@ -345,29 +364,29 @@ const SocietyAnalytics = () => {
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-3 py-4 md:px-4 md:py-8">
           {/* Key Metrics */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-2 lg:grid-cols-4 mb-6">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Total Members</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-xs md:text-sm font-medium">Total Members</CardTitle>
+                <Users className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{analytics?.totalMembers || 0}</div>
+                <div className="text-xl md:text-2xl font-bold">{analytics?.totalMembers || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {analytics?.activeMembers || 0} active (30d)
+                  {analytics?.activeMembers || 0} active
                 </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-xs md:text-sm font-medium">Total Events</CardTitle>
+                <Calendar className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{analytics?.totalEvents || 0}</div>
+                <div className="text-xl md:text-2xl font-bold">{analytics?.totalEvents || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   {analytics?.upcomingEvents || 0} upcoming
                 </p>
@@ -375,12 +394,12 @@ const SocietyAnalytics = () => {
             </Card>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Reports</CardTitle>
-                <AlertCircle className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-xs md:text-sm font-medium">Reports</CardTitle>
+                <AlertCircle className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{analytics?.totalReports || 0}</div>
+                <div className="text-xl md:text-2xl font-bold">{analytics?.totalReports || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   {analytics?.resolvedReports || 0} resolved
                 </p>
@@ -388,47 +407,46 @@ const SocietyAnalytics = () => {
             </Card>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Avg Response Time</CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-xs md:text-sm font-medium">Avg Response</CardTitle>
+                <Clock className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
+                <div className="text-xl md:text-2xl font-bold">
                   {analytics?.avgResponseTimeMinutes 
                     ? `${Math.floor(analytics.avgResponseTimeMinutes / 60)}h ${analytics.avgResponseTimeMinutes % 60}m`
                     : 'N/A'}
                 </div>
-                <p className="text-xs text-muted-foreground">First response time</p>
+                <p className="text-xs text-muted-foreground">First response</p>
               </CardContent>
             </Card>
           </div>
 
           <Tabs defaultValue="growth" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="growth">Growth & Engagement</TabsTrigger>
-              <TabsTrigger value="reports">Reports & Safety</TabsTrigger>
-              <TabsTrigger value="activity">Activity Tracking</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="growth">Growth</TabsTrigger>
+              <TabsTrigger value="reports">Safety</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="growth" className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+            <TabsContent value="growth" className="space-y-3">
+              <div className="grid gap-3 md:grid-cols-2">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Member Growth</CardTitle>
-                    <CardDescription>New members over last 6 months</CardDescription>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base md:text-lg">Member Growth</CardTitle>
+                    <CardDescription className="text-xs">New members (last 6 months)</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ChartContainer
                       config={{
                         count: { label: "Members", color: "hsl(var(--primary))" }
                       }}
-                      className="h-[300px]"
+                      className="h-[200px] md:h-[300px]"
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={analytics?.memberGrowth || []}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" />
-                          <YAxis />
+                          <XAxis dataKey="date" fontSize={10} />
+                          <YAxis allowDecimals={false} fontSize={10} />
                           <ChartTooltip content={<ChartTooltipContent />} />
                           <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} />
                         </LineChart>
@@ -438,22 +456,22 @@ const SocietyAnalytics = () => {
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Event Frequency</CardTitle>
-                    <CardDescription>Events created per month</CardDescription>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base md:text-lg">Event Frequency</CardTitle>
+                    <CardDescription className="text-xs">Events created per month</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ChartContainer
                       config={{
                         count: { label: "Events", color: "hsl(var(--secondary))" }
                       }}
-                      className="h-[300px]"
+                      className="h-[200px] md:h-[300px]"
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={analytics?.eventFrequency || []}>
                           <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" />
-                          <YAxis />
+                          <XAxis dataKey="month" fontSize={10} />
+                          <YAxis allowDecimals={false} fontSize={10} />
                           <ChartTooltip content={<ChartTooltipContent />} />
                           <Bar dataKey="count" fill="hsl(var(--secondary))" />
                         </BarChart>
@@ -464,19 +482,19 @@ const SocietyAnalytics = () => {
               </div>
             </TabsContent>
 
-            <TabsContent value="reports" className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+            <TabsContent value="reports" className="space-y-3">
+              <div className="grid gap-3 md:grid-cols-2">
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Reports by Status</CardTitle>
-                    <CardDescription>Distribution of report statuses</CardDescription>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base md:text-lg">Reports by Status</CardTitle>
+                    <CardDescription className="text-xs">Distribution of report statuses</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ChartContainer
                       config={{
                         count: { label: "Reports", color: "hsl(var(--primary))" }
                       }}
-                      className="h-[300px]"
+                      className="h-[200px] md:h-[300px]"
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -486,8 +504,9 @@ const SocietyAnalytics = () => {
                             nameKey="status"
                             cx="50%"
                             cy="50%"
-                            outerRadius={100}
-                            label
+                            outerRadius={80}
+                            label={(entry) => entry.count > 0 ? entry.status : ''}
+                            fontSize={10}
                           >
                             {analytics?.reportsByStatus?.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -501,15 +520,15 @@ const SocietyAnalytics = () => {
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle>Safety Metrics</CardTitle>
-                    <CardDescription>Key safety performance indicators</CardDescription>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base md:text-lg">Safety Metrics</CardTitle>
+                    <CardDescription className="text-xs">Key safety performance indicators</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Average Safety Score</span>
-                        <span className="text-2xl font-bold">{analytics?.avgSafetyScore || 0}/5</span>
+                        <span className="text-xs md:text-sm font-medium">Average Safety Score</span>
+                        <span className="text-lg md:text-2xl font-bold">{analytics?.avgSafetyScore || 0}/5</span>
                       </div>
                       <div className="w-full bg-muted rounded-full h-2">
                         <div 
@@ -521,8 +540,8 @@ const SocietyAnalytics = () => {
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Resolution Rate</span>
-                        <span className="text-2xl font-bold">
+                        <span className="text-xs md:text-sm font-medium">Resolution Rate</span>
+                        <span className="text-lg md:text-2xl font-bold">
                           {analytics?.totalReports 
                             ? Math.round((analytics.resolvedReports / analytics.totalReports) * 100)
                             : 0}%
@@ -542,12 +561,12 @@ const SocietyAnalytics = () => {
 
                     <div className="pt-4 space-y-2">
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">{analytics?.resolvedReports || 0} reports resolved</span>
+                        <CheckCircle className="h-3 w-3 md:h-4 md:w-4 text-green-500" />
+                        <span className="text-xs md:text-sm">{analytics?.resolvedReports || 0} reports resolved</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm">
+                        <Clock className="h-3 w-3 md:h-4 md:w-4 text-blue-500" />
+                        <span className="text-xs md:text-sm">
                           {analytics?.avgResponseTimeMinutes 
                             ? `${Math.floor(analytics.avgResponseTimeMinutes / 60)}h ${analytics.avgResponseTimeMinutes % 60}m avg response`
                             : 'No data'}
@@ -557,33 +576,6 @@ const SocietyAnalytics = () => {
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
-
-            <TabsContent value="activity" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>User Activity (Last 30 Days)</CardTitle>
-                  <CardDescription>Breakdown of actions taken by society members</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ChartContainer
-                    config={{
-                      count: { label: "Actions", color: "hsl(var(--accent))" }
-                    }}
-                    className="h-[400px]"
-                  >
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics?.activityByType || []} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis type="number" />
-                        <YAxis dataKey="type" type="category" width={150} />
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                        <Bar dataKey="count" fill="hsl(var(--accent))" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
             </TabsContent>
           </Tabs>
         </main>
