@@ -8,7 +8,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, X, ChevronRight } from "lucide-react";
+import { ArrowLeft, Plus, X, ChevronRight, GripVertical } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -45,6 +62,7 @@ interface WelfareContact {
   userId: string;
   displayName: string;
   role: string;
+  phone?: string;
 }
 
 interface ExternalContact {
@@ -62,6 +80,92 @@ interface EmergencyField {
   phone: string;
 }
 
+// Sortable contact item component
+const SortableContactItem = ({ contact, onUpdateRole, onUpdatePhone, onRemove, profilePhone }: { 
+  contact: WelfareContact; 
+  onUpdateRole: (userId: string, role: string) => void;
+  onUpdatePhone: (userId: string, phone: string) => void;
+  onRemove: (userId: string) => void;
+  profilePhone?: string;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: contact.userId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-start gap-1.5 sm:gap-2 rounded-lg border bg-muted p-2 sm:p-3"
+    >
+      <button
+        type="button"
+        className="cursor-grab active:cursor-grabbing mt-0.5 touch-none"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+      </button>
+      <div className="flex-1 space-y-1.5 sm:space-y-2 min-w-0">
+        <p className="font-medium text-sm sm:text-base">{contact.displayName}</p>
+        <div className="space-y-1.5 sm:space-y-2">
+          <div className="space-y-1">
+            <Label htmlFor={`role-${contact.userId}`} className="text-xs text-muted-foreground">
+              Role (optional)
+            </Label>
+            <Input
+              id={`role-${contact.userId}`}
+              value={contact.role}
+              onChange={(e) => onUpdateRole(contact.userId, e.target.value)}
+              placeholder="e.g., Welfare Officer"
+              className="h-8 text-sm"
+            />
+          </div>
+          {profilePhone ? (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Phone</Label>
+              <p className="text-sm px-3 py-1.5 rounded-md bg-background border">{profilePhone}</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <Label htmlFor={`phone-${contact.userId}`} className="text-xs text-muted-foreground">
+                Phone (optional)
+              </Label>
+              <Input
+                id={`phone-${contact.userId}`}
+                value={contact.phone || ""}
+                onChange={(e) => onUpdatePhone(contact.userId, e.target.value)}
+                placeholder="e.g., +353 87 123 4567"
+                className="h-8 text-sm"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={() => onRemove(contact.userId)}
+        className="shrink-0 h-8 w-8"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
+
 const EditEvent = () => {
   const { slug, eventId } = useParams();
   const navigate = useNavigate();
@@ -73,6 +177,14 @@ const EditEvent = () => {
   const [submitting, setSubmitting] = useState(false);
   const { isCommittee, loading: roleLoading } = useCommitteeRole(society?.id);
 
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   // Form state
   const [eventName, setEventName] = useState("");
   const [eventDate, setEventDate] = useState<Date>();
@@ -80,6 +192,7 @@ const EditEvent = () => {
   const [eventTime, setEventTime] = useState("");
   const [location, setLocation] = useState("");
   const [selectedContacts, setSelectedContacts] = useState<WelfareContact[]>([]);
+  const [memberPhones, setMemberPhones] = useState<Record<string, string>>({});
   const [externalContacts, setExternalContacts] = useState<ExternalContact[]>([]);
   const [emergencyFields, setEmergencyFields] = useState<EmergencyField[]>([]);
   const [selectedCoCId, setSelectedCoCId] = useState("");
@@ -175,6 +288,7 @@ const EditEvent = () => {
             userId: c.user_id,
             displayName: c.contact_name || "Anonymous",
             role: c.role || "",
+            phone: c.contact_phone || "",
           }));
         
         const externalContactsList = contactsData
@@ -242,12 +356,21 @@ const EditEvent = () => {
       .select(`
         user_id,
         role,
-        profile:profiles(id, display_name)
+        profile:profiles(id, display_name, phone_number)
       `)
       .eq("society_id", societyData.id);
 
       if (!membersError && membersData) {
         setMembers(membersData as any);
+        
+        // Store member phone numbers for display
+        const phones: Record<string, string> = {};
+        membersData.forEach((member: any) => {
+          if (member.profile?.phone_number) {
+            phones[member.user_id] = member.profile.phone_number;
+          }
+        });
+        setMemberPhones(phones);
       }
 
       setLoading(false);
@@ -259,12 +382,60 @@ const EditEvent = () => {
   };
 
   const handleMemberSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const member = members.find(m => m.user_id === e.target.value);
-    if (member) {
-      setSelectedMember(member);
-      setTempRole("");
+    const memberId = e.target.value;
+    if (!memberId) return;
+
+    const member = members.find(m => m.user_id === memberId);
+    if (!member) return;
+
+    // Check if already added
+    const exists = selectedContacts.some(c => c.userId === member.user_id);
+    if (exists) {
+      toast.error("Contact already added");
+      e.target.value = "";
+      return;
     }
+
+    // Instantly add member to selected contacts
+    setSelectedContacts([
+      ...selectedContacts,
+      {
+        userId: member.user_id,
+        displayName: member.profile?.display_name || "Anonymous",
+        role: "",
+        phone: "",
+      },
+    ]);
+    
     e.target.value = "";
+  };
+
+  const updateMemberRole = (userId: string, role: string) => {
+    setSelectedContacts(
+      selectedContacts.map(c =>
+        c.userId === userId ? { ...c, role } : c
+      )
+    );
+  };
+
+  const updateMemberPhone = (userId: string, phone: string) => {
+    setSelectedContacts(
+      selectedContacts.map(c =>
+        c.userId === userId ? { ...c, phone } : c
+      )
+    );
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      setSelectedContacts((contacts) => {
+        const oldIndex = contacts.findIndex((c) => c.userId === active.id);
+        const newIndex = contacts.findIndex((c) => c.userId === over.id);
+        return arrayMove(contacts, oldIndex, newIndex);
+      });
+    }
   };
 
   const handleAddMember = () => {
@@ -433,7 +604,7 @@ const EditEvent = () => {
             event_id: eventId,
             user_id: contact.userId,
             contact_name: profile?.display_name || contact.displayName,
-            contact_phone: profile?.phone_number,
+            contact_phone: contact.phone || profile?.phone_number,
             contact_avatar_url: profile?.avatar_url,
             external_name: null,
             external_phone: null,
@@ -713,27 +884,27 @@ const EditEvent = () => {
                   
                   {selectedContacts.length > 0 && (
                     <div className="space-y-2">
-                      {selectedContacts.map((contact) => (
-                        <div
-                          key={contact.userId}
-                          className="flex items-center gap-2 rounded-lg border bg-muted p-3"
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <SortableContext
+                          items={selectedContacts.map(c => c.userId)}
+                          strategy={verticalListSortingStrategy}
                         >
-                          <div className="flex-1">
-                            <p className="font-medium">{contact.displayName}</p>
-                            {contact.role && (
-                              <p className="text-sm text-muted-foreground">{contact.role}</p>
-                            )}
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeMemberContact(contact.userId)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                          {selectedContacts.map((contact) => (
+                            <SortableContactItem
+                              key={contact.userId}
+                              contact={contact}
+                              onUpdateRole={updateMemberRole}
+                              onUpdatePhone={updateMemberPhone}
+                              onRemove={removeMemberContact}
+                              profilePhone={memberPhones[contact.userId]}
+                            />
+                          ))}
+                        </SortableContext>
+                      </DndContext>
                     </div>
                   )}
 
@@ -753,45 +924,9 @@ const EditEvent = () => {
                           </option>
                         ))}
                     </select>
-
-                    {selectedMember && (
-                      <div className="rounded-lg border bg-muted p-3 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium">{selectedMember.profile?.display_name || "Anonymous"}</p>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedMember(null);
-                              setTempRole("");
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="tempRole" className="text-sm">
-                            Role (optional)
-                          </Label>
-                          <Input
-                            id="tempRole"
-                            value={tempRole}
-                            onChange={(e) => setTempRole(e.target.value)}
-                            placeholder="e.g., Welfare Officer"
-                            className="h-9"
-                          />
-                        </div>
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={handleAddMember}
-                          className="w-full"
-                        >
-                          Add Contact
-                        </Button>
-                      </div>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Select to add instantly. Drag to reorder. Changes save automatically.
+                    </p>
                   </div>
                 </div>
 

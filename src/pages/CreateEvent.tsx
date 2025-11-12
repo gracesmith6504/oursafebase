@@ -45,6 +45,9 @@ import logo from "@/assets/logo.png";
 import { CreateCoCDialog } from "@/components/CreateCoCDialog";
 import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
 import { generateUniqueSlug } from "@/lib/eventHelpers";
+import { EventSafetyPreviewDialog } from "@/components/EventSafetyPreviewDialog";
+import { CoCPreviewDialog } from "@/components/CoCPreviewDialog";
+import { Eye } from "lucide-react";
 
 interface Society {
   id: string;
@@ -206,6 +209,10 @@ const CreateEvent = () => {
   const [showCoCPreview, setShowCoCPreview] = useState(false);
   const [createdEventData, setCreatedEventData] = useState<any>(null);
   const [cocPreviewData, setCoCPreviewData] = useState<any>(null);
+  
+  // Preview dialog states
+  const [showSafetyPreview, setShowSafetyPreview] = useState(false);
+  const [showCoCPreviewDialog, setShowCoCPreviewDialog] = useState(false);
   
   const [selectedContacts, setSelectedContacts] = useState<WelfareContact[]>([]);
   const [memberPhones, setMemberPhones] = useState<Record<string, string>>({});
@@ -1146,25 +1153,54 @@ const CreateEvent = () => {
 
         {/* Sticky Footer */}
         <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-3 sm:p-4">
-          <div className="container mx-auto flex max-w-2xl gap-2 sm:gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(`/society/${slug}/events`)}
-              className="flex-1 text-sm sm:text-base"
-              disabled={submitting}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              onClick={handleSubmit} 
-              className="flex-1 text-sm sm:text-base whitespace-normal sm:whitespace-nowrap px-2 sm:px-4 leading-tight py-2" 
-              disabled={submitting}
-            >
-              {submitting ? "Creating..." : <span className="inline sm:hidden">Save & Create</span>}
-              {submitting ? "" : <span className="hidden sm:inline">Save & Create Safety Page</span>}
-            </Button>
+          <div className="container mx-auto max-w-2xl space-y-2">
+            {/* Preview Buttons Row */}
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSafetyPreview(true)}
+                className="flex-1"
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                Preview Safety Page
+              </Button>
+              {selectedCoCId && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCoCPreviewDialog(true)}
+                  className="flex-1"
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  Preview CoC
+                </Button>
+              )}
+            </div>
+            
+            {/* Action Buttons Row */}
+            <div className="flex gap-2 sm:gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate(`/society/${slug}/events`)}
+                className="flex-1 text-sm sm:text-base"
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                onClick={handleSubmit} 
+                className="flex-1 text-sm sm:text-base whitespace-normal sm:whitespace-nowrap px-2 sm:px-4 leading-tight py-2" 
+                disabled={submitting}
+              >
+                {submitting ? "Creating..." : <span className="inline sm:hidden">Save & Create</span>}
+                {submitting ? "" : <span className="hidden sm:inline">Save & Create Safety Page</span>}
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -1175,6 +1211,30 @@ const CreateEvent = () => {
             onOpenChange={setCreateCoCDialogOpen}
             societyId={society.id}
             onSuccess={fetchCoCs}
+          />
+        )}
+        
+        {/* Safety Page Preview Dialog */}
+        <EventSafetyPreviewDialog
+          open={showSafetyPreview}
+          onOpenChange={setShowSafetyPreview}
+          eventName={eventName}
+          eventDate={eventDate}
+          location={location}
+          welfareContacts={selectedContacts}
+          externalContacts={externalContacts}
+          emergencyFields={emergencyFields}
+        />
+
+        {/* CoC Preview Dialog */}
+        {selectedCoCId && (
+          <CoCPreviewDialog
+            open={showCoCPreviewDialog}
+            onOpenChange={setShowCoCPreviewDialog}
+            cocName={availableCoCs.find(c => c.id === selectedCoCId)?.name || null}
+            cocContent={availableCoCs.find(c => c.id === selectedCoCId)?.content || null}
+            cocFileUrl={availableCoCs.find(c => c.id === selectedCoCId)?.file_url || null}
+            eventName={eventName}
           />
         )}
         
