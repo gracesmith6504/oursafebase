@@ -645,6 +645,10 @@ export type Database = {
         Args: { _society_id: string; _user_id: string }
         Returns: boolean
       }
+      is_committee_member_by_email: {
+        Args: { _email: string; _society_id: string }
+        Returns: boolean
+      }
       is_society_creator: {
         Args: { _society_id: string; _user_id: string }
         Returns: boolean

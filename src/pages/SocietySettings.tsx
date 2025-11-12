@@ -37,13 +37,6 @@ interface Society {
   is_verified: boolean;
 }
 
-interface CommitteeMember {
-  user_id: string;
-  profiles: {
-    display_name: string | null;
-    id: string;
-  };
-}
 
 const SocietySettings = () => {
   const { slug } = useParams();
@@ -63,7 +56,6 @@ const SocietySettings = () => {
   const [transferEmail, setTransferEmail] = useState("");
   const [transferring, setTransferring] = useState(false);
   const [showTransferConfirm, setShowTransferConfirm] = useState(false);
-  const [targetMember, setTargetMember] = useState<CommitteeMember | null>(null);
 
   useEffect(() => {
     if (user && slug) {
@@ -196,16 +188,14 @@ const SocietySettings = () => {
       return;
     }
 
-    // Check if this email belongs to a committee member of this society
-    const { data: member, error } = await supabase
-      .from("society_members")
-      .select(`
-        user_id, 
-        profiles!inner(display_name, id)
-      `)
-      .eq("society_id", society?.id)
-      .eq("role", "committee")
-      .limit(100);
+    // Check if this email belongs to a committee member using RPC function
+    const { data: isCommitteeMember, error } = await supabase.rpc(
+      'is_committee_member_by_email',
+      {
+        _email: transferEmail.toLowerCase(),
+        _society_id: society?.id
+      }
+    );
 
     if (error) {
       console.error(error);
@@ -213,27 +203,16 @@ const SocietySettings = () => {
       return;
     }
 
-    // Find the member by cross-referencing with auth.users email
-    // We need to get the user's email from their profile or check directly
-    const targetMember = member?.find(m => {
-      // This is a simplified check - in production you'd want a more robust way
-      // to match email to user_id, potentially using a server-side function
-      return true; // For now, we'll check if they exist as committee
-    });
-
-    if (!member || member.length === 0) {
+    if (!isCommitteeMember) {
       toast.error("This email must belong to a committee member of this society");
       return;
     }
 
-    // For simplicity, we'll just use the first match if the email matches
-    // In a production app, you'd want to use an edge function to properly validate
-    setTargetMember(member[0] as CommitteeMember);
     setShowTransferConfirm(true);
   };
 
   const handleTransferConfirm = async () => {
-    if (!society || !targetMember) return;
+    if (!society) return;
 
     setTransferring(true);
     try {
