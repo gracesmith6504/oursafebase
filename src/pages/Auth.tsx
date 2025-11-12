@@ -64,6 +64,7 @@ const Auth = () => {
   const [showConsentScreen, setShowConsentScreen] = useState(false);
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [recordingConsent, setRecordingConsent] = useState(false);
+  const [checkingConsent, setCheckingConsent] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
@@ -162,10 +163,18 @@ const Auth = () => {
   useEffect(() => {
     // Check if user needs to provide consent
     const checkConsent = async () => {
-      if (!user) return;
+      if (!user) {
+        setCheckingConsent(false);
+        return;
+      }
 
       // Don't check consent if we're still in the middle of showing other UI states
-      if (showEmailConfirmation || showPasswordReset || loading) return;
+      if (showEmailConfirmation || showPasswordReset || loading) {
+        setCheckingConsent(false);
+        return;
+      }
+
+      setCheckingConsent(true);
 
       const { data: consent } = await supabase
         .from("user_consents" as any)
@@ -205,6 +214,7 @@ const Auth = () => {
       // For Google OAuth users without consent, show consent screen
       if (isGoogleUser && !consent) {
         setShowConsentScreen(true);
+        setCheckingConsent(false);
         return;
       }
 
@@ -258,6 +268,8 @@ const Auth = () => {
           navigate("/dashboard");
         }
       }
+
+      setCheckingConsent(false);
     };
 
     checkConsent();
@@ -444,22 +456,41 @@ const Auth = () => {
     }
   };
   
+  // Show loading spinner while checking consent
+  if (checkingConsent) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted">
+        <div className="text-center space-y-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto"></div>
+          <p className="text-muted-foreground">Setting up your account...</p>
+        </div>
+      </div>
+    );
+  }
+
   return <div className="min-h-screen bg-muted">
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-4">
         <div className="w-full max-w-md space-y-4">
           {showConsentScreen ? (
-            <Card className="w-full max-w-md">
-              <CardHeader className="text-center">
-                <div className="mb-4 flex justify-center">
-                  <img src={logo} alt="OurSafeBase" className="h-16" />
+            <Card className="w-full max-w-2xl mx-auto">
+              <CardHeader>
+                <div className="flex items-center gap-3 mb-4">
+                  <img src={logo} alt="OurSafeBase" className="h-12" />
+                  <CardTitle className="text-2xl">Welcome to OurSafeBase!</CardTitle>
                 </div>
-                <CardTitle className="text-2xl">Terms and Conditions</CardTitle>
                 <CardDescription>
-                  Please review and accept OurSafeBase's Terms of Service and Privacy Policy before continuing.
+                  Before you get started, please take a moment to review and accept our Terms of Service and Privacy Policy.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-start space-x-3 rounded-lg border border-border bg-muted/50 p-4">
+                <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    We're committed to keeping your data safe and transparent about how we use it. 
+                    Our policies outline your rights and our responsibilities.
+                  </p>
+                </div>
+                
+                <div className="flex items-start space-x-3">
                   <Checkbox
                     id="consent-terms"
                     checked={consentAccepted}
@@ -492,13 +523,14 @@ const Auth = () => {
                     </a>
                   </label>
                 </div>
-
+                
                 <Button
-                  className="w-full"
                   onClick={handleConsentContinue}
                   disabled={!consentAccepted || recordingConsent}
+                  className="w-full"
+                  size="lg"
                 >
-                  {recordingConsent ? "Please wait..." : "Continue"}
+                  {recordingConsent ? "Recording..." : "Continue to OurSafeBase"}
                 </Button>
               </CardContent>
             </Card>

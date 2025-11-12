@@ -24,7 +24,6 @@ interface Society {
   name: string;
   slug: string;
   logo_url: string | null;
-  description: string | null;
   creator_email: string | null;
   is_verified: boolean;
 }
@@ -88,7 +87,7 @@ const Profile = () => {
     const {
       data,
       error
-    } = await supabase.from("society_members").select("id, role, email_notifications_enabled, society:societies(id, name, slug, logo_url, description, creator_email, is_verified)").eq("user_id", user?.id);
+    } = await supabase.from("society_members").select("id, role, email_notifications_enabled, society:societies(id, name, slug, logo_url, creator_email, is_verified)").eq("user_id", user?.id);
     if (error) {
       toast.error("Failed to load societies");
       console.error(error);
