@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, X, ChevronRight, GripVertical } from "lucide-react";
+import { ArrowLeft, Plus, X, ChevronRight, GripVertical, Trash2 } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -36,6 +36,16 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -212,6 +222,7 @@ const EditEvent = () => {
   
   // Preview dialog state
   const [showSafetyPreview, setShowSafetyPreview] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   const countryCodes = [
     { code: "+353", country: "Ireland", flag: "🇮🇪" },
@@ -1153,6 +1164,18 @@ const EditEvent = () => {
                 <Eye className="h-4 w-4" />
               </Button>
               
+              {/* Delete button - subtle and small */}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowDeleteDialog(true)}
+                className="shrink-0 text-muted-foreground hover:text-destructive"
+                disabled={submitting}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              
               {/* Cancel - more discrete */}
               <Button
                 type="button"
@@ -1193,6 +1216,43 @@ const EditEvent = () => {
           hasCodeOfConduct={!!selectedCoCId}
           cocName={availableCoCs.find(c => c.id === selectedCoCId)?.name || null}
         />
+
+        {/* Delete Event Dialog */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Event</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this event? This action cannot be undone.
+                All associated data including reports, feedback, and code acceptances will be permanently deleted.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={async () => {
+                  try {
+                    const { error } = await supabase
+                      .from("events")
+                      .delete()
+                      .eq("id", eventId);
+
+                    if (error) throw error;
+
+                    toast.success("Event deleted successfully");
+                    navigate(`/society/${slug}/events`);
+                  } catch (error) {
+                    console.error("Error deleting event:", error);
+                    toast.error("Failed to delete event");
+                  }
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete Event
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </ProtectedRoute>
   );

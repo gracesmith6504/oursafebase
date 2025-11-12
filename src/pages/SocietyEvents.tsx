@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
-import { ArrowLeft, Plus, Calendar, FileText, MessageSquare, Eye, Shield, Share2, Edit, BarChart, QrCode, ChevronRight, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, FileText, MessageSquare, Eye, Shield, Share2, Edit, BarChart, QrCode, ChevronRight } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,16 +15,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -62,9 +52,6 @@ const SocietyEvents = () => {
   const [loading, setLoading] = useState(true);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const { isCommittee, loading: roleLoading } = useCommitteeRole(societyId || undefined);
 
   useEffect(() => {
@@ -192,35 +179,6 @@ const SocietyEvents = () => {
       toast.success("Event link copied to clipboard");
     }
   }, [societySlug]);
-
-  const handleDeleteClick = useCallback((event: Event) => {
-    setEventToDelete(event);
-    setDeleteDialogOpen(true);
-  }, []);
-
-  const handleDeleteConfirm = async () => {
-    if (!eventToDelete) return;
-
-    setDeleting(true);
-    try {
-      const { error } = await supabase
-        .from("events")
-        .delete()
-        .eq("id", eventToDelete.id);
-
-      if (error) throw error;
-
-      toast.success("Event deleted successfully");
-      setDeleteDialogOpen(false);
-      setEventToDelete(null);
-      fetchEvents();
-    } catch (error) {
-      console.error("Error deleting event:", error);
-      toast.error("Failed to delete event");
-    } finally {
-      setDeleting(false);
-    }
-  };
 
   if (loading || roleLoading) {
     return (
@@ -407,15 +365,6 @@ const SocietyEvents = () => {
                             Manage Event
                           </Button>
                         )}
-
-                        <Button 
-                          className="w-full" 
-                          variant="ghost"
-                          onClick={() => handleDeleteClick(event)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete Event
-                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -435,27 +384,6 @@ const SocietyEvents = () => {
             eventSlug={selectedEvent.slug}
           />
         )}
-
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Event?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete "{eventToDelete?.title}"? This will permanently delete all associated data including reports, feedback, and safety information. This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDeleteConfirm}
-                disabled={deleting}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {deleting ? "Deleting..." : "Delete Event"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </ProtectedRoute>
   );
