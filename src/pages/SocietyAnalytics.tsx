@@ -112,7 +112,7 @@ const SocietyAnalytics = () => {
       }
 
       // Fetch analytics data
-      await fetchAnalytics(societyData.id);
+      await fetchAnalytics(societyData.id, societyData.created_at);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -121,7 +121,7 @@ const SocietyAnalytics = () => {
     }
   };
 
-  const fetchAnalytics = async (societyId: string) => {
+  const fetchAnalytics = async (societyId: string, societyCreatedAt: string) => {
     // Total and active members
     const { data: members } = await supabase
       .from("society_members")
@@ -186,11 +186,11 @@ const SocietyAnalytics = () => {
       ? Math.round((safetyScores.reduce((a, b) => a + b, 0) / safetyScores.length) * 100) / 100
       : 0;
 
-    // Member growth over last 6 months
-    const memberGrowth = calculateMemberGrowth(members || []);
+    // Member growth since society creation
+    const memberGrowth = calculateMemberGrowth(members || [], societyCreatedAt);
 
-    // Event frequency by month (last 6 months)
-    const eventFrequency = calculateEventFrequency(events || []);
+    // Event frequency since society creation
+    const eventFrequency = calculateEventFrequency(events || [], societyCreatedAt);
 
     // Reports by status
     const reportsByStatus = [
@@ -233,15 +233,19 @@ const SocietyAnalytics = () => {
     });
   };
 
-  const calculateMemberGrowth = (members: any[]) => {
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const calculateMemberGrowth = (members: any[], societyCreatedAt: string) => {
+    const societyCreated = new Date(societyCreatedAt);
+    const now = new Date();
+    
+    // Calculate number of months from society creation to now
+    const monthsDiff = (now.getFullYear() - societyCreated.getFullYear()) * 12 
+                      + (now.getMonth() - societyCreated.getMonth());
 
-    // Create array of last 6 months
+    // Create array from society creation to now
     const months: Array<{ date: string; count: number }> = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
+    for (let i = 0; i <= monthsDiff; i++) {
+      const d = new Date(societyCreated);
+      d.setMonth(d.getMonth() + i);
       const monthKey = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
       months.push({ date: monthKey, count: 0 });
     }
@@ -249,7 +253,7 @@ const SocietyAnalytics = () => {
     // Count members joined in each month
     members.forEach(member => {
       const joinDate = new Date(member.joined_at);
-      if (joinDate >= sixMonthsAgo) {
+      if (joinDate >= societyCreated) {
         const monthKey = joinDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
         const monthEntry = months.find(m => m.date === monthKey);
         if (monthEntry) {
@@ -261,15 +265,19 @@ const SocietyAnalytics = () => {
     return months;
   };
 
-  const calculateEventFrequency = (events: any[]) => {
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const calculateEventFrequency = (events: any[], societyCreatedAt: string) => {
+    const societyCreated = new Date(societyCreatedAt);
+    const now = new Date();
+    
+    // Calculate number of months from society creation to now
+    const monthsDiff = (now.getFullYear() - societyCreated.getFullYear()) * 12 
+                      + (now.getMonth() - societyCreated.getMonth());
 
-    // Create array of last 6 months
+    // Create array from society creation to now
     const months: Array<{ month: string; count: number }> = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
+    for (let i = 0; i <= monthsDiff; i++) {
+      const d = new Date(societyCreated);
+      d.setMonth(d.getMonth() + i);
       const monthKey = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
       months.push({ month: monthKey, count: 0 });
     }
@@ -277,7 +285,7 @@ const SocietyAnalytics = () => {
     // Count events created in each month
     events.forEach(event => {
       const eventDate = new Date(event.created_at);
-      if (eventDate >= sixMonthsAgo) {
+      if (eventDate >= societyCreated) {
         const monthKey = eventDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
         const monthEntry = months.find(m => m.month === monthKey);
         if (monthEntry) {
@@ -433,17 +441,17 @@ const SocietyAnalytics = () => {
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base md:text-lg">Member Growth</CardTitle>
-                    <CardDescription className="text-xs">New members (last 6 months)</CardDescription>
+                    <CardDescription className="text-xs">Since society creation</CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="overflow-hidden">
                     <ChartContainer
                       config={{
                         count: { label: "Members", color: "hsl(var(--primary))" }
                       }}
                       className="h-[200px] md:h-[300px]"
                     >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={analytics?.memberGrowth || []}>
+                       <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={analytics?.memberGrowth || []} margin={{ left: -20, right: 10 }}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="date" fontSize={10} />
                           <YAxis allowDecimals={false} fontSize={10} />
@@ -458,17 +466,17 @@ const SocietyAnalytics = () => {
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base md:text-lg">Event Frequency</CardTitle>
-                    <CardDescription className="text-xs">Events created per month</CardDescription>
+                    <CardDescription className="text-xs">Since society creation</CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="overflow-hidden">
                     <ChartContainer
                       config={{
                         count: { label: "Events", color: "hsl(var(--secondary))" }
                       }}
                       className="h-[200px] md:h-[300px]"
                     >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={analytics?.eventFrequency || []}>
+                       <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={analytics?.eventFrequency || []} margin={{ left: -20, right: 10 }}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="month" fontSize={10} />
                           <YAxis allowDecimals={false} fontSize={10} />
