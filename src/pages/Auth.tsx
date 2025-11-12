@@ -436,19 +436,12 @@ const Auth = () => {
         return;
       }
 
+      toast.success("Thank you for accepting our terms!");
       setShowConsentScreen(false);
       setRecordingConsent(false);
 
-      // Proceed with redirect logic
-      if (inviteCode && societyInfo?.role === "committee") {
-        navigate(`/onboarding?invite=${inviteCode}`);
-      } else if (inviteCode) {
-        navigate(`/invite/${inviteCode}`);
-      } else if (redirectPath) {
-        navigate(redirectPath);
-      } else {
-        navigate("/dashboard");
-      }
+      // Redirect directly to dashboard after consent
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error recording consent:", error);
       toast.error("An error occurred. Please try again.");
@@ -468,73 +461,72 @@ const Auth = () => {
     );
   }
 
+  // Show consent screen on its own page (no auth form underneath)
+  if (showConsentScreen && user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center space-y-3">
+            <div className="flex justify-center mb-2">
+              <img src={logo} alt="OurSafeBase" className="h-12" />
+            </div>
+            <CardTitle className="text-2xl">Welcome to OurSafeBase!</CardTitle>
+            <CardDescription className="text-base">
+              Before you get started, please review and accept our Terms of Service and Privacy Policy.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-start space-x-3 rounded-lg border p-4">
+              <Checkbox
+                id="consent-terms"
+                checked={consentAccepted}
+                onCheckedChange={(checked) => setConsentAccepted(checked === true)}
+                className="mt-1"
+              />
+              <label
+                htmlFor="consent-terms"
+                className="text-sm leading-relaxed cursor-pointer flex-1"
+              >
+                I agree to the{" "}
+                <a
+                  href="/terms-of-service"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-medium"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Terms of Service
+                </a>{" "}
+                and{" "}
+                <a
+                  href="/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline font-medium"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Privacy Policy
+                </a>
+              </label>
+            </div>
+            <Button
+              onClick={handleConsentContinue}
+              disabled={!consentAccepted || recordingConsent}
+              className="w-full"
+              size="lg"
+            >
+              {recordingConsent ? "Recording..." : "Continue to OurSafeBase"}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return <div className="min-h-screen bg-muted">
       <div className="flex min-h-[calc(100vh-200px)] items-center justify-center p-4">
         <div className="w-full max-w-md space-y-4">
-          {showConsentScreen ? (
-            <Card className="w-full max-w-2xl mx-auto">
-              <CardHeader>
-                <div className="flex items-center gap-3 mb-4">
-                  <img src={logo} alt="OurSafeBase" className="h-12" />
-                  <CardTitle className="text-2xl">Welcome to OurSafeBase!</CardTitle>
-                </div>
-                <CardDescription>
-                  Before you get started, please take a moment to review and accept our Terms of Service and Privacy Policy.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="bg-muted/50 p-4 rounded-lg space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    We're committed to keeping your data safe and transparent about how we use it. 
-                    Our policies outline your rights and our responsibilities.
-                  </p>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <Checkbox
-                    id="consent-terms"
-                    checked={consentAccepted}
-                    onCheckedChange={(checked) => setConsentAccepted(checked === true)}
-                    className="mt-1"
-                  />
-                  <label
-                    htmlFor="consent-terms"
-                    className="text-sm leading-relaxed cursor-pointer"
-                  >
-                    I agree to the{" "}
-                    <a
-                      href="/terms-of-service"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline font-medium"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Terms of Service
-                    </a>{" "}
-                    and{" "}
-                    <a
-                      href="/privacy-policy"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline font-medium"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Privacy Policy
-                    </a>
-                  </label>
-                </div>
-                
-                <Button
-                  onClick={handleConsentContinue}
-                  disabled={!consentAccepted || recordingConsent}
-                  className="w-full"
-                  size="lg"
-                >
-                  {recordingConsent ? "Recording..." : "Continue to OurSafeBase"}
-                </Button>
-              </CardContent>
-            </Card>
-          ) : isInAppBrowser && !showEmailConfirmation && !showPasswordReset && <Alert variant="destructive" className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
+          {isInAppBrowser && !showEmailConfirmation && !showPasswordReset && <Alert variant="destructive" className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
               <AlertDescription className="text-sm">
                 <strong className="block mb-1">⚠️ Please open in external browser</strong>
                 <p className="mb-2">Google sign-in won't work in this app's browser.</p>
