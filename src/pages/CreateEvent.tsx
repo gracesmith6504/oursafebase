@@ -284,8 +284,23 @@ const CreateEvent = () => {
   const handleMemberSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const member = members.find((m) => m.user_id === e.target.value);
     if (member) {
-      setSelectedMember(member);
-      setTempRole("");
+      // Check for duplicates
+      const exists = selectedContacts.some((c) => c.userId === member.user_id);
+      if (exists) {
+        toast.error("Contact already added");
+        e.target.value = "";
+        return;
+      }
+
+      // Instantly add member to the list
+      setSelectedContacts([
+        ...selectedContacts,
+        {
+          userId: member.user_id,
+          displayName: member.profile?.display_name || "Anonymous",
+          role: "",
+        },
+      ]);
     }
     e.target.value = "";
   };
@@ -315,6 +330,12 @@ const CreateEvent = () => {
 
   const removeMemberContact = (userId: string) => {
     setSelectedContacts(selectedContacts.filter((c) => c.userId !== userId));
+  };
+
+  const updateMemberRole = (userId: string, role: string) => {
+    setSelectedContacts(
+      selectedContacts.map((c) => (c.userId === userId ? { ...c, role } : c))
+    );
   };
 
   const handleAddExternalContact = () => {
@@ -743,11 +764,31 @@ const CreateEvent = () => {
                   {selectedContacts.length > 0 && (
                     <div className="space-y-2">
                       {selectedContacts.map((contact) => (
-                        <div key={contact.userId} className="flex items-center gap-2 rounded-lg border bg-muted p-3">
-                          <div className="flex-1">
+                        <div key={contact.userId} className="flex items-start gap-2 rounded-lg border bg-muted p-3">
+                          <div className="flex-1 space-y-2">
                             <p className="font-medium">{contact.displayName}</p>
-                            <p className="text-sm text-muted-foreground">{contact.role}</p>
+                            <div className="space-y-1">
+                              <Label htmlFor={`role-${contact.userId}`} className="text-xs text-muted-foreground">
+                                Role (optional)
+                              </Label>
+                              <Input
+                                id={`role-${contact.userId}`}
+                                value={contact.role}
+                                onChange={(e) => updateMemberRole(contact.userId, e.target.value)}
+                                placeholder="e.g., Welfare Officer"
+                                className="h-8 text-sm"
+                              />
+                            </div>
                           </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeMemberContact(contact.userId)}
+                            className="shrink-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -769,40 +810,9 @@ const CreateEvent = () => {
                           </option>
                         ))}
                     </select>
-
-                    {selectedMember && (
-                      <div className="rounded-lg border bg-muted p-3 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <p className="font-medium">{selectedMember.profile?.display_name || "Anonymous"}</p>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedMember(null);
-                              setTempRole("");
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="tempRole" className="text-sm">
-                            Role (optional)
-                          </Label>
-                          <Input
-                            id="tempRole"
-                            value={tempRole}
-                            onChange={(e) => setTempRole(e.target.value)}
-                            placeholder="e.g., Welfare Officer"
-                            className="h-9"
-                          />
-                        </div>
-                        <Button type="button" size="sm" onClick={handleAddMember} className="w-full">
-                          Add Contact
-                        </Button>
-                      </div>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Select to add. Changes save automatically.
+                    </p>
                   </div>
                 </div>
 
