@@ -184,35 +184,35 @@ const SocietyDashboard = () => {
               </BreadcrumbList>
             </Breadcrumb>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="shrink-0">
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
                 {society?.logo_url ? (
-                  <Avatar className="h-10 w-10">
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 shrink-0">
                     <AvatarImage src={society.logo_url} alt={society.name} />
                     <AvatarFallback>{society.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                 ) : (
-                  <img src={logo} alt="OurSafeBase" className="h-8" />
+                  <img src={logo} alt="OurSafeBase" className="h-6 sm:h-8 shrink-0" />
                 )}
-                <div>
-                  <h1 className="text-xl font-bold flex items-center gap-2">
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2 truncate">
                     {society?.name}
                     {society?.is_verified && <VerifiedBadge size="md" />}
                   </h1>
-                  <p className="text-sm text-muted-foreground">Committee Dashboard</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Committee Dashboard</p>
                 </div>
               </div>
               {isCreator && (
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
                   onClick={() => navigate(`/society/${slug}/settings`)}
+                  className="shrink-0"
                 >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
+                  <Settings className="h-4 w-4" />
                 </Button>
               )}
             </div>

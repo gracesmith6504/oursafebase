@@ -364,31 +364,35 @@ const SocietySettings = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="logo">Society Logo</Label>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     {logoPreview && (
-                      <div className="flex items-center gap-2">
+                      <div className="relative group">
                         <Avatar className="h-20 w-20">
                           <AvatarImage src={logoPreview} alt="Society logo" />
                           <AvatarFallback>{name.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <Button
                           type="button"
-                          variant="destructive"
+                          variant="ghost"
                           size="icon"
                           onClick={handleLogoDelete}
                           disabled={saving}
+                          className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive/10 hover:bg-destructive/20 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     )}
-                    <div className="flex-1">
-                      <Input
-                        id="logo"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleLogoChange}
-                      />
+                    <div className="flex-1 w-full">
+                      <div className="relative">
+                        <Input
+                          id="logo"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoChange}
+                          className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer"
+                        />
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         Max 2MB. JPG, PNG, or GIF
                       </p>
