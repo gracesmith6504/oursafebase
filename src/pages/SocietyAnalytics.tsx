@@ -234,25 +234,22 @@ const SocietyAnalytics = () => {
   };
 
   const calculateMemberGrowth = (members: any[]) => {
-    if (!society?.created_at) return [];
-    
-    const societyCreatedDate = new Date(society.created_at);
-    const now = new Date();
-    
-    // Calculate months from society creation to now
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    // Create array of last 6 months
     const months: Array<{ date: string; count: number }> = [];
-    const currentDate = new Date(societyCreatedDate);
-    
-    while (currentDate <= now) {
-      const monthKey = currentDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const monthKey = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
       months.push({ date: monthKey, count: 0 });
-      currentDate.setMonth(currentDate.getMonth() + 1);
     }
     
     // Count members joined in each month
     members.forEach(member => {
       const joinDate = new Date(member.joined_at);
-      if (joinDate >= societyCreatedDate) {
+      if (joinDate >= sixMonthsAgo) {
         const monthKey = joinDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
         const monthEntry = months.find(m => m.date === monthKey);
         if (monthEntry) {
@@ -265,25 +262,22 @@ const SocietyAnalytics = () => {
   };
 
   const calculateEventFrequency = (events: any[]) => {
-    if (!society?.created_at) return [];
-    
-    const societyCreatedDate = new Date(society.created_at);
-    const now = new Date();
-    
-    // Calculate months from society creation to now
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    // Create array of last 6 months
     const months: Array<{ month: string; count: number }> = [];
-    const currentDate = new Date(societyCreatedDate);
-    
-    while (currentDate <= now) {
-      const monthKey = currentDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const monthKey = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
       months.push({ month: monthKey, count: 0 });
-      currentDate.setMonth(currentDate.getMonth() + 1);
     }
     
     // Count events created in each month
     events.forEach(event => {
       const eventDate = new Date(event.created_at);
-      if (eventDate >= societyCreatedDate) {
+      if (eventDate >= sixMonthsAgo) {
         const monthKey = eventDate.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
         const monthEntry = months.find(m => m.month === monthKey);
         if (monthEntry) {
@@ -439,54 +433,50 @@ const SocietyAnalytics = () => {
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base md:text-lg">Member Growth</CardTitle>
-                    <CardDescription className="text-xs">New members since creation</CardDescription>
+                    <CardDescription className="text-xs">New members (last 6 months)</CardDescription>
                   </CardHeader>
-                  <CardContent className="overflow-hidden">
-                    <div className="w-full overflow-x-auto -mx-2 px-2">
-                      <ChartContainer
-                        config={{
-                          count: { label: "Members", color: "hsl(var(--primary))" }
-                        }}
-                        className="h-[200px] md:h-[300px] min-w-[300px]"
-                      >
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={analytics?.memberGrowth || []} margin={{ left: -20, right: 10 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="date" fontSize={10} />
-                            <YAxis allowDecimals={false} fontSize={10} />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </ChartContainer>
-                    </div>
+                  <CardContent>
+                    <ChartContainer
+                      config={{
+                        count: { label: "Members", color: "hsl(var(--primary))" }
+                      }}
+                      className="h-[200px] md:h-[300px]"
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={analytics?.memberGrowth || []}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" fontSize={10} />
+                          <YAxis allowDecimals={false} fontSize={10} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base md:text-lg">Event Frequency</CardTitle>
-                    <CardDescription className="text-xs">Events created since creation</CardDescription>
+                    <CardDescription className="text-xs">Events created per month</CardDescription>
                   </CardHeader>
-                  <CardContent className="overflow-hidden">
-                    <div className="w-full overflow-x-auto -mx-2 px-2">
-                      <ChartContainer
-                        config={{
-                          count: { label: "Events", color: "hsl(var(--secondary))" }
-                        }}
-                        className="h-[200px] md:h-[300px] min-w-[300px]"
-                      >
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={analytics?.eventFrequency || []} margin={{ left: -20, right: 10 }}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="month" fontSize={10} />
-                            <YAxis allowDecimals={false} fontSize={10} />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Bar dataKey="count" fill="hsl(var(--secondary))" />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </ChartContainer>
-                    </div>
+                  <CardContent>
+                    <ChartContainer
+                      config={{
+                        count: { label: "Events", color: "hsl(var(--secondary))" }
+                      }}
+                      className="h-[200px] md:h-[300px]"
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={analytics?.eventFrequency || []}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" fontSize={10} />
+                          <YAxis allowDecimals={false} fontSize={10} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="count" fill="hsl(var(--secondary))" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
                   </CardContent>
                 </Card>
               </div>
@@ -499,7 +489,7 @@ const SocietyAnalytics = () => {
                     <CardTitle className="text-base md:text-lg">Reports by Status</CardTitle>
                     <CardDescription className="text-xs">Distribution of report statuses</CardDescription>
                   </CardHeader>
-                  <CardContent className="overflow-hidden">
+                  <CardContent>
                     <ChartContainer
                       config={{
                         count: { label: "Reports", color: "hsl(var(--primary))" }
@@ -514,9 +504,9 @@ const SocietyAnalytics = () => {
                             nameKey="status"
                             cx="50%"
                             cy="50%"
-                            outerRadius={70}
+                            outerRadius={80}
                             label={(entry) => entry.count > 0 ? entry.status : ''}
-                            fontSize={9}
+                            fontSize={10}
                           >
                             {analytics?.reportsByStatus?.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
