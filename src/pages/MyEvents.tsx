@@ -12,11 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { getEventStatus } from "@/lib/eventHelpers";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 interface Society {
   id: string;
   name: string;
   slug: string;
+  creator_email: string | null;
+  is_verified: boolean;
 }
 
 interface Event {
@@ -89,7 +92,7 @@ const MyEvents = () => {
         event_date,
         event_end_date,
         location,
-        society:societies!inner(id, name, slug)
+        society:societies!inner(id, name, slug, creator_email, is_verified)
       `)
       .in("society_id", societyIds)
       .order("event_date", { ascending: false });
@@ -309,8 +312,9 @@ const MyEvents = () => {
                               : format(new Date(event.event_date), "MMM d, yyyy")
                             }
                           </span>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs flex items-center gap-1">
                             {event.society.name}
+                            {event.society.is_verified && <VerifiedBadge size="sm" />}
                           </Badge>
                           {event.location && (
                             <span className="truncate">📍 {event.location}</span>

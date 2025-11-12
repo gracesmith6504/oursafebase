@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import CreateSocietyDialog from "@/components/CreateSocietyDialog";
 import JoinSocietyDialog from "@/components/JoinSocietyDialog";
 import logo from "@/assets/logo.png";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 interface SocietyMembership {
   role: "committee" | "attendee";
@@ -17,6 +18,8 @@ interface SocietyMembership {
     id: string;
     name: string;
     slug: string;
+    creator_email: string | null;
+    is_verified: boolean;
   };
 }
 
@@ -49,7 +52,7 @@ const Dashboard = () => {
   const fetchSocieties = async () => {
     const { data, error } = await supabase
       .from("society_members")
-      .select("role, society:societies(id, name, slug)")
+      .select("role, society:societies(id, name, slug, creator_email, is_verified)")
       .eq("user_id", user?.id);
 
     if (error) {
@@ -148,7 +151,10 @@ const Dashboard = () => {
                   >
                     <CardHeader className="min-w-0">
                       <div className="flex items-start justify-between gap-3 min-w-0">
-                        <CardTitle className="break-words min-w-0 flex-1 font-heading">{membership.society.name}</CardTitle>
+                        <CardTitle className="break-words min-w-0 flex-1 font-heading flex items-center gap-2">
+                          {membership.society.name}
+                          {membership.society.is_verified && <VerifiedBadge size="sm" />}
+                        </CardTitle>
                         <Badge variant={membership.role === "committee" ? "default" : "secondary"} className="shrink-0 shadow-sm">
                           {membership.role === "committee" ? "Committee" : "Attendee"}
                         </Badge>

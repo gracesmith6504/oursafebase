@@ -57,6 +57,7 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
       .insert({
         name: trimmedName,
         slug,
+        creator_email: user?.email,
       })
       .select()
       .single();

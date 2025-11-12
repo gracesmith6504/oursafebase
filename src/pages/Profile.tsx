@@ -12,6 +12,8 @@ import { ArrowLeft, Upload, Bell, LogOut, Download } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import logo from "@/assets/logo.png";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+
 interface Profile {
   display_name: string | null;
   phone_number: string | null;
@@ -22,6 +24,8 @@ interface Society {
   name: string;
   slug: string;
   description: string | null;
+  creator_email: string | null;
+  is_verified: boolean;
 }
 interface SocietyMembership {
   id: string;
@@ -459,7 +463,10 @@ const Profile = () => {
                   </p> : <div className="space-y-3">
                     {societies.map(membership => <div key={membership.id} className="flex items-center justify-between rounded-lg border p-4">
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold break-words">{membership.society.name}</h3>
+                          <h3 className="font-semibold break-words flex items-center gap-2">
+                            {membership.society.name}
+                            {membership.society.is_verified && <VerifiedBadge size="sm" />}
+                          </h3>
                           
                         </div>
                         <Button variant="destructive" size="sm" onClick={() => setSocietyToLeave(membership.society)} className="mx-[10px]">

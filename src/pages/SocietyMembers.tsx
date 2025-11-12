@@ -23,6 +23,9 @@ import { SocietyInviteQRCodeDialog } from "@/components/SocietyInviteQRCodeDialo
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
 import { getAppUrl } from "@/lib/constants";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
 
 interface Society {
   id: string;
@@ -30,6 +33,8 @@ interface Society {
   slug: string;
   attendee_invite_code: string;
   committee_invite_code: string;
+  creator_email: string | null;
+  is_verified: boolean;
 }
 
 interface Member {
@@ -58,6 +63,8 @@ const SocietyMembers = () => {
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [committeeQrDialogOpen, setCommitteeQrDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isCreator, setIsCreator] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
 
   const committeeInviteUrl = society ? `${getAppUrl()}/invite/committee/${society.committee_invite_code}` : "";
   const attendeeInviteUrl = society ? `${getAppUrl()}/invite/attendee/${society.attendee_invite_code}` : "";
@@ -88,11 +95,28 @@ const SocietyMembers = () => {
     }
   }, [society?.id]);
 
+  useEffect(() => {
+    if (user && society) {
+      checkCreator();
+    }
+  }, [user, society]);
+
+  const checkCreator = async () => {
+    if (!user || !society) return;
+    
+    const { data } = await supabase.rpc('is_society_creator', {
+      _user_id: user.id,
+      _society_id: society.id
+    });
+    
+    setIsCreator(data || false);
+  };
+
   const fetchSociety = async () => {
     // Fetch basic society info (available to all members)
     const { data: basicData, error: basicError } = await supabase
       .from("societies")
-      .select("id, name, slug, created_at, updated_at")
+      .select("id, name, slug, creator_email, is_verified, created_at, updated_at")
       .eq("slug", slug)
       .single();
 
@@ -178,6 +202,25 @@ const SocietyMembers = () => {
     }
   };
 
+  const handleRemoveMember = async () => {
+    if (!memberToRemove) return;
+
+    const { error } = await supabase
+      .from("society_members")
+      .delete()
+      .eq("id", memberToRemove.id);
+
+    if (error) {
+      toast.error("Failed to remove member");
+      console.error(error);
+    } else {
+      toast.success(`${memberToRemove.name} removed from society`);
+      fetchMembers();
+    }
+    
+    setMemberToRemove(null);
+  };
+
   if (loading) {
     return (
       <ProtectedRoute>
@@ -220,7 +263,10 @@ const SocietyMembers = () => {
               </Button>
               <img src={logo} alt="OurSafeBase" className="h-8" />
               <div>
-                <h1 className="text-xl font-bold">{society?.name}</h1>
+                <h1 className="text-xl font-bold flex items-center gap-2">
+                  {society?.name}
+                  {society?.is_verified && <VerifiedBadge size="md" />}
+                </h1>
                 <p className="text-sm text-muted-foreground">Members</p>
               </div>
             </div>
@@ -333,17 +379,34 @@ const SocietyMembers = () => {
                       </div>
                       <div className="flex items-center justify-between gap-4 mt-3">
                         <Badge variant="default" className="shrink-0">Committee</Badge>
-                        <div className={`flex items-center gap-2 shrink-0 ${!isCurrentUser ? 'opacity-50' : ''}`}>
-                          <Bell className="h-4 w-4 text-muted-foreground" />
-                          <Switch
-                            checked={member.email_notifications_enabled}
-                            disabled={!isCurrentUser}
-                            onCheckedChange={(checked) => {
-                              if (isCurrentUser) {
-                                handleNotificationToggle(member.id, checked);
-                              }
-                            }}
-                          />
+                        <div className="flex items-center gap-2">
+                          {isCreator && !isCurrentUser && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMemberToRemove({
+                                  id: member.id,
+                                  name: member.profiles?.display_name || "member"
+                                });
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          )}
+                          <div className={`flex items-center gap-2 shrink-0 ${!isCurrentUser ? 'opacity-50' : ''}`}>
+                            <Bell className="h-4 w-4 text-muted-foreground" />
+                            <Switch
+                              checked={member.email_notifications_enabled}
+                              disabled={!isCurrentUser}
+                              onCheckedChange={(checked) => {
+                                if (isCurrentUser) {
+                                  handleNotificationToggle(member.id, checked);
+                                }
+                              }}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -395,7 +458,24 @@ const SocietyMembers = () => {
                         Joined {new Date(member.joined_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <Badge variant="secondary">Attendee</Badge>
+                    <div className="flex items-center gap-2">
+                      {isCreator && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMemberToRemove({
+                              id: member.id,
+                              name: member.profiles?.display_name || "member"
+                            });
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
+                      <Badge variant="secondary">Attendee</Badge>
+                    </div>
                   </div>
                 ))
                 )}
@@ -418,6 +498,23 @@ const SocietyMembers = () => {
           inviteUrl={committeeInviteUrl}
           inviteType="committee"
         />
+        
+        <AlertDialog open={!!memberToRemove} onOpenChange={(open) => !open && setMemberToRemove(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove Member</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove {memberToRemove?.name} from the society? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleRemoveMember} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </ProtectedRoute>
   );

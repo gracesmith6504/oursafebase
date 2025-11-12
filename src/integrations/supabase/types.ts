@@ -513,7 +513,9 @@ export type Database = {
           attendee_invite_code: string
           committee_invite_code: string
           created_at: string | null
+          creator_email: string | null
           id: string
+          is_verified: boolean
           name: string
           slug: string
           updated_at: string | null
@@ -522,7 +524,9 @@ export type Database = {
           attendee_invite_code?: string
           committee_invite_code?: string
           created_at?: string | null
+          creator_email?: string | null
           id?: string
+          is_verified?: boolean
           name: string
           slug: string
           updated_at?: string | null
@@ -531,7 +535,9 @@ export type Database = {
           attendee_invite_code?: string
           committee_invite_code?: string
           created_at?: string | null
+          creator_email?: string | null
           id?: string
+          is_verified?: boolean
           name?: string
           slug?: string
           updated_at?: string | null
@@ -580,6 +586,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -604,7 +631,18 @@ export type Database = {
           committee_invite_code: string
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_committee_member: {
+        Args: { _society_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_society_creator: {
         Args: { _society_id: string; _user_id: string }
         Returns: boolean
       }
@@ -623,6 +661,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "user"
       society_member_role: "committee" | "attendee"
     }
     CompositeTypes: {
@@ -751,6 +790,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "user"],
       society_member_role: ["committee", "attendee"],
     },
   },

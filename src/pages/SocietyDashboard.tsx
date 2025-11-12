@@ -16,11 +16,14 @@ import {
 } from "@/components/ui/breadcrumb";
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
+import { VerifiedBadge } from "@/components/VerifiedBadge";
 
 interface Society {
   id: string;
   name: string;
   slug: string;
+  creator_email: string | null;
+  is_verified: boolean;
 }
 
 const SocietyDashboard = () => {
@@ -51,7 +54,7 @@ const SocietyDashboard = () => {
   const fetchSociety = async () => {
     const { data, error } = await supabase
       .from("societies")
-      .select("*")
+      .select("id, name, slug, creator_email, is_verified")
       .eq("slug", slug)
       .single();
 
@@ -167,7 +170,10 @@ const SocietyDashboard = () => {
               </Button>
               <img src={logo} alt="OurSafeBase" className="h-8" />
               <div>
-                <h1 className="text-xl font-bold">{society?.name}</h1>
+                <h1 className="text-xl font-bold flex items-center gap-2">
+                  {society?.name}
+                  {society?.is_verified && <VerifiedBadge size="md" />}
+                </h1>
                 <p className="text-sm text-muted-foreground">Committee Dashboard</p>
               </div>
             </div>
