@@ -331,7 +331,7 @@ const SocietyAnalytics = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-muted">
+      <div className="min-h-screen bg-muted overflow-x-hidden">
         <header className="border-b bg-background">
           <div className="container mx-auto px-4 py-4">
             <Breadcrumb className="mb-4">
@@ -372,7 +372,7 @@ const SocietyAnalytics = () => {
           </div>
         </header>
 
-        <main className="container mx-auto px-3 py-4 md:px-4 md:py-8">
+        <main className="container mx-auto px-3 py-4 md:px-4 md:py-8 max-w-full">
           {/* Key Metrics */}
           <div className="grid gap-3 grid-cols-2 md:grid-cols-2 lg:grid-cols-4 mb-6">
             <Card>
@@ -437,7 +437,7 @@ const SocietyAnalytics = () => {
             </TabsList>
 
             <TabsContent value="growth" className="space-y-3">
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-2 w-full">
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base md:text-lg">Member Growth</CardTitle>
@@ -491,7 +491,7 @@ const SocietyAnalytics = () => {
             </TabsContent>
 
             <TabsContent value="reports" className="space-y-3">
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-2 w-full">
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base md:text-lg">Reports by Status</CardTitle>
