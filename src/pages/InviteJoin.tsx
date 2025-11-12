@@ -10,20 +10,22 @@ const InviteJoin = () => {
   const { type, code } = useParams<{ type: 'committee' | 'attendee'; code: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const [processing, setProcessing] = useState(true);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading && !processing) {
       if (!user) {
         navigate(`/auth?invite=${code}`);
       } else {
         checkOnboardingStatus();
       }
     }
-  }, [user, authLoading, code]);
+  }, [user, authLoading, code, processing]);
 
   const checkOnboardingStatus = async () => {
-    if (!code || !user) return;
+    if (!code || !user || processing) return;
+    
+    setProcessing(true);
     
     const { data: validationResult, error: validationError } = await supabase
       .rpc("validate_invite_code", { invite_code: code });
