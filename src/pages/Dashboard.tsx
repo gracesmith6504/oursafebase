@@ -154,12 +154,14 @@ const Dashboard = () => {
                     <CardHeader className="min-w-0">
                       <div className="flex items-start justify-between gap-3 min-w-0">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <Avatar className="h-12 w-12 shrink-0">
-                            <AvatarImage src={membership.society.logo_url || undefined} alt={membership.society.name} />
-                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                              {membership.society.name.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
+                          {membership.society.logo_url && (
+                            <Avatar className="h-12 w-12 shrink-0">
+                              <AvatarImage src={membership.society.logo_url} alt={membership.society.name} />
+                              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                {membership.society.name.substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
                           <CardTitle className="break-words min-w-0 flex-1 font-heading flex items-center gap-2">
                             {membership.society.name}
                             {membership.society.is_verified && <VerifiedBadge size="sm" />}
