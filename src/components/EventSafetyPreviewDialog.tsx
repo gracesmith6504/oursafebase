@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, AlertCircle } from "lucide-react";
+import { Phone, AlertCircle, FileText, MessageSquare, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -36,6 +36,8 @@ interface EventSafetyPreviewDialogProps {
   welfareContacts: WelfareContact[];
   externalContacts: ExternalContact[];
   emergencyFields: EmergencyField[];
+  hasCodeOfConduct?: boolean;
+  cocName?: string | null;
 }
 
 export const EventSafetyPreviewDialog = ({
@@ -47,6 +49,8 @@ export const EventSafetyPreviewDialog = ({
   welfareContacts,
   externalContacts,
   emergencyFields,
+  hasCodeOfConduct = false,
+  cocName = null,
 }: EventSafetyPreviewDialogProps) => {
   const allContacts = [
     ...welfareContacts.map(c => ({
@@ -153,6 +157,69 @@ export const EventSafetyPreviewDialog = ({
                 </CardContent>
               </Card>
             )}
+
+            {/* Action Buttons - Preview Only (Disabled) */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Button 
+                size="lg" 
+                className="w-full" 
+                variant="destructive"
+                disabled
+              >
+                <FileText className="mr-2 h-5 w-5" />
+                Report a Concern
+              </Button>
+              <Button 
+                size="lg" 
+                className="w-full" 
+                variant="outline"
+                disabled
+              >
+                <MessageSquare className="mr-2 h-5 w-5" />
+                Submit Feedback
+              </Button>
+            </div>
+
+            {/* Code of Conduct Card - Preview */}
+            {hasCodeOfConduct && (
+              <Card className="border bg-muted/30">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                        <Shield className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm">Code of Conduct</p>
+                        {cocName && (
+                          <p className="text-xs text-muted-foreground truncate">{cocName}</p>
+                        )}
+                      </div>
+                    </div>
+                    <Button 
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0"
+                      disabled
+                    >
+                      View Document →
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Disclaimer */}
+            <Card className="bg-muted/30 border-muted-foreground/20">
+              <CardContent className="pt-4 pb-4">
+                <div className="flex items-start gap-3 text-xs text-muted-foreground leading-relaxed">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5 text-muted-foreground/70" />
+                  <p>
+                    <strong className="text-foreground">Important:</strong> OurSafeBase is a support tool and is not a substitute for professional medical, legal, or emergency services.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
             {allContacts.length === 0 && emergencyFields.length === 0 && (
               <Card>

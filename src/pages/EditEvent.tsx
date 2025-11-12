@@ -42,6 +42,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { EventSafetyPreviewDialog } from "@/components/EventSafetyPreviewDialog";
+import { Eye } from "lucide-react";
 
 interface Society {
   id: string;
@@ -207,6 +209,9 @@ const EditEvent = () => {
   const [externalPhone, setExternalPhone] = useState("");
   const [externalRole, setExternalRole] = useState("");
   const [externalCountryCode, setExternalCountryCode] = useState("+353");
+  
+  // Preview dialog state
+  const [showSafetyPreview, setShowSafetyPreview] = useState(false);
   
   const countryCodes = [
     { code: "+353", country: "Ireland", flag: "🇮🇪" },
@@ -1134,27 +1139,60 @@ const EditEvent = () => {
         </main>
 
         {/* Sticky Footer */}
-        <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-4">
-          <div className="container mx-auto flex max-w-2xl gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(`/society/${slug}/events`)}
-              className="flex-1"
-              disabled={submitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              onClick={handleSubmit}
-              className="flex-1"
-              disabled={submitting}
-            >
-              {submitting ? "Saving..." : "Save Changes"}
-            </Button>
+        <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-3 sm:p-4">
+          <div className="container mx-auto max-w-2xl">
+            <div className="flex gap-2 sm:gap-4">
+              {/* Preview button - icon only */}
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setShowSafetyPreview(true)}
+                className="shrink-0"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              
+              {/* Cancel - more discrete */}
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => navigate(`/society/${slug}/events`)}
+                className="flex-1 text-sm sm:text-base"
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              
+              {/* Primary action */}
+              <Button
+                type="submit"
+                onClick={handleSubmit}
+                className="flex-1 text-sm sm:text-base"
+                disabled={submitting}
+              >
+                {submitting ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
           </div>
         </div>
+        
+        {/* Safety Page Preview Dialog */}
+        <EventSafetyPreviewDialog
+          open={showSafetyPreview}
+          onOpenChange={setShowSafetyPreview}
+          eventName={eventName}
+          eventDate={eventDate}
+          location={location}
+          welfareContacts={selectedContacts.map(contact => ({
+            ...contact,
+            phone: contact.phone || memberPhones[contact.userId]
+          }))}
+          externalContacts={externalContacts}
+          emergencyFields={emergencyFields}
+          hasCodeOfConduct={!!selectedCoCId}
+          cocName={availableCoCs.find(c => c.id === selectedCoCId)?.name || null}
+        />
       </div>
     </ProtectedRoute>
   );

@@ -46,7 +46,6 @@ import { CreateCoCDialog } from "@/components/CreateCoCDialog";
 import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
 import { generateUniqueSlug } from "@/lib/eventHelpers";
 import { EventSafetyPreviewDialog } from "@/components/EventSafetyPreviewDialog";
-import { CoCPreviewDialog } from "@/components/CoCPreviewDialog";
 import { Eye } from "lucide-react";
 
 interface Society {
@@ -210,9 +209,8 @@ const CreateEvent = () => {
   const [createdEventData, setCreatedEventData] = useState<any>(null);
   const [cocPreviewData, setCoCPreviewData] = useState<any>(null);
   
-  // Preview dialog states
+  // Preview dialog state
   const [showSafetyPreview, setShowSafetyPreview] = useState(false);
-  const [showCoCPreviewDialog, setShowCoCPreviewDialog] = useState(false);
   
   const [selectedContacts, setSelectedContacts] = useState<WelfareContact[]>([]);
   const [memberPhones, setMemberPhones] = useState<Record<string, string>>({});
@@ -1153,44 +1151,31 @@ const CreateEvent = () => {
 
         {/* Sticky Footer */}
         <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-3 sm:p-4">
-          <div className="container mx-auto max-w-2xl space-y-2">
-            {/* Preview Buttons Row */}
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowSafetyPreview(true)}
-                className="flex-1"
-              >
-                <Eye className="mr-2 h-4 w-4" />
-                Preview Safety Page
-              </Button>
-              {selectedCoCId && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowCoCPreviewDialog(true)}
-                  className="flex-1"
-                >
-                  <Eye className="mr-2 h-4 w-4" />
-                  Preview CoC
-                </Button>
-              )}
-            </div>
-            
-            {/* Action Buttons Row */}
+          <div className="container mx-auto max-w-2xl">
             <div className="flex gap-2 sm:gap-4">
+              {/* Preview button - icon only */}
               <Button
                 type="button"
                 variant="outline"
+                size="icon"
+                onClick={() => setShowSafetyPreview(true)}
+                className="shrink-0"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              
+              {/* Cancel - more discrete */}
+              <Button
+                type="button"
+                variant="ghost"
                 onClick={() => navigate(`/society/${slug}/events`)}
                 className="flex-1 text-sm sm:text-base"
                 disabled={submitting}
               >
                 Cancel
               </Button>
+              
+              {/* Primary action */}
               <Button 
                 type="submit" 
                 onClick={handleSubmit} 
@@ -1221,22 +1206,15 @@ const CreateEvent = () => {
           eventName={eventName}
           eventDate={eventDate}
           location={location}
-          welfareContacts={selectedContacts}
+          welfareContacts={selectedContacts.map(contact => ({
+            ...contact,
+            phone: contact.phone || memberPhones[contact.userId]
+          }))}
           externalContacts={externalContacts}
           emergencyFields={emergencyFields}
+          hasCodeOfConduct={!!selectedCoCId}
+          cocName={availableCoCs.find(c => c.id === selectedCoCId)?.name || null}
         />
-
-        {/* CoC Preview Dialog */}
-        {selectedCoCId && (
-          <CoCPreviewDialog
-            open={showCoCPreviewDialog}
-            onOpenChange={setShowCoCPreviewDialog}
-            cocName={availableCoCs.find(c => c.id === selectedCoCId)?.name || null}
-            cocContent={availableCoCs.find(c => c.id === selectedCoCId)?.content || null}
-            cocFileUrl={availableCoCs.find(c => c.id === selectedCoCId)?.file_url || null}
-            eventName={eventName}
-          />
-        )}
         
         {/* CoC Preview Dialog after event creation */}
         {showCoCPreview && cocPreviewData && createdEventData && (
