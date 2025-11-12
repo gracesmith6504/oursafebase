@@ -168,7 +168,7 @@ const Auth = () => {
       if (showEmailConfirmation || showPasswordReset || loading) return;
 
       const { data: consent } = await supabase
-        .from("user_consents")
+        .from("user_consents" as any)
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
@@ -201,7 +201,7 @@ const Auth = () => {
       
       if (acceptedTermsInMetadata) {
         // Auto-record consent for email signups
-        const { error: insertError } = await supabase.from("user_consents").insert({
+        const { error: insertError } = await supabase.from("user_consents" as any).insert({
           user_id: user.id,
           accepted_terms: true,
           user_agent: navigator.userAgent,
@@ -385,7 +385,7 @@ const Auth = () => {
 
     try {
       // Record consent in database
-      const { error } = await supabase.from("user_consents").insert({
+      const { error } = await supabase.from("user_consents" as any).insert({
         user_id: user!.id,
         accepted_terms: true,
         ip_address: null, // Could fetch from an API if needed
