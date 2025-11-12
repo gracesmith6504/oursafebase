@@ -119,6 +119,39 @@ const SocietySettings = () => {
     }
   };
 
+  const handleLogoDelete = async () => {
+    if (!society || !society.logo_url) return;
+
+    setSaving(true);
+    try {
+      // Delete from storage
+      const oldFileName = society.logo_url.split('/').pop();
+      if (oldFileName) {
+        await supabase.storage
+          .from("society-logos")
+          .remove([oldFileName]);
+      }
+
+      // Update society to remove logo
+      const { error } = await supabase
+        .from("societies")
+        .update({ logo_url: null })
+        .eq("id", society.id);
+
+      if (error) throw error;
+
+      toast.success("Logo deleted successfully");
+      await fetchSociety();
+      setLogoFile(null);
+      setLogoPreview(null);
+    } catch (error) {
+      toast.error("Failed to delete logo");
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!society) return;
@@ -333,10 +366,21 @@ const SocietySettings = () => {
                   <Label htmlFor="logo">Society Logo</Label>
                   <div className="flex items-center gap-4">
                     {logoPreview && (
-                      <Avatar className="h-20 w-20">
-                        <AvatarImage src={logoPreview} alt="Society logo" />
-                        <AvatarFallback>{name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-20 w-20">
+                          <AvatarImage src={logoPreview} alt="Society logo" />
+                          <AvatarFallback>{name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          onClick={handleLogoDelete}
+                          disabled={saving}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     )}
                     <div className="flex-1">
                       <Input
