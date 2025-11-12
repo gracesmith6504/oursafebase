@@ -57,6 +57,7 @@ export function ReportConcernDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [referenceId, setReferenceId] = useState("");
+  const [wasAnonymous, setWasAnonymous] = useState(false);
   const { user } = useAuth();
   
   const form = useForm<ReportFormData>({
@@ -124,6 +125,7 @@ export function ReportConcernDialog({
       const random = Math.random().toString(36).substring(2, 6).toUpperCase();
       const refId = `REF-${timestamp}-${random}`;
       setReferenceId(refId);
+      setWasAnonymous(data.isAnonymous);
       setShowSuccess(true);
       form.reset();
     } catch (error) {
@@ -147,6 +149,7 @@ export function ReportConcernDialog({
   const handleClose = () => {
     setShowSuccess(false);
     setReferenceId("");
+    setWasAnonymous(false);
     form.reset();
     onOpenChange(false);
   };
@@ -159,24 +162,35 @@ export function ReportConcernDialog({
             </div>
             <DialogTitle className="text-center">Concern Reported Successfully</DialogTitle>
             <DialogDescription className="text-center">
-              Your concern has been reported and will be reviewed by the committee.
+              {wasAnonymous 
+                ? "Your anonymous concern has been reported and will be reviewed by the committee."
+                : "Your concern has been reported and will be reviewed by the committee."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="bg-muted p-4 rounded-lg">
-              <p className="text-sm font-medium mb-2">Reference ID:</p>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 bg-background px-3 py-2 rounded font-mono text-sm">
-                  {referenceId}
-                </code>
-                <Button variant="outline" size="icon" onClick={copyReferenceId}>
-                  <Copy className="h-4 w-4" />
-                </Button>
+            {!wasAnonymous && (
+              <div className="bg-muted p-4 rounded-lg">
+                <p className="text-sm font-medium mb-2">Reference ID:</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 bg-background px-3 py-2 rounded font-mono text-sm">
+                    {referenceId}
+                  </code>
+                  <Button variant="outline" size="icon" onClick={copyReferenceId}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Save this reference ID to track your report.
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Save this reference ID to track your report.
-              </p>
-            </div>
+            )}
+            {wasAnonymous && (
+              <div className="bg-muted p-4 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  Since you submitted this report anonymously, the committee will not have a way to contact you directly with updates.
+                </p>
+              </div>
+            )}
             <Button onClick={handleClose} className="w-full">
               Close
             </Button>
@@ -235,13 +249,23 @@ export function ReportConcernDialog({
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Submit Anonymously</FormLabel>
                       <div className="text-sm text-muted-foreground">
-                        {field.value ? "Your identity will not be shared" : "Provide contact info for follow-up"}
+                        {field.value 
+                          ? "Your identity will not be shared with the committee" 
+                          : "Provide contact info for follow-up"}
                       </div>
                     </div>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                   </FormItem>} />
+
+              {isAnonymous && (
+                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-4 rounded-lg">
+                  <p className="text-sm text-amber-900 dark:text-amber-200">
+                    <strong>Note:</strong> Since you're submitting anonymously, the committee will not be able to contact you with updates or follow-up questions about your report.
+                  </p>
+                </div>
+              )}
 
               {!isAnonymous && <div className="space-y-4 p-4 bg-muted rounded-lg">
                   <p className="text-sm font-medium">Contact Information</p>
