@@ -517,6 +517,7 @@ export type Database = {
           id: string
           is_verified: boolean
           logo_url: string | null
+          member_count: number
           name: string
           slug: string
           updated_at: string | null
@@ -529,6 +530,7 @@ export type Database = {
           id?: string
           is_verified?: boolean
           logo_url?: string | null
+          member_count?: number
           name: string
           slug: string
           updated_at?: string | null
@@ -541,6 +543,7 @@ export type Database = {
           id?: string
           is_verified?: boolean
           logo_url?: string | null
+          member_count?: number
           name?: string
           slug?: string
           updated_at?: string | null
@@ -588,6 +591,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_consents: {
+        Row: {
+          accepted_at: string
+          accepted_terms: boolean
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          accepted_terms?: boolean
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          accepted_terms?: boolean
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
