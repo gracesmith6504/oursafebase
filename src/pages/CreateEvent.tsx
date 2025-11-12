@@ -8,7 +8,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Plus, X, ChevronRight } from "lucide-react";
+import { ArrowLeft, Plus, X, ChevronRight, GripVertical } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -48,6 +65,7 @@ interface WelfareContact {
   userId: string;
   displayName: string;
   role: string;
+  phone?: string;
 }
 
 interface ExternalContact {
@@ -65,6 +83,90 @@ interface EmergencyField {
   phone: string;
 }
 
+// Sortable contact item component
+const SortableContactItem = ({ contact, onUpdateRole, onUpdatePhone, onRemove, profilePhone }: { 
+  contact: WelfareContact; 
+  onUpdateRole: (userId: string, role: string) => void;
+  onUpdatePhone: (userId: string, phone: string) => void;
+  onRemove: (userId: string) => void;
+  profilePhone?: string;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: contact.userId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-start gap-2 rounded-lg border bg-muted p-3"
+    >
+      <button
+        type="button"
+        className="cursor-grab active:cursor-grabbing mt-1 touch-none"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-5 w-5 text-muted-foreground" />
+      </button>
+      <div className="flex-1 space-y-2">
+        <p className="font-medium">{contact.displayName}</p>
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label htmlFor={`role-${contact.userId}`} className="text-xs text-muted-foreground">
+              Role (optional)
+            </Label>
+            <Input
+              id={`role-${contact.userId}`}
+              value={contact.role}
+              onChange={(e) => onUpdateRole(contact.userId, e.target.value)}
+              placeholder="e.g., Welfare Officer"
+              className="h-8 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor={`phone-${contact.userId}`} className="text-xs text-muted-foreground">
+              Phone {profilePhone ? "(override profile phone)" : "(required for display)"}
+            </Label>
+            <Input
+              id={`phone-${contact.userId}`}
+              value={contact.phone || ""}
+              onChange={(e) => onUpdatePhone(contact.userId, e.target.value)}
+              placeholder={profilePhone || "e.g., +353 87 123 4567"}
+              className="h-8 text-sm"
+            />
+            {profilePhone && !contact.phone && (
+              <p className="text-xs text-muted-foreground">
+                Will use profile phone: {profilePhone}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={() => onRemove(contact.userId)}
+        className="shrink-0"
+      >
+        <X className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
+
 const CreateEvent = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -75,6 +177,14 @@ const CreateEvent = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const { isCommittee, loading: roleLoading } = useCommitteeRole(society?.id);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Form state
   const [eventName, setEventName] = useState("");
@@ -96,6 +206,7 @@ const CreateEvent = () => {
   const [cocPreviewData, setCoCPreviewData] = useState<any>(null);
   
   const [selectedContacts, setSelectedContacts] = useState<WelfareContact[]>([]);
+  const [memberPhones, setMemberPhones] = useState<Record<string, string>>({});
   const [externalContacts, setExternalContacts] = useState<ExternalContact[]>([]);
   const [emergencyFields, setEmergencyFields] = useState<EmergencyField[]>([]);
   const [selectedCoCId, setSelectedCoCId] = useState("");
@@ -189,20 +300,29 @@ const CreateEvent = () => {
         return;
       }
 
-      // Fetch all members
+      // Fetch all members with profiles including phone numbers
       const { data: membersData, error: membersError } = await supabase
         .from("society_members")
         .select(
           `
           user_id,
           role,
-          profile:profiles(id, display_name)
+          profile:profiles(id, display_name, phone_number)
         `,
         )
         .eq("society_id", societyData.id);
 
       if (!membersError && membersData) {
         setMembers(membersData as any);
+        
+        // Store member phone numbers for reference
+        const phones: Record<string, string> = {};
+        membersData.forEach((member: any) => {
+          if (member.profile?.phone_number) {
+            phones[member.user_id] = member.profile.phone_number;
+          }
+        });
+        setMemberPhones(phones);
       }
 
       // Fetch available society-level CoCs
@@ -338,6 +458,25 @@ const CreateEvent = () => {
     );
   };
 
+  const updateMemberPhone = (userId: string, phone: string) => {
+    setSelectedContacts(
+      selectedContacts.map((c) => (c.userId === userId ? { ...c, phone } : c))
+    );
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setSelectedContacts((contacts) => {
+        const oldIndex = contacts.findIndex((c) => c.userId === active.id);
+        const newIndex = contacts.findIndex((c) => c.userId === over.id);
+
+        return arrayMove(contacts, oldIndex, newIndex);
+      });
+    }
+  };
+
   const handleAddExternalContact = () => {
     if (!externalName.trim() || !externalPhone.trim()) {
       toast.error("Please provide name and phone number");
@@ -471,11 +610,13 @@ const CreateEvent = () => {
       const contactsToInsert = [
         ...selectedContacts.map((contact, index) => {
           const profile = memberProfiles[contact.userId];
+          // Use custom phone if provided, otherwise use profile phone
+          const phoneToUse = contact.phone?.trim() || profile?.phone_number;
           return {
             event_id: eventData.id,
             user_id: contact.userId,
             contact_name: profile?.display_name || contact.displayName,
-            contact_phone: profile?.phone_number,
+            contact_phone: phoneToUse,
             contact_avatar_url: profile?.avatar_url,
             external_name: null,
             external_phone: null,
@@ -763,34 +904,27 @@ const CreateEvent = () => {
 
                   {selectedContacts.length > 0 && (
                     <div className="space-y-2">
-                      {selectedContacts.map((contact) => (
-                        <div key={contact.userId} className="flex items-start gap-2 rounded-lg border bg-muted p-3">
-                          <div className="flex-1 space-y-2">
-                            <p className="font-medium">{contact.displayName}</p>
-                            <div className="space-y-1">
-                              <Label htmlFor={`role-${contact.userId}`} className="text-xs text-muted-foreground">
-                                Role (optional)
-                              </Label>
-                              <Input
-                                id={`role-${contact.userId}`}
-                                value={contact.role}
-                                onChange={(e) => updateMemberRole(contact.userId, e.target.value)}
-                                placeholder="e.g., Welfare Officer"
-                                className="h-8 text-sm"
-                              />
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeMemberContact(contact.userId)}
-                            className="shrink-0"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <SortableContext
+                          items={selectedContacts.map((c) => c.userId)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {selectedContacts.map((contact) => (
+                            <SortableContactItem
+                              key={contact.userId}
+                              contact={contact}
+                              onUpdateRole={updateMemberRole}
+                              onUpdatePhone={updateMemberPhone}
+                              onRemove={removeMemberContact}
+                              profilePhone={memberPhones[contact.userId]}
+                            />
+                          ))}
+                        </SortableContext>
+                      </DndContext>
                     </div>
                   )}
 
@@ -811,7 +945,7 @@ const CreateEvent = () => {
                         ))}
                     </select>
                     <p className="text-xs text-muted-foreground">
-                      Select to add. Changes save automatically.
+                      Select to add. Drag to reorder. Changes save automatically.
                     </p>
                   </div>
                 </div>
