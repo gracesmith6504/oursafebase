@@ -366,7 +366,7 @@ const SocietySettings = () => {
                   <Label htmlFor="logo">Society Logo</Label>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     {logoPreview && (
-                      <div className="relative group">
+                      <div className="flex items-center gap-3">
                         <Avatar className="h-20 w-20">
                           <AvatarImage src={logoPreview} alt="Society logo" />
                           <AvatarFallback>{name.substring(0, 2).toUpperCase()}</AvatarFallback>
@@ -374,36 +374,37 @@ const SocietySettings = () => {
                         <Button
                           type="button"
                           variant="ghost"
-                          size="icon"
+                          size="sm"
                           onClick={handleLogoDelete}
                           disabled={saving}
-                          className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive/10 hover:bg-destructive/20 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="text-muted-foreground hover:text-destructive h-8"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                          Remove
                         </Button>
                       </div>
                     )}
-                    <div className="flex-1 w-full">
-                      <div className="relative">
-                        <Input
-                          id="logo"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleLogoChange}
-                          className="cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
+                    <div className="flex-1 w-full space-y-1.5">
+                      <Input
+                        id="logo"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoChange}
+                        className="cursor-pointer file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-muted file:text-foreground hover:file:bg-muted/80 file:cursor-pointer"
+                      />
+                      <p className="text-xs text-muted-foreground">
                         Max 2MB. JPG, PNG, or GIF
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <Button type="submit" disabled={saving}>
-                  <Save className="mr-2 h-4 w-4" />
-                  {saving ? "Saving..." : "Save Changes"}
-                </Button>
+                <div className="flex justify-end pt-2">
+                  <Button type="submit" disabled={saving} variant="default" size="default">
+                    <Save className="mr-2 h-4 w-4" />
+                    {saving ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </form>
