@@ -164,6 +164,9 @@ const Auth = () => {
     const checkConsent = async () => {
       if (!user) return;
 
+      // Don't check consent if we're still in the middle of showing other UI states
+      if (showEmailConfirmation || showPasswordReset || loading) return;
+
       const { data: consent } = await supabase
         .from("user_consents")
         .select("*")
@@ -227,11 +230,12 @@ const Auth = () => {
       }
 
       // If no consent record and no metadata, show consent screen (for Google OAuth users)
+      // This will show after Google OAuth redirect completes and user is authenticated
       setShowConsentScreen(true);
     };
 
     checkConsent();
-  }, [user, navigate, inviteCode, redirectPath, societyInfo, loadingSocietyInfo]);
+  }, [user, navigate, inviteCode, redirectPath, societyInfo, loadingSocietyInfo, showEmailConfirmation, showPasswordReset, loading]);
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password || !confirmPassword) {
