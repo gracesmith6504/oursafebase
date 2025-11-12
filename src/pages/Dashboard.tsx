@@ -58,7 +58,6 @@ const Dashboard = () => {
       .eq("user_id", user?.id);
 
     if (error) {
-      toast.error("Failed to load societies");
       console.error(error);
     } else {
       setSocieties(

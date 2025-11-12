@@ -38,11 +38,9 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        toast.error("Logo must be less than 2MB");
         return;
       }
       if (!file.type.startsWith('image/')) {
-        toast.error("Please upload an image file");
         return;
       }
       setLogoFile(file);
@@ -60,12 +58,10 @@ const CreateSocietyDialog = ({ open, onOpenChange, onSuccess }: CreateSocietyDia
     const trimmedName = name.trim();
     
     if (!trimmedName) {
-      toast.error("Please enter a society name");
       return;
     }
     
     if (trimmedName.length > 150) {
-      toast.error("Society name must be less than 150 characters");
       return;
     }
 

@@ -20,7 +20,6 @@ export const EventShareCard = ({ societySlug, eventSlug, eventTitle, onShowQRCod
   const copyLink = () => {
     navigator.clipboard.writeText(eventUrl);
     setCopied(true);
-    toast.success("Link copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
   };
 

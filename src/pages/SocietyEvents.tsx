@@ -83,7 +83,6 @@ const SocietyEvents = () => {
         .single();
 
       if (!memberData) {
-        toast.error("You are not a member of this society");
         navigate("/dashboard");
         return;
       }
@@ -104,7 +103,6 @@ const SocietyEvents = () => {
       }
     } catch (error) {
       console.error("Error fetching events:", error);
-      toast.error("Failed to load events");
     } finally {
       setLoading(false);
     }
@@ -176,7 +174,6 @@ const SocietyEvents = () => {
       }).catch(() => {});
     } else {
       navigator.clipboard.writeText(eventUrl);
-      toast.success("Event link copied to clipboard");
     }
   }, [societySlug]);
 

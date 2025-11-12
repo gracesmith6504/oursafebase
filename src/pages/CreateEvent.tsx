@@ -268,7 +268,6 @@ const CreateEvent = () => {
           setExternalContacts(draft.externalContacts || []);
           setEmergencyFields(draft.emergencyFields || []);
           setSelectedCoCId(draft.selectedCoCId || "");
-          toast.info("Draft restored");
         } catch (error) {
           console.error("Error loading draft:", error);
         }
@@ -286,7 +285,6 @@ const CreateEvent = () => {
         .single();
 
       if (societyError || !societyData) {
-        toast.error("Society not found");
         navigate("/dashboard");
         return;
       }
@@ -302,7 +300,6 @@ const CreateEvent = () => {
         .single();
 
       if (!membershipData) {
-        toast.error("You are not a member of this society");
         navigate("/dashboard");
         return;
       }
@@ -354,7 +351,6 @@ const CreateEvent = () => {
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data:", error);
-      toast.error("Failed to load data");
       navigate("/dashboard");
     }
   };
@@ -414,7 +410,6 @@ const CreateEvent = () => {
       // Check for duplicates
       const exists = selectedContacts.some((c) => c.userId === member.user_id);
       if (exists) {
-        toast.error("Contact already added");
         e.target.value = "";
         return;
       }
@@ -437,7 +432,6 @@ const CreateEvent = () => {
 
     const exists = selectedContacts.some((c) => c.userId === selectedMember.user_id);
     if (exists) {
-      toast.error("Contact already added");
       setSelectedMember(null);
       setTempRole("");
       return;
@@ -486,12 +480,10 @@ const CreateEvent = () => {
 
   const handleAddExternalContact = () => {
     if (!externalName.trim() || !externalPhone.trim()) {
-      toast.error("Please provide name and phone number");
       return;
     }
 
     if (externalName.trim().length > 100) {
-      toast.error("Name must be less than 100 characters");
       return;
     }
 

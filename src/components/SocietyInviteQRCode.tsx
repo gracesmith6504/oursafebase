@@ -44,7 +44,6 @@ export const SocietyInviteQRCode = ({
         a.download = `${societyName}-${inviteType}-invite-qr.png`;
         a.click();
         URL.revokeObjectURL(url);
-        toast.success("QR code downloaded!");
       });
     };
 
@@ -120,7 +119,6 @@ export const SocietyInviteQRCode = ({
 
   const copyLink = () => {
     navigator.clipboard.writeText(inviteUrl);
-    toast.success("Link copied to clipboard!");
   };
 
   return (

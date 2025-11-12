@@ -141,10 +141,6 @@ export function ReportConcernDialog({
   };
   const copyReferenceId = () => {
     navigator.clipboard.writeText(referenceId);
-    toast({
-      title: "Copied!",
-      description: "Reference ID copied to clipboard"
-    });
   };
   const handleClose = () => {
     setShowSuccess(false);

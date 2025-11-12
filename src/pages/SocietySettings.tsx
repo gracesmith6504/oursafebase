@@ -77,7 +77,6 @@ const SocietySettings = () => {
       .single();
 
     if (error || !data) {
-      toast.error("Society not found");
       navigate("/dashboard");
       return;
     }
@@ -103,11 +102,9 @@ const SocietySettings = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        toast.error("Logo must be less than 2MB");
         return;
       }
       if (!file.type.startsWith('image/')) {
-        toast.error("Please upload an image file");
         return;
       }
       setLogoFile(file);
@@ -212,12 +209,10 @@ const SocietySettings = () => {
 
   const handleTransferInitiate = async () => {
     if (!transferEmail.trim()) {
-      toast.error("Please enter an email address");
       return;
     }
 
     if (transferEmail.toLowerCase() === user?.email?.toLowerCase()) {
-      toast.error("You're already the owner");
       return;
     }
 
@@ -232,12 +227,10 @@ const SocietySettings = () => {
 
     if (error) {
       console.error(error);
-      toast.error("Failed to validate member");
       return;
     }
 
     if (!isCommitteeMember) {
-      toast.error("This email must belong to a committee member of this society");
       return;
     }
 

@@ -122,7 +122,6 @@ const SocietyMembers = () => {
       .single();
 
     if (basicError || !basicData) {
-      toast.error("Society not found");
       navigate("/dashboard");
       return;
     }
@@ -159,7 +158,6 @@ const SocietyMembers = () => {
       .order("joined_at", { ascending: true });
 
     if (error) {
-      toast.error("Failed to load members");
       console.error(error);
     } else {
       setMembers(data as any);
@@ -169,14 +167,12 @@ const SocietyMembers = () => {
   const copyCommitteeLink = () => {
     navigator.clipboard.writeText(committeeInviteUrl);
     setCopiedCommittee(true);
-    toast.success("Committee invite link copied!");
     setTimeout(() => setCopiedCommittee(false), 2000);
   };
 
   const copyAttendeeLink = () => {
     navigator.clipboard.writeText(attendeeInviteUrl);
     setCopiedAttendee(true);
-    toast.success("Attendee invite link copied!");
     setTimeout(() => setCopiedAttendee(false), 2000);
   };
 
@@ -194,12 +190,9 @@ const SocietyMembers = () => {
       .eq("id", memberId);
 
     if (error) {
-      toast.error("Failed to update notification preferences");
       console.error(error);
       // Revert on error
       await fetchMembers();
-    } else {
-      toast.success(enabled ? "Notifications enabled" : "Notifications disabled");
     }
   };
 

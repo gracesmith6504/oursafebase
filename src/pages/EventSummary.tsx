@@ -124,7 +124,6 @@ const EventSummary = () => {
       await fetchNotes();
     } catch (error) {
       console.error("Error fetching event data:", error);
-      toast.error("Failed to load event summary");
     } finally {
       setLoading(false);
     }

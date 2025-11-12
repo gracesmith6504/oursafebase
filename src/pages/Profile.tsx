@@ -75,7 +75,6 @@ const Profile = () => {
       error
     } = await supabase.from("profiles").select("display_name, phone_number, avatar_url").eq("id", user?.id).single();
     if (error) {
-      toast.error("Failed to load profile");
       console.error(error);
     } else if (data) {
       setProfile(data);
@@ -89,7 +88,6 @@ const Profile = () => {
       error
     } = await supabase.from("society_members").select("id, role, email_notifications_enabled, society:societies(id, name, slug, logo_url, creator_email, is_verified)").eq("user_id", user?.id);
     if (error) {
-      toast.error("Failed to load societies");
       console.error(error);
     } else {
       setSocieties(data as any);
@@ -107,19 +105,15 @@ const Profile = () => {
       email_notifications_enabled: enabled
     }).eq("id", membershipId);
     if (error) {
-      toast.error("Failed to update notification preferences");
       console.error(error);
       // Revert on error
       await fetchSocieties();
-    } else {
-      toast.success(enabled ? "Notifications enabled" : "Notifications disabled");
     }
   };
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        toast.error("Image must be less than 2MB");
         return;
       }
       setAvatarFile(file);
@@ -132,7 +126,6 @@ const Profile = () => {
   };
   const handleSaveProfile = async () => {
     if (profile.display_name && profile.display_name.trim().length > 100) {
-      toast.error("Display name must be less than 100 characters");
       return;
     }
 
