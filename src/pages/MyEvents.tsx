@@ -18,6 +18,7 @@ interface Society {
   id: string;
   name: string;
   slug: string;
+  logo_url: string | null;
   creator_email: string | null;
   is_verified: boolean;
 }
@@ -92,7 +93,7 @@ const MyEvents = () => {
         event_date,
         event_end_date,
         location,
-        society:societies!inner(id, name, slug, creator_email, is_verified)
+        society:societies!inner(id, name, slug, logo_url, creator_email, is_verified)
       `)
       .in("society_id", societyIds)
       .order("event_date", { ascending: false });
@@ -113,7 +114,7 @@ const MyEvents = () => {
     const uniqueSocieties = Array.from(
       new Map(eventsData.map(e => [e.society.id, e.society])).values()
     );
-    setSocieties(uniqueSocieties);
+    setSocieties(uniqueSocieties as Society[]);
 
     // Batch fetch all CoCs and acceptances for better performance
     const eventIds = eventsData.map(e => e.id);

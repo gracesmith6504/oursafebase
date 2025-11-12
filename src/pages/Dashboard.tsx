@@ -18,6 +18,7 @@ interface SocietyMembership {
     id: string;
     name: string;
     slug: string;
+    logo_url: string | null;
     creator_email: string | null;
     is_verified: boolean;
   };
@@ -52,7 +53,7 @@ const Dashboard = () => {
   const fetchSocieties = async () => {
     const { data, error } = await supabase
       .from("society_members")
-      .select("role, society:societies(id, name, slug, creator_email, is_verified)")
+      .select("role, society:societies(id, name, slug, logo_url, creator_email, is_verified)")
       .eq("user_id", user?.id);
 
     if (error) {

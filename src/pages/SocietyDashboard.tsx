@@ -5,7 +5,8 @@ import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Users, AlertCircle, Shield, ArrowLeft, ChevronRight } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Calendar, Users, AlertCircle, Shield, ArrowLeft, ChevronRight, Settings } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -22,6 +23,7 @@ interface Society {
   id: string;
   name: string;
   slug: string;
+  logo_url: string | null;
   creator_email: string | null;
   is_verified: boolean;
 }
@@ -32,6 +34,7 @@ const SocietyDashboard = () => {
   const { user } = useAuth();
   const [society, setSociety] = useState<Society | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isCreator, setIsCreator] = useState(false);
   const [stats, setStats] = useState({
     upcomingEvents: 0,
     totalMembers: 0,
@@ -51,10 +54,27 @@ const SocietyDashboard = () => {
     }
   }, [society?.id]);
 
+  useEffect(() => {
+    if (user && society) {
+      checkIsCreator();
+    }
+  }, [user, society]);
+
+  const checkIsCreator = async () => {
+    if (!user || !society) return;
+
+    const { data } = await supabase.rpc('is_society_creator', {
+      _user_id: user.id,
+      _society_id: society.id
+    });
+
+    setIsCreator(data || false);
+  };
+
   const fetchSociety = async () => {
     const { data, error } = await supabase
       .from("societies")
-      .select("id, name, slug, creator_email, is_verified")
+      .select("id, name, slug, logo_url, creator_email, is_verified")
       .eq("slug", slug)
       .single();
 
@@ -164,18 +184,37 @@ const SocietyDashboard = () => {
               </BreadcrumbList>
             </Breadcrumb>
 
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <img src={logo} alt="OurSafeBase" className="h-8" />
-              <div>
-                <h1 className="text-xl font-bold flex items-center gap-2">
-                  {society?.name}
-                  {society?.is_verified && <VerifiedBadge size="md" />}
-                </h1>
-                <p className="text-sm text-muted-foreground">Committee Dashboard</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                {society?.logo_url ? (
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={society.logo_url} alt={society.name} />
+                    <AvatarFallback>{society.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <img src={logo} alt="OurSafeBase" className="h-8" />
+                )}
+                <div>
+                  <h1 className="text-xl font-bold flex items-center gap-2">
+                    {society?.name}
+                    {society?.is_verified && <VerifiedBadge size="md" />}
+                  </h1>
+                  <p className="text-sm text-muted-foreground">Committee Dashboard</p>
+                </div>
               </div>
+              {isCreator && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/society/${slug}/settings`)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Button>
+              )}
             </div>
           </div>
         </header>

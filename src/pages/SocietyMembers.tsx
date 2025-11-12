@@ -31,6 +31,7 @@ interface Society {
   id: string;
   name: string;
   slug: string;
+  logo_url: string | null;
   attendee_invite_code: string;
   committee_invite_code: string;
   creator_email: string | null;
@@ -116,7 +117,7 @@ const SocietyMembers = () => {
     // Fetch basic society info (available to all members)
     const { data: basicData, error: basicError } = await supabase
       .from("societies")
-      .select("id, name, slug, creator_email, is_verified, created_at, updated_at")
+      .select("id, name, slug, logo_url, creator_email, is_verified, created_at, updated_at")
       .eq("slug", slug)
       .single();
 

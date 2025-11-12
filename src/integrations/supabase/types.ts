@@ -516,6 +516,7 @@ export type Database = {
           creator_email: string | null
           id: string
           is_verified: boolean
+          logo_url: string | null
           name: string
           slug: string
           updated_at: string | null
@@ -527,6 +528,7 @@ export type Database = {
           creator_email?: string | null
           id?: string
           is_verified?: boolean
+          logo_url?: string | null
           name: string
           slug: string
           updated_at?: string | null
@@ -538,6 +540,7 @@ export type Database = {
           creator_email?: string | null
           id?: string
           is_verified?: boolean
+          logo_url?: string | null
           name?: string
           slug?: string
           updated_at?: string | null
