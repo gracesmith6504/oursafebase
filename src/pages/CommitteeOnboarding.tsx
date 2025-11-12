@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ const CommitteeOnboarding = () => {
   const inviteCode = searchParams.get("invite");
   
   const [displayName, setDisplayName] = useState("");
+  const [countryCode, setCountryCode] = useState("+353");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
@@ -120,7 +122,7 @@ const CommitteeOnboarding = () => {
         .from('profiles')
         .update({
           display_name: displayName,
-          phone_number: phoneNumber,
+          phone_number: `${countryCode}${phoneNumber}`,
           ...(avatarUrl && { avatar_url: avatarUrl })
         })
         .eq('id', user!.id);
@@ -211,15 +213,38 @@ const CommitteeOnboarding = () => {
 
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number *</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+44 7XXX XXXXXX"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                disabled={loading}
-                required
-              />
+              <div className="flex gap-2">
+                <Select value={countryCode} onValueChange={setCountryCode}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="+353">🇮🇪 +353</SelectItem>
+                    <SelectItem value="+44">🇬🇧 +44</SelectItem>
+                    <SelectItem value="+1">🇺🇸 +1</SelectItem>
+                    <SelectItem value="+61">🇦🇺 +61</SelectItem>
+                    <SelectItem value="+33">🇫🇷 +33</SelectItem>
+                    <SelectItem value="+49">🇩🇪 +49</SelectItem>
+                    <SelectItem value="+34">🇪🇸 +34</SelectItem>
+                    <SelectItem value="+39">🇮🇹 +39</SelectItem>
+                    <SelectItem value="+31">🇳🇱 +31</SelectItem>
+                    <SelectItem value="+32">🇧🇪 +32</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="87 123 4567"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/[^\d\s]/g, ''))}
+                  disabled={loading}
+                  required
+                  className="flex-1"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Enter your phone number without the country code
+              </p>
             </div>
 
             <Button
