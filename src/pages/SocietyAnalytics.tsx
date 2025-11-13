@@ -430,65 +430,11 @@ const SocietyAnalytics = () => {
             </Card>
           </div>
 
-          <Tabs defaultValue="growth" className="space-y-4">
+          <Tabs defaultValue="reports" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="growth">Growth</TabsTrigger>
               <TabsTrigger value="reports">Safety</TabsTrigger>
+              <TabsTrigger value="growth">Growth</TabsTrigger>
             </TabsList>
-
-            <TabsContent value="growth" className="space-y-3">
-              <div className="grid gap-3 md:grid-cols-2 w-full">
-                <Card className="w-full overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base md:text-lg">Member Growth</CardTitle>
-                    <CardDescription className="text-xs">Since society creation</CardDescription>
-                  </CardHeader>
-                  <CardContent className="overflow-hidden p-0 pr-3 pb-3">
-                    <ChartContainer
-                      config={{
-                        count: { label: "Members", color: "hsl(var(--primary))" }
-                      }}
-                      className="h-[200px] md:h-[300px] w-full"
-                    >
-                       <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={analytics?.memberGrowth || []} margin={{ left: -30, right: 5, top: 5, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" fontSize={10} />
-                          <YAxis allowDecimals={false} fontSize={10} />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-
-                <Card className="w-full overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base md:text-lg">Event Frequency</CardTitle>
-                    <CardDescription className="text-xs">Since society creation</CardDescription>
-                  </CardHeader>
-                  <CardContent className="overflow-hidden p-0 pr-3 pb-3">
-                    <ChartContainer
-                      config={{
-                        count: { label: "Events", color: "hsl(var(--secondary))" }
-                      }}
-                      className="h-[200px] md:h-[300px] w-full"
-                    >
-                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={analytics?.eventFrequency || []} margin={{ left: -30, right: 5, top: 5, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" fontSize={10} />
-                          <YAxis allowDecimals={false} fontSize={10} />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar dataKey="count" fill="hsl(var(--secondary))" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
 
             <TabsContent value="reports" className="space-y-3">
               <div className="grid gap-3 md:grid-cols-2 w-full">
@@ -581,6 +527,60 @@ const SocietyAnalytics = () => {
                         </span>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="growth" className="space-y-3">
+              <div className="grid gap-3 md:grid-cols-2 w-full">
+                <Card className="w-full overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base md:text-lg">Member Growth</CardTitle>
+                    <CardDescription className="text-xs">Since society creation</CardDescription>
+                  </CardHeader>
+                  <CardContent className="overflow-hidden p-0 pr-3 pb-3">
+                    <ChartContainer
+                      config={{
+                        count: { label: "Members", color: "hsl(var(--primary))" }
+                      }}
+                      className="h-[200px] md:h-[300px] w-full"
+                    >
+                       <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={analytics?.memberGrowth || []} margin={{ left: -30, right: 5, top: 5, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="date" fontSize={10} />
+                          <YAxis allowDecimals={false} fontSize={10} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
+                  </CardContent>
+                </Card>
+
+                <Card className="w-full overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base md:text-lg">Event Frequency</CardTitle>
+                    <CardDescription className="text-xs">Since society creation</CardDescription>
+                  </CardHeader>
+                  <CardContent className="overflow-hidden p-0 pr-3 pb-3">
+                    <ChartContainer
+                      config={{
+                        count: { label: "Events", color: "hsl(var(--secondary))" }
+                      }}
+                      className="h-[200px] md:h-[300px] w-full"
+                    >
+                       <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={analytics?.eventFrequency || []} margin={{ left: -30, right: 5, top: 5, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" fontSize={10} />
+                          <YAxis allowDecimals={false} fontSize={10} />
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                          <Bar dataKey="count" fill="hsl(var(--secondary))" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ChartContainer>
                   </CardContent>
                 </Card>
               </div>
