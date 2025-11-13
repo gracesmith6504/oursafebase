@@ -212,7 +212,7 @@ const Profile = () => {
       // Fetch all user data
       const [profileData, societiesData, eventsData, reportsData, feedbackData, acceptancesData, notesData, bookmarksData] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single(),
-        supabase.from("society_members").select("*, society:societies(*)").eq("user_id", user.id),
+        supabase.from("society_members").select("*, society:societies(id, name, slug, logo_url, created_at, updated_at, is_verified, member_count, creator_email, activation_date, university_name, attendee_invite_code, committee_invite_code)").eq("user_id", user.id),
         supabase.from("events").select("*").eq("created_by", user.id),
         supabase.from("reports").select("*").eq("reporter_email", userEmail),
         supabase.from("event_feedback").select("*").eq("contact_email", userEmail),
@@ -221,12 +221,37 @@ const Profile = () => {
         supabase.from("report_bookmarks").select("*").eq("user_id", user.id)
       ]);
 
+      // Filter out sensitive invite codes based on user role
+      const sanitizedSocieties = societiesData.data?.map((membership: any) => {
+        const { society, role, ...membershipData } = membership;
+        
+        // Only include appropriate invite code based on role
+        const sanitizedSociety = {
+          ...society,
+          attendee_invite_code: role === 'attendee' ? society.attendee_invite_code : undefined,
+          committee_invite_code: role === 'committee' ? society.committee_invite_code : undefined,
+        };
+
+        // Remove undefined fields
+        if (role === 'attendee') {
+          delete sanitizedSociety.committee_invite_code;
+        } else {
+          delete sanitizedSociety.attendee_invite_code;
+        }
+
+        return {
+          ...membershipData,
+          role,
+          society: sanitizedSociety,
+        };
+      });
+
       const exportData = {
         exportDate: new Date().toISOString(),
         userId: user.id,
         userEmail: userEmail,
         profile: profileData.data,
-        societyMemberships: societiesData.data,
+        societyMemberships: sanitizedSocieties,
         eventsCreated: eventsData.data,
         reportsSubmitted: reportsData.data,
         feedbackSubmitted: feedbackData.data,
