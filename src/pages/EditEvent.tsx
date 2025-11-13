@@ -728,7 +728,7 @@ const EditEvent = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-muted pb-24">
+      <div className="min-h-screen bg-muted pb-24 overflow-x-hidden">
         <header className="border-b bg-background">
           <div className="container mx-auto px-4 py-4">
             {/* Breadcrumbs */}
@@ -775,7 +775,7 @@ const EditEvent = () => {
           </div>
         </header>
 
-        <main className="container mx-auto max-w-2xl px-4 py-8">
+        <main className="container mx-auto max-w-2xl px-3 py-4 md:px-4 md:py-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Event Details */}
             <Card>

@@ -82,8 +82,8 @@ const SocietyAttendee = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="min-h-screen bg-background overflow-x-hidden">
+        <div className="container mx-auto max-w-4xl px-3 py-4 md:px-4 md:py-8">
           {loading ? (
             <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />

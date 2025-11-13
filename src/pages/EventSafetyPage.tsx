@@ -377,10 +377,10 @@ const EventSafetyPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-x-hidden">
       {/* Header */}
       <header className="border-b bg-background/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-3 md:px-4 py-6 max-w-full">
           {/* Breadcrumbs */}
           {society && (
             <Breadcrumb className="mb-4">
@@ -455,7 +455,7 @@ const EventSafetyPage = () => {
         </div>
       </header>
 
-      <main className="container mx-auto max-w-4xl px-4 py-8 space-y-6">
+      <main className="container mx-auto max-w-4xl px-3 py-4 md:px-4 md:py-8 space-y-6">
         {/* Important Contacts */}
         {welfareContacts.length > 0 && (
           <Card>
@@ -638,7 +638,7 @@ const EventSafetyPage = () => {
 
       {/* Footer */}
       <footer className="mt-16 border-t bg-muted/50 py-8">
-        <div className="container mx-auto px-4 text-center">
+        <div className="container mx-auto px-3 md:px-4 text-center max-w-full">
           <p className="text-sm text-muted-foreground">
             Powered by <span className="font-semibold">OurSafeBase</span>
           </p>

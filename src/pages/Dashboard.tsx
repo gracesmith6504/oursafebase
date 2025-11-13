@@ -75,7 +75,7 @@ const Dashboard = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
+      <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20 overflow-x-hidden">
         <header className="bg-card/80 backdrop-blur-sm shadow-md border-b border-border/50 rounded-b-3xl sticky top-0 z-50">
           <div className="container mx-auto flex items-center justify-between px-4 py-5">
             <div className="flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => navigate("/")}>
@@ -95,7 +95,7 @@ const Dashboard = () => {
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-12 relative">
+        <main className="container mx-auto px-3 py-8 md:px-4 md:py-12 relative max-w-full">
           <div className="mb-10">
             <h2 className="mb-3 text-3xl font-heading font-bold text-foreground">Your Societies</h2>
             <p className="text-muted-foreground text-base">

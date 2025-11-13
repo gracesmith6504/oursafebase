@@ -300,7 +300,7 @@ const Profile = () => {
       </ProtectedRoute>;
   }
   return <ProtectedRoute>
-      <div className="min-h-screen bg-muted">
+      <div className="min-h-screen bg-muted overflow-x-hidden">
         <header className="border-b bg-background">
           <div className="container mx-auto flex items-center justify-between px-4 py-4">
             <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
@@ -318,7 +318,7 @@ const Profile = () => {
           </div>
         </header>
 
-        <main className="container mx-auto max-w-4xl px-4 py-8">
+        <main className="container mx-auto max-w-4xl px-3 py-4 md:px-4 md:py-8">
           <div className="mb-8">
             <h2 className="mb-2 text-3xl font-bold">Edit Profile</h2>
             <p className="text-muted-foreground">

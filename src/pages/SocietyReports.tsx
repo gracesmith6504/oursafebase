@@ -479,7 +479,7 @@ export default function SocietyReports() {
         </Card>
       </div>;
   }
-  return <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background overflow-x-hidden">
       <header className="border-b bg-background">
         <div className="container mx-auto px-4 py-4">
           {/* Breadcrumbs */}
@@ -516,7 +516,7 @@ export default function SocietyReports() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
+      <main className="container mx-auto px-3 py-4 md:px-4 md:py-8 max-w-6xl">
         <Tabs defaultValue="reports" className="space-y-8">
           <div className="bg-card rounded-xl border shadow-sm p-1.5">
             <TabsList className="grid w-full grid-cols-3 h-auto bg-transparent gap-1">

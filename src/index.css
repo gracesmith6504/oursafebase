@@ -132,11 +132,13 @@ All colors MUST be HSL.
     background-image: var(--pattern-dots);
     background-size: 24px 24px;
     background-position: 0 0;
+    overflow-x: hidden;
   }
   
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 }
 

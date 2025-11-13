@@ -223,7 +223,7 @@ const SocietyCodesOfConduct = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-muted">
+      <div className="min-h-screen bg-muted overflow-x-hidden">
         <header className="border-b bg-background">
           <div className="container mx-auto px-4 py-4">
             {/* Breadcrumbs */}
@@ -260,7 +260,7 @@ const SocietyCodesOfConduct = () => {
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-3 py-4 md:px-4 md:py-8 max-w-full">
           {cocs.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">

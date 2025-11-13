@@ -168,7 +168,7 @@ const SocietyDashboard = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-muted">
+      <div className="min-h-screen bg-muted overflow-x-hidden">
         <header className="border-b bg-background">
           <div className="container mx-auto px-4 py-4">
             {/* Breadcrumbs */}
@@ -221,7 +221,7 @@ const SocietyDashboard = () => {
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-8">
+        <main className="container mx-auto px-3 py-4 md:px-4 md:py-8 max-w-full">
           <div className="grid gap-6 md:grid-cols-2">
             <Card className="cursor-pointer transition-all hover:shadow-lg" onClick={() => navigate(`/society/${slug}/reports`)}>
               <CardHeader className="relative">

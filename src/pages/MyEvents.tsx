@@ -203,7 +203,7 @@ const MyEvents = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <header className="border-b bg-background">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
@@ -218,7 +218,7 @@ const MyEvents = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
+      <main className="container mx-auto px-3 py-4 md:px-4 md:py-8 max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">My Events</h1>
           <p className="text-muted-foreground mt-1">
