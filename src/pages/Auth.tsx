@@ -675,12 +675,9 @@ const Auth = () => {
                   {inviteCode && societyInfo ? <div className="text-center">
                       <p className="mb-2">You have been invited to join</p>
                       <p className="font-bold text-lg text-foreground">{societyInfo.name}</p>
-                      {societyInfo.role === "committee" && <>
-                          <p className="text-sm mt-1">as a committee member</p>
-                          <p className="text-xs mt-2 text-muted-foreground">
-                            You'll be asked to provide your phone number for safety purposes
-                          </p>
-                        </>}
+                      {societyInfo.role === "committee" && (
+                        <p className="text-sm mt-1">as a committee member</p>
+                      )}
                     </div> : inviteCode ? "You're joining a society. Sign in or create an account to continue." : "Create safer events for your student society"}
                 </CardDescription>
               </CardHeader>
