@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Copy, Check, Bell, QrCode, ChevronRight, Search } from "lucide-react";
+import { ArrowLeft, Copy, Check, Bell, QrCode, ChevronRight, Search, RefreshCw } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -66,6 +66,9 @@ const SocietyMembers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreator, setIsCreator] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
+  const [regeneratingCommittee, setRegeneratingCommittee] = useState(false);
+  const [regeneratingAttendee, setRegeneratingAttendee] = useState(false);
+  const [confirmRegenerateDialog, setConfirmRegenerateDialog] = useState<'committee' | 'attendee' | null>(null);
 
   const committeeInviteUrl = society ? `${getAppUrl()}/invite/committee/${society.committee_invite_code}` : "";
   const attendeeInviteUrl = society ? `${getAppUrl()}/invite/attendee/${society.attendee_invite_code}` : "";
@@ -215,6 +218,48 @@ const SocietyMembers = () => {
     setMemberToRemove(null);
   };
 
+  const generateInviteCode = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  const handleRegenerateCode = async (type: 'committee' | 'attendee') => {
+    if (!society) return;
+
+    const newCode = generateInviteCode();
+    const field = type === 'committee' ? 'committee_invite_code' : 'attendee_invite_code';
+
+    if (type === 'committee') {
+      setRegeneratingCommittee(true);
+    } else {
+      setRegeneratingAttendee(true);
+    }
+
+    const { error } = await supabase
+      .from("societies")
+      .update({ [field]: newCode })
+      .eq("id", society.id);
+
+    if (error) {
+      toast.error(`Failed to regenerate ${type} invite code`);
+      console.error("Error regenerating code:", error);
+    } else {
+      toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} invite code regenerated successfully`);
+      setSociety({ ...society, [field]: newCode });
+    }
+
+    if (type === 'committee') {
+      setRegeneratingCommittee(false);
+    } else {
+      setRegeneratingAttendee(false);
+    }
+    setConfirmRegenerateDialog(null);
+  };
+
   if (loading) {
     return (
       <ProtectedRoute>
@@ -286,6 +331,16 @@ const SocietyMembers = () => {
                   <Button onClick={() => setCommitteeQrDialogOpen(true)} variant="outline" size="icon">
                     <QrCode className="h-4 w-4" />
                   </Button>
+                  {isCreator && (
+                    <Button 
+                      onClick={() => setConfirmRegenerateDialog('committee')} 
+                      variant="outline" 
+                      size="icon"
+                      disabled={regeneratingCommittee}
+                    >
+                      <RefreshCw className={`h-4 w-4 ${regeneratingCommittee ? 'animate-spin' : ''}`} />
+                    </Button>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
@@ -315,6 +370,16 @@ const SocietyMembers = () => {
                   <Button onClick={() => setQrDialogOpen(true)} variant="outline" size="icon">
                     <QrCode className="h-4 w-4" />
                   </Button>
+                  {isCreator && (
+                    <Button 
+                      onClick={() => setConfirmRegenerateDialog('attendee')} 
+                      variant="outline" 
+                      size="icon"
+                      disabled={regeneratingAttendee}
+                    >
+                      <RefreshCw className={`h-4 w-4 ${regeneratingAttendee ? 'animate-spin' : ''}`} />
+                    </Button>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
@@ -505,6 +570,24 @@ const SocietyMembers = () => {
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={handleRemoveMember} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                 Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={!!confirmRegenerateDialog} onOpenChange={(open) => !open && setConfirmRegenerateDialog(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Regenerate Invite Code?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to regenerate the {confirmRegenerateDialog} invite code? 
+                The current invite link will be invalidated immediately, and anyone with the old link will no longer be able to use it to join.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => confirmRegenerateDialog && handleRegenerateCode(confirmRegenerateDialog)}>
+                Regenerate Code
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
