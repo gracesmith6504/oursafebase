@@ -212,7 +212,7 @@ const Profile = () => {
       // Fetch all user data
       const [profileData, societiesData, eventsData, reportsData, feedbackData, acceptancesData, notesData, bookmarksData] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single(),
-        supabase.from("society_members").select("*, society:societies(id, name, slug, logo_url, created_at, updated_at, is_verified, member_count, creator_email, activation_date, university_name, attendee_invite_code, committee_invite_code)").eq("user_id", user.id),
+        supabase.from("society_members").select("role, joined_at, email_notifications_enabled, society:societies(name)").eq("user_id", user.id),
         supabase.from("events").select("*").eq("created_by", user.id),
         supabase.from("reports").select("*").eq("reporter_email", userEmail),
         supabase.from("event_feedback").select("*").eq("contact_email", userEmail),
@@ -221,43 +221,68 @@ const Profile = () => {
         supabase.from("report_bookmarks").select("*").eq("user_id", user.id)
       ]);
 
-      // Filter out sensitive invite codes based on user role
-      const sanitizedSocieties = societiesData.data?.map((membership: any) => {
-        const { society, role, ...membershipData } = membership;
-        
-        // Only include appropriate invite code based on role
-        const sanitizedSociety = {
-          ...society,
-          attendee_invite_code: role === 'attendee' ? society.attendee_invite_code : undefined,
-          committee_invite_code: role === 'committee' ? society.committee_invite_code : undefined,
-        };
+      // Sanitize data to include only user's personal information
+      const sanitizedSocieties = societiesData.data?.map((membership: any) => ({
+        society_name: membership.society?.name,
+        role: membership.role,
+        joined_at: membership.joined_at,
+        email_notifications_enabled: membership.email_notifications_enabled,
+      }));
 
-        // Remove undefined fields
-        if (role === 'attendee') {
-          delete sanitizedSociety.committee_invite_code;
-        } else {
-          delete sanitizedSociety.attendee_invite_code;
-        }
+      const sanitizedEvents = eventsData.data?.map((event: any) => ({
+        title: event.title,
+        event_date: event.event_date,
+        event_end_date: event.event_end_date,
+        location: event.location,
+        status: event.status,
+        created_at: event.created_at,
+      }));
 
-        return {
-          ...membershipData,
-          role,
-          society: sanitizedSociety,
-        };
-      });
+      const sanitizedReports = reportsData.data?.map((report: any) => ({
+        concern_type: report.concern_type,
+        submitted_at: report.submitted_at,
+        status: report.status,
+        is_anonymous: report.is_anonymous,
+      }));
+
+      const sanitizedFeedback = feedbackData.data?.map((feedback: any) => ({
+        felt_safe: feedback.felt_safe,
+        improvements: feedback.improvements,
+        submitted_at: feedback.submitted_at,
+        is_anonymous: feedback.is_anonymous,
+      }));
+
+      const sanitizedAcceptances = acceptancesData.data?.map((acceptance: any) => ({
+        accepted_at: acceptance.accepted_at,
+        accepted_version: acceptance.accepted_version,
+      }));
+
+      const sanitizedNotes = notesData.data?.map((note: any) => ({
+        content: note.content,
+        tags: note.tags,
+        is_pinned: note.is_pinned,
+        created_at: note.created_at,
+        updated_at: note.updated_at,
+      }));
 
       const exportData = {
         exportDate: new Date().toISOString(),
-        userId: user.id,
         userEmail: userEmail,
-        profile: profileData.data,
+        dataDescription: "This export contains your personal data and activity only. It does not include other members' information, internal system IDs, or sensitive society details.",
+        profile: {
+          display_name: profileData.data?.display_name,
+          phone_number: profileData.data?.phone_number,
+          avatar_url: profileData.data?.avatar_url,
+          created_at: profileData.data?.created_at,
+          last_login_at: profileData.data?.last_login_at,
+        },
         societyMemberships: sanitizedSocieties,
-        eventsCreated: eventsData.data,
-        reportsSubmitted: reportsData.data,
-        feedbackSubmitted: feedbackData.data,
-        codeAcceptances: acceptancesData.data,
-        eventNotes: notesData.data,
-        reportBookmarks: bookmarksData.data,
+        eventsCreated: sanitizedEvents,
+        reportsSubmitted: sanitizedReports,
+        feedbackSubmitted: sanitizedFeedback,
+        codeAcceptances: sanitizedAcceptances,
+        eventNotes: sanitizedNotes,
+        reportBookmarksCount: bookmarksData.data?.length || 0,
       };
 
       // Create JSON blob and download
@@ -458,7 +483,7 @@ const Profile = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Export includes: profile, society memberships, events created, reports, feedback, code acceptances, and notes.
+                  Export includes your personal data and activity only. Does not include other members' information, internal system IDs, or sensitive society details.
                 </p>
                 <Button onClick={handleExportData} disabled={exporting} variant="outline">
                   <Download className="mr-2 h-4 w-4" />
