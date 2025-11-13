@@ -209,7 +209,7 @@ const EventSummary = () => {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-muted">
+      <div className="min-h-screen bg-muted overflow-x-hidden">
         <header className="border-b bg-background">
           <div className="container mx-auto px-4 py-4">
             {/* Breadcrumbs */}
@@ -265,7 +265,7 @@ const EventSummary = () => {
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-8 space-y-8">
+        <main className="container mx-auto px-3 py-4 md:px-4 md:py-8 space-y-8 max-w-full">
           {/* Key Metrics */}
           <section>
             <h2 className="text-xl font-semibold mb-4">Key Metrics</h2>
@@ -336,19 +336,19 @@ const EventSummary = () => {
           {(severityData.length > 0 || safetyData.length > 0) && (
             <section>
               <h2 className="text-xl font-semibold mb-4">Data Insights</h2>
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-6 md:grid-cols-2 w-full">
                 {severityData.length > 0 && (
-                  <Card>
+                  <Card className="w-full overflow-hidden">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <AlertTriangle className="h-5 w-5" />
                         Reports by Severity
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <ChartContainer config={{}} className="h-[250px]">
+                    <CardContent className="p-0 pr-3 pb-3">
+                      <ChartContainer config={{}} className="h-[250px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
+                          <PieChart margin={{ left: 0, right: 0, top: 5, bottom: 5 }}>
                             <Pie
                               data={severityData}
                               cx="50%"
@@ -372,17 +372,17 @@ const EventSummary = () => {
                 )}
 
                 {safetyData.length > 0 && (
-                  <Card>
+                  <Card className="w-full overflow-hidden">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <TrendingUp className="h-5 w-5" />
                         Safety Ratings Distribution
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <ChartContainer config={{}} className="h-[250px]">
+                    <CardContent className="p-0 pr-3 pb-3">
+                      <ChartContainer config={{}} className="h-[250px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={safetyData}>
+                          <BarChart data={safetyData} margin={{ left: -30, right: 5, top: 5, bottom: 5 }}>
                             <XAxis dataKey="name" fontSize={12} />
                             <YAxis fontSize={12} />
                             <ChartTooltip content={<ChartTooltipContent />} />
