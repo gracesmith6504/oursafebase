@@ -243,7 +243,7 @@ const SocietyDashboard = () => {
               <CardHeader>
                 <Calendar className="mb-2 h-10 w-10 text-primary" />
                 <CardTitle>Events</CardTitle>
-                <CardDescription>Create and manage your society events</CardDescription>
+                <CardDescription>Create and manage your society events and trips</CardDescription>
               </CardHeader>
               <CardContent>
                 <Button className="w-full">Manage Events</Button>
