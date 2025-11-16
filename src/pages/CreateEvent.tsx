@@ -1113,7 +1113,7 @@ const CreateEvent = () => {
                         {availableCoCs.map((coc) => (
                           <option key={coc.id} value={coc.id}>
                             {coc.name || `Version ${coc.version}`}
-                            {coc.is_active ? " (Active)" : ""}
+                            {coc.is_active ? " (Default)" : ""}
                           </option>
                         ))}
                       </select>

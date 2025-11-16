@@ -122,11 +122,10 @@ const SocietyCodesOfConduct = () => {
       .eq("id", cocId);
 
     if (error) {
-      toast.error("Failed to set active Code of Conduct");
+      toast.error("Failed to set default Code of Conduct");
       return;
     }
 
-    toast.success("Code of Conduct set as active");
     fetchSocietyAndCoCs();
   };
 
@@ -286,7 +285,7 @@ const SocietyCodesOfConduct = () => {
                             {coc.name || `Template v${coc.version}`}
                           </CardTitle>
                           {coc.is_active && (
-                            <Badge variant="default">Active</Badge>
+                            <Badge variant="default">Default</Badge>
                           )}
                         </div>
                         <CardDescription>
@@ -340,7 +339,7 @@ const SocietyCodesOfConduct = () => {
                         variant="outline"
                         onClick={() => handleSetActive(coc.id)}
                       >
-                        Set as Active
+                        Set as Default
                       </Button>
                     )}
                   </CardContent>
