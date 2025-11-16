@@ -18,6 +18,7 @@ import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EventQRCodeDialog } from "@/components/EventQRCodeDialog";
 import { EventShareCard } from "@/components/EventShareCard";
+import { EventSafetyPageSkeleton } from "@/components/EventSafetyPageSkeleton";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -147,30 +148,61 @@ const EventSafetyPage = () => {
       if (!eventData) throw new Error("Event not found");
       setEvent(eventData);
 
-      // Fetch society to get slug
-      const { data: societyData } = await supabase
-        .from("societies")
-        .select("slug")
-        .eq("id", eventData.society_id)
-        .single();
-      
-      if (societyData) {
-        setSociety(societyData);
+      // Fetch all data in parallel for faster loading
+      const [
+        societyResult,
+        contactsResult,
+        emergencyResult,
+        eventCocResult,
+        templateCocResult
+      ] = await Promise.all([
+        // Fetch society slug
+        supabase
+          .from("societies")
+          .select("slug")
+          .eq("id", eventData.society_id)
+          .single(),
+        
+        // Fetch event contacts
+        supabase
+          .from("event_contacts")
+          .select("id, role, contact_name, contact_phone, contact_avatar_url, display_order")
+          .eq("event_id", eventData.id)
+          .order("display_order"),
+        
+        // Fetch emergency info
+        supabase
+          .from("emergency_info")
+          .select("*")
+          .eq("event_id", eventData.id)
+          .maybeSingle(),
+        
+        // Fetch event-specific CoC
+        supabase
+          .from("code_of_conduct")
+          .select("id, name, content, file_url, version")
+          .eq("event_id", eventData.id)
+          .eq("is_active", true)
+          .maybeSingle(),
+        
+        // Fetch template CoC (in parallel, we'll use it if needed)
+        supabase
+          .from("code_of_conduct")
+          .select("id, name, content, file_url, version")
+          .eq("society_id", eventData.society_id)
+          .is("event_id", null)
+          .eq("is_active", true)
+          .maybeSingle()
+      ]);
+
+      // Process society data
+      if (societyResult.data) {
+        setSociety(societyResult.data);
       }
 
-      // Fetch event contacts using snapshot fields including avatar (no join needed for public page)
-      const { data: contactsData, error: contactsError } = await supabase
-        .from("event_contacts")
-        .select("id, role, contact_name, contact_phone, contact_avatar_url, display_order")
-        .eq("event_id", eventData.id)
-        .order("display_order");
-
-      if (contactsError) {
-        console.error("Error fetching contacts:", contactsError);
-      }
-
-      if (contactsData) {
-        const processedContacts = contactsData.map((contact: any) => ({
+      // Process contacts
+      if (contactsResult.data) {
+        const processedContacts = contactsResult.data.map((contact: any) => ({
           id: contact.id,
           name: contact.contact_name || "Anonymous",
           phone: contact.contact_phone,
@@ -180,41 +212,15 @@ const EventSafetyPage = () => {
         setWelfareContacts(processedContacts);
       }
 
-      // Fetch emergency info
-      const { data: emergencyData } = await supabase
-        .from("emergency_info")
-        .select("*")
-        .eq("event_id", eventData.id)
-        .single();
-
-      if (emergencyData) {
-        setEmergencyInfo(emergencyData);
+      // Process emergency info
+      if (emergencyResult.data) {
+        setEmergencyInfo(emergencyResult.data);
       }
 
-      // Fetch code of conduct - only event-specific for display
-      let { data: cocData } = await supabase
-        .from("code_of_conduct")
-        .select("id, name, content, file_url, version")
-        .eq("event_id", eventData.id)
-        .eq("is_active", true)
-        .maybeSingle();
-
-      // Track if event has event-level CoC
-      setHasEventLevelCoC(!!cocData);
-
-      // If no event-specific CoC, optionally show active template content for display only
-      if (!cocData) {
-        const { data: templateCocData } = await supabase
-          .from("code_of_conduct")
-          .select("id, name, content, file_url, version")
-          .eq("society_id", eventData.society_id)
-          .is("event_id", null)
-          .eq("is_active", true)
-          .maybeSingle();
-        
-        cocData = templateCocData;
-      }
-
+      // Process Code of Conduct (prefer event-specific, fall back to template)
+      const cocData = eventCocResult.data || templateCocResult.data;
+      setHasEventLevelCoC(!!eventCocResult.data);
+      
       if (cocData) {
         setCodeOfConduct(cocData);
       }
@@ -308,11 +314,7 @@ const EventSafetyPage = () => {
   };
 
   if (authLoading || loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <EventSafetyPageSkeleton />;
   }
 
   // Show CoC dialog if required
