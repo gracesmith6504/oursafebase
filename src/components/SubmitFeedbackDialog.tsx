@@ -16,42 +16,46 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle, ArrowLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-const feedbackSchema = z.object({
-  feltSafeComfortable: z.enum(["yes_completely", "mostly", "few_issues", "no"], {
-    required_error: "Please select an option"
-  }),
-  improvements: z.string()
-    .trim()
-    .max(2000, "Improvements must be less than 2000 characters")
-    .optional()
-    .or(z.literal("")),
-  isAnonymous: z.boolean(),
-  name: z.string()
-    .trim()
-    .max(100, "Name must be less than 100 characters")
-    .optional()
-    .or(z.literal("")),
-  email: z.string()
-    .trim()
-    .email("Please enter a valid email")
-    .max(255, "Email must be less than 255 characters")
-    .optional()
-    .or(z.literal("")),
-  countryCode: z.string().optional().or(z.literal("")),
-  phone: z.string()
-    .trim()
-    .regex(/^$|^[0-9\s\+\-\(\)]{7,20}$/, "Phone must be 7-20 characters with only numbers and symbols")
-    .optional()
-    .or(z.literal(""))
-}).refine(data => {
-  if (!data.isAnonymous) {
-    return data.email && data.email.length > 0;
-  }
-  return true;
-}, {
-  message: "Please provide an email so we can follow up with you",
-  path: ["email"]
-});
+const feedbackSchema = z
+  .object({
+    feltSafeComfortable: z.enum(["yes_completely", "mostly", "few_issues", "no"], {
+      required_error: "Please select an option",
+    }),
+    improvements: z
+      .string()
+      .trim()
+      .max(2000, "Improvements must be less than 2000 characters")
+      .optional()
+      .or(z.literal("")),
+    isAnonymous: z.boolean(),
+    name: z.string().trim().max(100, "Name must be less than 100 characters").optional().or(z.literal("")),
+    email: z
+      .string()
+      .trim()
+      .email("Please enter a valid email")
+      .max(255, "Email must be less than 255 characters")
+      .optional()
+      .or(z.literal("")),
+    countryCode: z.string().optional().or(z.literal("")),
+    phone: z
+      .string()
+      .trim()
+      .regex(/^$|^[0-9\s\+\-\(\)]{7,20}$/, "Phone must be 7-20 characters with only numbers and symbols")
+      .optional()
+      .or(z.literal("")),
+  })
+  .refine(
+    (data) => {
+      if (!data.isAnonymous) {
+        return data.email && data.email.length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Please provide an email so we can follow up with you",
+      path: ["email"],
+    },
+  );
 type FeedbackFormData = z.infer<typeof feedbackSchema>;
 interface SubmitFeedbackDialogProps {
   open: boolean;
@@ -60,32 +64,35 @@ interface SubmitFeedbackDialogProps {
   eventTitle: string;
   onOpenReportDialog?: () => void;
 }
-const COMFORT_OPTIONS = [{
-  value: "yes_completely",
-  label: "Yes, completely"
-}, {
-  value: "mostly",
-  label: "Mostly"
-}, {
-  value: "few_issues",
-  label: "A few issues"
-}, {
-  value: "no",
-  label: "No"
-}];
+const COMFORT_OPTIONS = [
+  {
+    value: "yes_completely",
+    label: "Yes, completely",
+  },
+  {
+    value: "mostly",
+    label: "Mostly",
+  },
+  {
+    value: "few_issues",
+    label: "A few issues",
+  },
+  {
+    value: "no",
+    label: "No",
+  },
+];
 export function SubmitFeedbackDialog({
   open,
   onOpenChange,
   eventId,
   eventTitle,
-  onOpenReportDialog
+  onOpenReportDialog,
 }: SubmitFeedbackDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { user } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const form = useForm<FeedbackFormData>({
     resolver: zodResolver(feedbackSchema),
     defaultValues: {
@@ -95,8 +102,8 @@ export function SubmitFeedbackDialog({
       name: "",
       email: user?.email || "",
       countryCode: "+353",
-      phone: ""
-    }
+      phone: "",
+    },
   });
   const isAnonymous = form.watch("isAnonymous");
 
@@ -109,24 +116,22 @@ export function SubmitFeedbackDialog({
     setIsSubmitting(true);
     try {
       // User is always authenticated; is_anonymous controls contact visibility
-      const fullPhone = data.isAnonymous ? null : (data.phone ? `${data.countryCode || '+353'}${data.phone}` : null);
-      const {
-        error
-      } = await supabase.from("event_feedback").insert({
+      const fullPhone = data.isAnonymous ? null : data.phone ? `${data.countryCode || "+353"}${data.phone}` : null;
+      const { error } = await supabase.from("event_feedback").insert({
         event_id: eventId,
         felt_safe: data.feltSafeComfortable,
         improvements: data.improvements || null,
         is_anonymous: data.isAnonymous,
         contact_name: data.isAnonymous ? null : data.name || null,
         contact_email: data.isAnonymous ? null : data.email || null,
-        contact_phone: fullPhone
+        contact_phone: fullPhone,
       });
       if (error) throw error;
       setShowSuccess(true);
       form.reset();
       toast({
         title: "Feedback submitted",
-        description: "Thank you for helping us improve!"
+        description: "Thank you for helping us improve!",
       });
       setTimeout(() => {
         setShowSuccess(false);
@@ -137,7 +142,7 @@ export function SubmitFeedbackDialog({
       toast({
         title: "Error",
         description: "Failed to submit feedback. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -150,64 +155,98 @@ export function SubmitFeedbackDialog({
       onOpenChange(false);
     }
   };
-  return <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] p-0 [&>button[aria-label='Close']]:hidden" onPointerDownOutside={e => e.preventDefault()} onEscapeKeyDown={e => e.preventDefault()}>
-        {showSuccess ? <div className="flex flex-col items-center justify-center py-12 space-y-4 px-6">
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent
+        className="sm:max-w-[600px] max-h-[90vh] p-0 [&>button[aria-label='Close']]:hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
+        {showSuccess ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-4 px-6">
             <CheckCircle className="w-16 h-16 text-green-500" />
             <h2 className="text-2xl font-bold">Thank you for your feedback! 🎉</h2>
             <p className="text-center text-muted-foreground">
               Your feedback helps us create safer events for everyone.
             </p>
-          </div> : <>
+          </div>
+        ) : (
+          <>
             <div className="flex items-center justify-between p-6 pb-4 border-b">
               <h2 className="text-2xl font-bold">Event Feedback</h2>
-              
             </div>
 
             <ScrollArea className="max-h-[calc(90vh-180px)] px-6">
               <div className="space-y-4 pb-4">
                 <p className="text-sm text-muted-foreground">
                   This is just feedback for the event - if something serious happened, please use the{" "}
-                  <button type="button" onClick={() => {
-                onOpenChange(false);
-                onOpenReportDialog?.();
-              }} className="text-primary hover:underline font-medium">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onOpenChange(false);
+                      onOpenReportDialog?.();
+                    }}
+                    className="text-primary hover:underline font-medium"
+                  >
                     Report an Incident form
-                  </button>.
+                  </button>
+                  .
                 </p>
 
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <FormField control={form.control} name="feltSafeComfortable" render={({
-                  field
-                }) => <FormItem className="space-y-2">
-                          <FormLabel className="text-base font-medium">Did you feel safe and comfortable during the event? *</FormLabel>
+                    <FormField
+                      control={form.control}
+                      name="feltSafeComfortable"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="text-base font-medium">
+                            Did you feel safe and comfortable during the event? *
+                          </FormLabel>
                           <FormControl>
                             <RadioGroup onValueChange={field.onChange} value={field.value} className="space-y-1.5">
-                              {COMFORT_OPTIONS.map(option => <div key={option.value} className="flex items-center space-x-3 p-2.5 rounded-md border hover:bg-accent/50 cursor-pointer transition-colors" onClick={() => field.onChange(option.value)}>
+                              {COMFORT_OPTIONS.map((option) => (
+                                <div
+                                  key={option.value}
+                                  className="flex items-center space-x-3 p-2.5 rounded-md border hover:bg-accent/50 cursor-pointer transition-colors"
+                                  onClick={() => field.onChange(option.value)}
+                                >
                                   <RadioGroupItem value={option.value} />
                                   <Label htmlFor={option.value} className="flex-1 cursor-pointer text-sm">
                                     {option.label}
                                   </Label>
-                                </div>)}
+                                </div>
+                              ))}
                             </RadioGroup>
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
+                        </FormItem>
+                      )}
+                    />
 
-                    <FormField control={form.control} name="improvements" render={({
-                  field
-                }) => <FormItem>
-                          <FormLabel>Anything we could do better next time?</FormLabel>
-                           <FormControl>
-                            <Textarea placeholder="Share your thoughts..." className="min-h-[80px] resize-none mx-0.5" {...field} />
+                    <FormField
+                      control={form.control}
+                      name="improvements"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Any suggestions to improve the event overall?</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Share your thoughts..."
+                              className="min-h-[80px] resize-none mx-0.5"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
-                        </FormItem>} />
+                        </FormItem>
+                      )}
+                    />
 
-                    <FormField control={form.control} name="isAnonymous" render={({
-                  field
-                }) => <FormItem className="flex items-center justify-between rounded-lg border p-4">
+                    <FormField
+                      control={form.control}
+                      name="isAnonymous"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
                             <FormLabel className="text-base">Submit Anonymously</FormLabel>
                             <div className="text-sm text-muted-foreground">
@@ -217,43 +256,56 @@ export function SubmitFeedbackDialog({
                           <FormControl>
                             <Switch checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
-                        </FormItem>} />
+                        </FormItem>
+                      )}
+                    />
 
-                    {!isAnonymous && <div className="space-y-3 p-4 bg-muted rounded-lg">
+                    {!isAnonymous && (
+                      <div className="space-y-3 p-4 bg-muted rounded-lg">
                         <p className="text-sm font-medium">Contact Information</p>
-                        
-                        <FormField control={form.control} name="name" render={({
-                    field
-                  }) => <FormItem>
+
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
                               <FormLabel>Name (optional)</FormLabel>
                               <FormControl>
                                 <Input placeholder="Your name" {...field} />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>} />
+                            </FormItem>
+                          )}
+                        />
 
-                        <FormField control={form.control} name="email" render={({
-                    field
-                  }) => <FormItem>
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
                               <FormLabel>Email</FormLabel>
                               <FormControl>
-                                <Input 
-                                  type="email" 
+                                <Input
+                                  type="email"
                                   placeholder="your.email@example.com"
                                   disabled={true}
                                   className="bg-muted cursor-not-allowed"
-                                  {...field} 
+                                  {...field}
                                 />
                               </FormControl>
                               <FormMessage />
-                            </FormItem>} />
+                            </FormItem>
+                          )}
+                        />
 
                         <div className="space-y-2">
                           <FormLabel>Phone Number (optional)</FormLabel>
                           <div className="flex gap-2">
-                            <FormField control={form.control} name="countryCode" render={({
-                              field
-                            }) => <FormItem className="w-[120px]">
+                            <FormField
+                              control={form.control}
+                              name="countryCode"
+                              render={({ field }) => (
+                                <FormItem className="w-[120px]">
                                   <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                       <SelectTrigger>
@@ -274,23 +326,26 @@ export function SubmitFeedbackDialog({
                                     </SelectContent>
                                   </Select>
                                   <FormMessage />
-                                </FormItem>} />
-                            
-                            <FormField control={form.control} name="phone" render={({
-                              field
-                            }) => <FormItem className="flex-1">
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="phone"
+                              render={({ field }) => (
+                                <FormItem className="flex-1">
                                   <FormControl>
-                                    <Input 
-                                      type="tel" 
-                                      placeholder="87 123 4567"
-                                      {...field} 
-                                    />
+                                    <Input type="tel" placeholder="87 123 4567" {...field} />
                                   </FormControl>
                                   <FormMessage />
-                                </FormItem>} />
+                                </FormItem>
+                              )}
+                            />
                           </div>
                         </div>
-                      </div>}
+                      </div>
+                    )}
                   </form>
                 </Form>
               </div>
@@ -301,7 +356,9 @@ export function SubmitFeedbackDialog({
                 {isSubmitting ? "Submitting..." : "Submit Feedback"}
               </Button>
             </div>
-          </>}
+          </>
+        )}
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 }
