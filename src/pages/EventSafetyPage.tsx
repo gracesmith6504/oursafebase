@@ -616,53 +616,30 @@ const EventSafetyPage = () => {
 
         {/* Code of Conduct - Bottom Section */}
         {codeOfConduct && (
-          <Card className="border bg-muted/30 mt-8">
-            <CardContent className="p-4">
-              {codeOfConduct.file_url ? (
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="p-2.5 bg-primary/10 rounded-lg shrink-0">
-                      <Shield className="h-5 w-5 text-primary" />
-                    </div>
-                    <p className="font-semibold text-sm sm:text-base truncate">Code of Conduct</p>
+          <Card 
+            className="border bg-muted/30 mt-8 cursor-pointer hover:bg-muted/40 transition-colors"
+            onClick={() => {
+              if (codeOfConduct.file_url && codeOfConduct.id) {
+                window.open(`/code-of-conduct/${codeOfConduct.id}`, '_blank');
+              } else if (codeOfConduct.file_url) {
+                window.open(codeOfConduct.file_url, '_blank');
+              } else {
+                setShowViewCoCDialog(true);
+              }
+            }}
+          >
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                  <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                    <Shield className="h-4 w-4 text-primary" />
                   </div>
-                  <Button 
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      if (codeOfConduct.id) {
-                        window.open(`/code-of-conduct/${codeOfConduct.id}`, '_blank');
-                      } else {
-                        window.open(codeOfConduct.file_url, '_blank');
-                      }
-                    }}
-                    className="shrink-0 hover:bg-primary/10 h-9 px-3"
-                  >
-                    <span className="hidden sm:inline">View</span>
-                    <ArrowRight className="h-4 w-4 sm:ml-1" />
-                  </Button>
+                  <p className="font-medium text-sm truncate">Code of Conduct</p>
                 </div>
-              ) : (
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="p-2.5 bg-primary/10 rounded-lg shrink-0">
-                      <Shield className="h-5 w-5 text-primary" />
-                    </div>
-                    <p className="font-semibold text-sm sm:text-base truncate">Code of Conduct</p>
-                  </div>
-                  <Button 
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowViewCoCDialog(true)}
-                    className="shrink-0 hover:bg-primary/10 h-9 px-3"
-                  >
-                    <span className="hidden sm:inline">View</span>
-                    <ArrowRight className="h-4 w-4 sm:ml-1" />
-                  </Button>
-                </div>
-              )}
+                <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </div>
               {!hasEventLevelCoC && isCommittee && (
-                <div className="mt-2 p-2 bg-muted/50 rounded-md">
+                <div className="mt-2 p-2 bg-muted/50 rounded-md" onClick={(e) => e.stopPropagation()}>
                   <p className="text-xs text-muted-foreground">
                     No event-specific CoC.{" "}
                     <Button
