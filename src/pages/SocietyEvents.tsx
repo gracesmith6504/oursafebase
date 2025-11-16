@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
-import { ArrowLeft, Plus, Calendar, FileText, MessageSquare, Eye, Shield, Share2, Edit, BarChart, QrCode, ChevronRight } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, FileText, MessageSquare, Eye, Shield, Share2, Edit, BarChart, QrCode, ChevronRight, Copy } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -351,6 +351,15 @@ const SocietyEvents = () => {
                         >
                           <BarChart className="mr-2 h-4 w-4" />
                           Event Summary
+                        </Button>
+                        
+                        <Button 
+                          className="w-full" 
+                          variant="outline"
+                          onClick={() => navigate(`/society/${slug}/events/${event.id}/duplicate`)}
+                        >
+                          <Copy className="mr-2 h-4 w-4" />
+                          Duplicate
                         </Button>
                         
                         {getEventStatus(event.event_date) !== 'past' && (
