@@ -178,6 +178,24 @@ export function SubmitFeedbackDialog({
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
                       control={form.control}
+                      name="improvements"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Any suggestions to improve the event overall?</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Share your thoughts..."
+                              className="min-h-[80px] resize-none mx-0.5"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
                       name="feltSafeComfortable"
                       render={({ field }) => (
                         <FormItem className="space-y-2">
@@ -205,23 +223,6 @@ export function SubmitFeedbackDialog({
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="improvements"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Any suggestions to improve the event overall?</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Share your thoughts..."
-                              className="min-h-[80px] resize-none mx-0.5"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
 
                     <FormField
                       control={form.control}
