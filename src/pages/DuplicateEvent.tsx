@@ -386,29 +386,30 @@ const DuplicateEvent = () => {
       // Fetch available society CoCs
       const { data: societyCoCs } = await supabase
         .from("code_of_conduct")
-        .select("*")
+        .select("id, version, content, file_url, name, is_active")
         .eq("society_id", societyData.id)
         .is("event_id", null)
         .order("version", { ascending: false });
 
       setAvailableCoCs(societyCoCs || []);
 
-      // Pre-select the CoC if it matches a society CoC
-      if (eventCoCData && societyCoCs) {
-        const matchingCoC = societyCoCs.find(
-          (coc) => coc.name === eventCoCData.name || coc.version === eventCoCData.version
-        );
-        if (matchingCoC) {
-          setSelectedCoCId(matchingCoC.id);
+      // Decide which CoC to pre-select:
+      if (societyCoCs && societyCoCs.length > 0) {
+        let toSelect: string | null = null;
+
+        if (eventCoCData) {
+          const match = societyCoCs.find(
+            (coc) => coc.name === eventCoCData.name || coc.version === eventCoCData.version
+          );
+          if (match) toSelect = match.id;
         }
-      } else if (societyCoCs && societyCoCs.length > 0) {
-        // If no matching CoC from original event, auto-select the default (is_active) CoC
-        const activeCoC = societyCoCs.find((c) => c.is_active);
-        if (activeCoC) {
-          setSelectedCoCId(activeCoC.id);
-        } else {
-          setSelectedCoCId(societyCoCs[0].id);
+
+        if (!toSelect) {
+          const active = societyCoCs.find((c) => c.is_active);
+          toSelect = active ? active.id : societyCoCs[0].id;
         }
+
+        setSelectedCoCId(toSelect);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
