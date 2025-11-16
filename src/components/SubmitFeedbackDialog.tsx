@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CheckCircle, ArrowLeft } from "lucide-react";
+import { CheckCircle, Loader2, ArrowLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 const feedbackSchema = z
   .object({
@@ -168,24 +168,28 @@ export function SubmitFeedbackDialog({
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between p-6 pb-4 border-b">
-              <h2 className="text-2xl font-bold">Event Feedback</h2>
+            <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-primary/5 to-accent/5">
+              <h2 className="text-xl sm:text-2xl font-bold">Share Your Feedback</h2>
+              <p className="text-sm text-muted-foreground mt-1">Help us make future events even better</p>
             </div>
 
-            <ScrollArea className="max-h-[calc(90vh-180px)] px-6">
-              <div className="space-y-4 pb-4">
+            <ScrollArea className="max-h-[calc(90vh-180px)]">
+              <div className="p-4 sm:p-6 space-y-5">
                 <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                    {/* Improvements Section */}
                     <FormField
                       control={form.control}
                       name="improvements"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Any suggestions to improve the event overall?</FormLabel>
+                        <FormItem className="space-y-3">
+                          <FormLabel className="text-sm font-medium">
+                            Any suggestions to improve the event overall?
+                          </FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder="Share your thoughts..."
-                              className="min-h-[80px] resize-none mx-0.5"
+                              placeholder="Share your thoughts, ideas, or suggestions..."
+                              className="min-h-[100px] resize-none"
                               {...field}
                             />
                           </FormControl>
@@ -194,24 +198,25 @@ export function SubmitFeedbackDialog({
                       )}
                     />
 
+                    {/* Safety Question */}
                     <FormField
                       control={form.control}
                       name="feltSafeComfortable"
                       render={({ field }) => (
-                        <FormItem className="space-y-2">
-                          <FormLabel className="text-base font-medium">
+                        <FormItem className="space-y-3">
+                          <FormLabel className="text-sm font-medium">
                             Did you feel safe and comfortable during the event? *
                           </FormLabel>
                           <FormControl>
-                            <RadioGroup onValueChange={field.onChange} value={field.value} className="space-y-1.5">
+                            <RadioGroup onValueChange={field.onChange} value={field.value} className="space-y-2">
                               {COMFORT_OPTIONS.map((option) => (
                                 <div
                                   key={option.value}
-                                  className="flex items-center space-x-3 p-2.5 rounded-md border hover:bg-accent/50 cursor-pointer transition-colors"
+                                  className="flex items-center space-x-3 p-3 sm:p-3.5 rounded-lg border-2 hover:border-primary/50 hover:bg-accent/30 cursor-pointer transition-all duration-200 group"
                                   onClick={() => field.onChange(option.value)}
                                 >
-                                  <RadioGroupItem value={option.value} />
-                                  <Label htmlFor={option.value} className="flex-1 cursor-pointer text-sm">
+                                  <RadioGroupItem value={option.value} className="flex-shrink-0" />
+                                  <Label htmlFor={option.value} className="flex-1 cursor-pointer text-sm font-normal">
                                     {option.label}
                                   </Label>
                                 </div>
@@ -223,37 +228,40 @@ export function SubmitFeedbackDialog({
                       )}
                     />
 
-
+                    {/* Anonymous Toggle */}
                     <FormField
                       control={form.control}
                       name="isAnonymous"
                       render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-lg border p-4">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">Submit Anonymously</FormLabel>
-                            <div className="text-sm text-muted-foreground">
-                              {field.value ? "Your identity will not be shared" : "Provide contact info for follow-up"}
+                        <FormItem className="bg-muted/50 rounded-xl p-4 border">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-1 flex-1">
+                              <FormLabel className="text-sm font-medium">Submit Anonymously</FormLabel>
+                              <p className="text-xs text-muted-foreground">
+                                {field.value ? "Your identity will not be shared" : "Provide contact info for follow-up"}
+                              </p>
                             </div>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
                           </div>
-                          <FormControl>
-                            <Switch checked={field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
                         </FormItem>
                       )}
                     />
 
+                    {/* Contact Information */}
                     {!isAnonymous && (
-                      <div className="space-y-3 p-4 bg-muted rounded-lg">
-                        <p className="text-sm font-medium">Contact Information</p>
+                      <div className="space-y-4 p-4 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border">
+                        <p className="text-sm font-semibold">Contact Information</p>
 
                         <FormField
                           control={form.control}
                           name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Name (optional)</FormLabel>
+                              <FormLabel className="text-sm">Name (optional)</FormLabel>
                               <FormControl>
-                                <Input placeholder="Your name" {...field} />
+                                <Input placeholder="Your name" className="h-10" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -265,13 +273,13 @@ export function SubmitFeedbackDialog({
                           name="email"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Email</FormLabel>
+                              <FormLabel className="text-sm">Email *</FormLabel>
                               <FormControl>
                                 <Input
                                   type="email"
                                   placeholder="your.email@example.com"
                                   disabled={true}
-                                  className="bg-muted cursor-not-allowed"
+                                  className="h-10 bg-muted/50 cursor-not-allowed"
                                   {...field}
                                 />
                               </FormControl>
@@ -281,20 +289,20 @@ export function SubmitFeedbackDialog({
                         />
 
                         <div className="space-y-2">
-                          <FormLabel>Phone Number (optional)</FormLabel>
+                          <FormLabel className="text-sm">Phone Number (optional)</FormLabel>
                           <div className="flex gap-2">
                             <FormField
                               control={form.control}
                               name="countryCode"
                               render={({ field }) => (
-                                <FormItem className="w-[120px]">
+                                <FormItem className="w-[110px] sm:w-[120px]">
                                   <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
-                                      <SelectTrigger>
+                                      <SelectTrigger className="h-10">
                                         <SelectValue placeholder="+353" />
                                       </SelectTrigger>
                                     </FormControl>
-                                    <SelectContent className="z-50">
+                                    <SelectContent className="z-[100]">
                                       <SelectItem value="+353">🇮🇪 +353</SelectItem>
                                       <SelectItem value="+44">🇬🇧 +44</SelectItem>
                                       <SelectItem value="+1">🇺🇸 +1</SelectItem>
@@ -318,7 +326,7 @@ export function SubmitFeedbackDialog({
                               render={({ field }) => (
                                 <FormItem className="flex-1">
                                   <FormControl>
-                                    <Input type="tel" placeholder="87 123 4567" {...field} />
+                                    <Input type="tel" placeholder="87 123 4567" className="h-10" {...field} />
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -328,16 +336,27 @@ export function SubmitFeedbackDialog({
                         </div>
                       </div>
                     )}
+
+                    {/* Submit Button */}
+                    <Button 
+                      type="submit" 
+                      disabled={isSubmitting} 
+                      className="w-full h-11 text-base font-medium"
+                      size="lg"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        "Submit Feedback"
+                      )}
+                    </Button>
                   </form>
                 </Form>
               </div>
             </ScrollArea>
-
-            <div className="flex justify-center p-6 pt-4 border-t">
-              <Button onClick={form.handleSubmit(onSubmit)} disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit Feedback"}
-              </Button>
-            </div>
           </>
         )}
       </DialogContent>
