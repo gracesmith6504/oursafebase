@@ -129,10 +129,6 @@ export function SubmitFeedbackDialog({
       if (error) throw error;
       setShowSuccess(true);
       form.reset();
-      toast({
-        title: "Feedback submitted",
-        description: "Thank you for helping us improve!",
-      });
       setTimeout(() => {
         setShowSuccess(false);
         onOpenChange(false);
