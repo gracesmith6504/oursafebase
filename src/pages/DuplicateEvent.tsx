@@ -401,6 +401,14 @@ const DuplicateEvent = () => {
         if (matchingCoC) {
           setSelectedCoCId(matchingCoC.id);
         }
+      } else if (societyCoCs && societyCoCs.length > 0) {
+        // If no matching CoC from original event, auto-select the default (is_active) CoC
+        const activeCoC = societyCoCs.find((c) => c.is_active);
+        if (activeCoC) {
+          setSelectedCoCId(activeCoC.id);
+        } else {
+          setSelectedCoCId(societyCoCs[0].id);
+        }
       }
     } catch (error) {
       console.error("Error fetching data:", error);
