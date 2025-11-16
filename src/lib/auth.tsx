@@ -29,6 +29,11 @@ export const useAuth = () => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // Update last_login_at for existing sessions too
+      if (session?.user) {
+        updateLastLogin();
+      }
     });
 
     return () => subscription.unsubscribe();
