@@ -178,21 +178,6 @@ export function SubmitFeedbackDialog({
 
             <ScrollArea className="max-h-[calc(90vh-180px)] px-6">
               <div className="space-y-4 pb-4">
-                <p className="text-sm text-muted-foreground">
-                  This is just feedback for the event - if something serious happened, please use the{" "}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onOpenChange(false);
-                      onOpenReportDialog?.();
-                    }}
-                    className="text-primary hover:underline font-medium"
-                  >
-                    Report an Incident form
-                  </button>
-                  .
-                </p>
-
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
