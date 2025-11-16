@@ -14,6 +14,7 @@ import SocietyAttendee from "./pages/SocietyAttendee";
 import SocietyMembers from "./pages/SocietyMembers";
 import SocietyEvents from "./pages/SocietyEvents";
 import CreateEvent from "./pages/CreateEvent";
+import DuplicateEvent from "./pages/DuplicateEvent";
 import EditEvent from "./pages/EditEvent";
 import EventSafetyPage from "./pages/EventSafetyPage";
 import SocietyReports from "./pages/SocietyReports";
@@ -64,6 +65,7 @@ const App = () => (
           <Route path="/society/:slug/members" element={<SocietyMembers />} />
           <Route path="/society/:slug/events" element={<SocietyEvents />} />
           <Route path="/society/:slug/events/new" element={<CreateEvent />} />
+          <Route path="/society/:slug/events/:eventId/duplicate" element={<DuplicateEvent />} />
           <Route path="/society/:slug/events/:eventId/edit" element={<EditEvent />} />
           <Route path="/society/:slug/events/:eventId/summary" element={<EventSummary />} />
           <Route path="/society/:slug/reports" element={<SocietyReports />} />
