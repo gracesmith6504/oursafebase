@@ -6,7 +6,7 @@ import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Shield, Plus, Edit, Trash2, FileText, Image, ChevronRight } from "lucide-react";
+import { ArrowLeft, Shield, Plus, Edit, Trash2, FileText, Image, ChevronRight, Star } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -285,7 +285,10 @@ const SocietyCodesOfConduct = () => {
                             {coc.name || `Template v${coc.version}`}
                           </CardTitle>
                           {coc.is_active && (
-                            <Badge variant="default">Default</Badge>
+                            <Badge variant="default" className="gap-1">
+                              <Star className="h-3 w-3 fill-current" />
+                              Default
+                            </Badge>
                           )}
                         </div>
                         <CardDescription>
