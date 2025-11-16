@@ -6,7 +6,6 @@ import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Plus, X, ChevronRight, GripVertical, Shield } from "lucide-react";
 import {
@@ -177,7 +176,6 @@ const DuplicateEvent = () => {
   const { isCommittee, loading: roleLoading } = useCommitteeRole(society?.id);
 
   const [eventName, setEventName] = useState("");
-  const [description, setDescription] = useState("");
   const [eventDate, setEventDate] = useState<Date | undefined>(undefined);
   const [eventEndDate, setEventEndDate] = useState<Date | undefined>(undefined);
   const [eventTime, setEventTime] = useState("");
@@ -322,7 +320,6 @@ const DuplicateEvent = () => {
 
       // Pre-fill basic event details
       setEventName(eventData.title + " (Copy)");
-      setDescription(eventData.description || "");
       setLocation(eventData.location || "");
 
       // Fetch event contacts
@@ -518,7 +515,6 @@ const DuplicateEvent = () => {
         .insert({
           title: eventName.trim(),
           slug: slug,
-          description: description.trim() || null,
           event_date: finalEventDate.toISOString(),
           event_end_date: eventEndDate?.toISOString() || null,
           location: location.trim() || null,
@@ -721,17 +717,6 @@ const DuplicateEvent = () => {
                   value={eventName}
                   onChange={(e) => setEventName(e.target.value)}
                   placeholder="e.g., Freshers Week Party"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Provide details about the event..."
-                  rows={4}
                 />
               </div>
 
@@ -1087,24 +1072,41 @@ const DuplicateEvent = () => {
           </Card>
         </div>
 
-        {/* Sticky Footer with Actions */}
-        <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t p-4">
-          <div className="max-w-3xl mx-auto flex items-center justify-between gap-3 flex-wrap">
-            <Button variant="outline" onClick={() => navigate(`/society/${slug}/events`)}>
-              Cancel
-            </Button>
-            <div className="flex gap-2 flex-wrap">
+        {/* Sticky Footer */}
+        <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-3 sm:p-4">
+          <div className="container mx-auto max-w-2xl">
+            <div className="flex gap-2 sm:gap-4">
+              {/* Preview button - icon only */}
               <Button
+                type="button"
                 variant="outline"
+                size="icon"
                 onClick={() => setShowSafetyPreview(true)}
-                disabled={!eventName || !eventDate}
+                className="shrink-0"
               >
-                <Eye className="h-4 w-4 mr-2" />
-                Preview
+                <Eye className="h-4 w-4" />
               </Button>
-              <Button onClick={handleSubmit} disabled={submitting}>
-                {submitting ? "Creating..." : "Create Event"}
-                <ChevronRight className="ml-2 h-4 w-4" />
+              
+              {/* Cancel - more discrete */}
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => navigate(`/society/${slug}/events`)}
+                className="flex-1 text-sm sm:text-base"
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+              
+              {/* Primary action */}
+              <Button 
+                type="submit" 
+                onClick={handleSubmit} 
+                className="flex-1 text-sm sm:text-base whitespace-normal sm:whitespace-nowrap px-2 sm:px-4 leading-tight py-2" 
+                disabled={submitting}
+              >
+                {submitting ? "Creating..." : <span className="inline sm:hidden">Save & Create</span>}
+                {submitting ? "" : <span className="hidden sm:inline">Save & Create Safety Page</span>}
               </Button>
             </div>
           </div>

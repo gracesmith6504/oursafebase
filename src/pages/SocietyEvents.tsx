@@ -354,11 +354,12 @@ const SocietyEvents = () => {
                         </Button>
                         
                         <Button 
-                          className="w-full" 
-                          variant="outline"
+                          variant="ghost"
+                          size="sm"
                           onClick={() => navigate(`/society/${slug}/events/${event.id}/duplicate`)}
+                          className="mx-auto flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
                         >
-                          <Copy className="mr-2 h-4 w-4" />
+                          <Copy className="h-3.5 w-3.5" />
                           Duplicate
                         </Button>
                         
