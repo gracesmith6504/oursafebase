@@ -1082,7 +1082,9 @@ const DuplicateEvent = () => {
                     <option value="">No code of conduct</option>
                     {availableCoCs.map((coc) => (
                       <option key={coc.id} value={coc.id}>
+                        {coc.is_active ? "⭐ " : ""}
                         {coc.name} (v{coc.version})
+                        {coc.is_active ? " (Default)" : ""}
                       </option>
                     ))}
                   </select>

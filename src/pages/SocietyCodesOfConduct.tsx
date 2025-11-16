@@ -286,7 +286,7 @@ const SocietyCodesOfConduct = () => {
                             {coc.name || `Template v${coc.version}`}
                           </CardTitle>
                           {coc.is_active && (
-                            <Badge variant="default">Active</Badge>
+                            <Badge variant="default">Default</Badge>
                           )}
                         </div>
                         <CardDescription>
