@@ -389,8 +389,7 @@ const DuplicateEvent = () => {
         .select("*")
         .eq("society_id", societyData.id)
         .is("event_id", null)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
+        .order("version", { ascending: false });
 
       setAvailableCoCs(societyCoCs || []);
 
@@ -420,13 +419,15 @@ const DuplicateEvent = () => {
       .select("id, version, content, file_url, name, is_active")
       .eq("society_id", society.id)
       .is("event_id", null)
-      .eq("is_active", true)
-      .order("created_at", { ascending: false });
+      .order("version", { ascending: false });
 
     if (cocsData) {
       setAvailableCoCs(cocsData);
-      // Auto-select the most recent CoC (first in the list)
-      if (cocsData.length > 0) {
+      // Auto-select the active CoC, or the most recent if none is active
+      const activeCoC = cocsData.find((c) => c.is_active);
+      if (activeCoC) {
+        setSelectedCoCId(activeCoC.id);
+      } else if (cocsData.length > 0) {
         setSelectedCoCId(cocsData[0].id);
       }
     }
