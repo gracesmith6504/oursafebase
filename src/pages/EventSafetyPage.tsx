@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy, Loader2, ArrowLeft, Share2, ChevronRight } from "lucide-react";
+import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy, Loader2, ArrowLeft, Share2, ChevronRight, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
@@ -619,14 +619,12 @@ const EventSafetyPage = () => {
           <Card className="border bg-muted/30 mt-8">
             <CardContent className="p-4">
               {codeOfConduct.file_url ? (
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                    <div className="p-2.5 bg-primary/10 rounded-lg shrink-0">
                       <Shield className="h-5 w-5 text-primary" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-sm">Code of Conduct</p>
-                    </div>
+                    <p className="font-semibold text-sm sm:text-base truncate">Code of Conduct</p>
                   </div>
                   <Button 
                     variant="ghost"
@@ -638,28 +636,28 @@ const EventSafetyPage = () => {
                         window.open(codeOfConduct.file_url, '_blank');
                       }
                     }}
-                    className="shrink-0 hover:bg-primary/10"
+                    className="shrink-0 hover:bg-primary/10 h-9 px-3"
                   >
-                    View Document →
+                    <span className="hidden sm:inline">View</span>
+                    <ArrowRight className="h-4 w-4 sm:ml-1" />
                   </Button>
                 </div>
               ) : (
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                    <div className="p-2.5 bg-primary/10 rounded-lg shrink-0">
                       <Shield className="h-5 w-5 text-primary" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-sm">Code of Conduct</p>
-                    </div>
+                    <p className="font-semibold text-sm sm:text-base truncate">Code of Conduct</p>
                   </div>
                   <Button 
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowViewCoCDialog(true)}
-                    className="shrink-0 hover:bg-primary/10"
+                    className="shrink-0 hover:bg-primary/10 h-9 px-3"
                   >
-                    View Code of Conduct →
+                    <span className="hidden sm:inline">View</span>
+                    <ArrowRight className="h-4 w-4 sm:ml-1" />
                   </Button>
                 </div>
               )}
