@@ -81,6 +81,7 @@ const EventSafetyPage = () => {
   const [emergencyInfo, setEmergencyInfo] = useState<EmergencyInfo | null>(null);
   const [codeOfConduct, setCodeOfConduct] = useState<CodeOfConduct | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [showMembershipAlert, setShowMembershipAlert] = useState(false);
@@ -148,14 +149,8 @@ const EventSafetyPage = () => {
       if (!eventData) throw new Error("Event not found");
       setEvent(eventData);
 
-      // Fetch all data in parallel for faster loading
-      const [
-        societyResult,
-        contactsResult,
-        emergencyResult,
-        eventCocResult,
-        templateCocResult
-      ] = await Promise.all([
+      // Fetch all data in parallel for faster loading - using allSettled for graceful failure handling
+      const results = await Promise.allSettled([
         // Fetch society slug
         supabase
           .from("societies")
@@ -196,13 +191,15 @@ const EventSafetyPage = () => {
       ]);
 
       // Process society data
-      if (societyResult.data) {
-        setSociety(societyResult.data);
+      if (results[0].status === 'fulfilled' && results[0].value.data) {
+        setSociety(results[0].value.data);
+      } else if (results[0].status === 'rejected') {
+        console.error("Failed to fetch society data:", results[0].reason);
       }
 
       // Process contacts
-      if (contactsResult.data) {
-        const processedContacts = contactsResult.data.map((contact: any) => ({
+      if (results[1].status === 'fulfilled' && results[1].value.data) {
+        const processedContacts = results[1].value.data.map((contact: any) => ({
           id: contact.id,
           name: contact.contact_name || "Anonymous",
           phone: contact.contact_phone,
@@ -210,16 +207,26 @@ const EventSafetyPage = () => {
           role: contact.role,
         }));
         setWelfareContacts(processedContacts);
+      } else if (results[1].status === 'rejected') {
+        console.error("Failed to fetch contacts:", results[1].reason);
       }
 
       // Process emergency info
-      if (emergencyResult.data) {
-        setEmergencyInfo(emergencyResult.data);
+      if (results[2].status === 'fulfilled' && results[2].value.data) {
+        setEmergencyInfo(results[2].value.data);
+      } else if (results[2].status === 'rejected') {
+        console.error("Failed to fetch emergency info:", results[2].reason);
       }
 
       // Process Code of Conduct (prefer event-specific, fall back to template)
-      const cocData = eventCocResult.data || templateCocResult.data;
-      setHasEventLevelCoC(!!eventCocResult.data);
+      let cocData = null;
+      if (results[3].status === 'fulfilled' && results[3].value.data) {
+        cocData = results[3].value.data;
+        setHasEventLevelCoC(true);
+      } else if (results[4].status === 'fulfilled' && results[4].value.data) {
+        cocData = results[4].value.data;
+        setHasEventLevelCoC(false);
+      }
       
       if (cocData) {
         setCodeOfConduct(cocData);
@@ -230,8 +237,11 @@ const EventSafetyPage = () => {
         await checkCoCAcceptance(eventData);
         await checkMembership(eventData.society_id);
       }
+      
+      setError(null); // Clear any previous errors on successful load
     } catch (error) {
       console.error("Error fetching event data:", error);
+      setError(error instanceof Error ? error.message : "Failed to load event safety information");
     } finally {
       setLoading(false);
     }
@@ -313,8 +323,42 @@ const EventSafetyPage = () => {
     }
   };
 
-  if (authLoading || loading || !user) {
+  if (authLoading || loading) {
     return <EventSafetyPageSkeleton />;
+  }
+
+  if (!user) {
+    // Redirect is handled in useEffect
+    return <EventSafetyPageSkeleton />;
+  }
+
+  // Show error state with retry option
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              Failed to Load Event
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">{error}</p>
+            <Button 
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                fetchEventData();
+              }}
+              className="w-full"
+            >
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   // Show CoC dialog if required
@@ -340,8 +384,8 @@ const EventSafetyPage = () => {
 
   if (!event) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Card className="max-w-md">
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <Card className="max-w-md w-full">
           <CardHeader>
             <CardTitle>Event Not Found</CardTitle>
           </CardHeader>
@@ -369,7 +413,7 @@ const EventSafetyPage = () => {
   );
 
   const handleBackClick = () => {
-    if (!society) return;
+    if (!society?.slug) return;
     
     if (isCommittee) {
       navigate(`/society/${society.slug}/dashboard`);
