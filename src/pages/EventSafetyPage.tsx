@@ -19,6 +19,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EventQRCodeDialog } from "@/components/EventQRCodeDialog";
 import { EventShareCard } from "@/components/EventShareCard";
 import { EventSafetyPageSkeleton } from "@/components/EventSafetyPageSkeleton";
+import { Footer } from "@/components/Footer";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -107,10 +108,10 @@ const EventSafetyPage = () => {
   }, [user, authLoading, navigate, eventId, societySlug, eventSlug, event?.title]);
 
   useEffect(() => {
-    if ((eventId || (societySlug && eventSlug)) && user) {
+    if ((eventId || (societySlug && eventSlug)) && user && !authLoading) {
       fetchEventData();
     }
-  }, [eventId, societySlug, eventSlug, user]);
+  }, [eventId, societySlug, eventSlug, user, authLoading]);
 
   useEffect(() => {
     if (event) {
@@ -119,6 +120,9 @@ const EventSafetyPage = () => {
   }, [event]);
 
   const fetchEventData = async () => {
+    setLoading(true);
+    setError(null);
+    
     try {
       // Fetch event - try slug-based query first, fall back to UUID
       let eventData;
@@ -242,6 +246,7 @@ const EventSafetyPage = () => {
     } catch (error) {
       console.error("Error fetching event data:", error);
       setError(error instanceof Error ? error.message : "Failed to load event safety information");
+      // Ensure we still have event data to show something to the user
     } finally {
       setLoading(false);
     }
@@ -323,12 +328,16 @@ const EventSafetyPage = () => {
     }
   };
 
-  if (authLoading || loading) {
+  if (authLoading) {
     return <EventSafetyPageSkeleton />;
   }
 
   if (!user) {
     // Redirect is handled in useEffect
+    return <EventSafetyPageSkeleton />;
+  }
+
+  if (loading) {
     return <EventSafetyPageSkeleton />;
   }
 
@@ -617,7 +626,7 @@ const EventSafetyPage = () => {
         {/* Code of Conduct - Bottom Section */}
         {codeOfConduct && (
           <Card 
-            className="border bg-muted/30 mt-8 cursor-pointer hover:bg-muted/40 transition-colors"
+            className="border bg-muted/30 mt-8 cursor-pointer hover:bg-muted/40 hover:scale-[1.02] transition-all duration-200"
             onClick={() => {
               if (codeOfConduct.file_url && codeOfConduct.id) {
                 window.open(`/code-of-conduct/${codeOfConduct.id}`, '_blank');
@@ -657,14 +666,7 @@ const EventSafetyPage = () => {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="mt-16 border-t bg-muted/50 py-8">
-        <div className="container mx-auto px-3 md:px-4 text-center max-w-full">
-          <p className="text-sm text-muted-foreground">
-            Powered by <span className="font-semibold">OurSafeBase</span>
-          </p>
-        </div>
-      </footer>
+      <Footer />
 
       <ReportConcernDialog
         open={showReportDialog}
