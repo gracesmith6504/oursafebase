@@ -412,6 +412,26 @@ const DuplicateEvent = () => {
     }
   };
 
+  const fetchCoCs = async () => {
+    if (!society) return;
+    
+    const { data: cocsData } = await supabase
+      .from("code_of_conduct")
+      .select("id, version, content, file_url, name, is_active")
+      .eq("society_id", society.id)
+      .is("event_id", null)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+
+    if (cocsData) {
+      setAvailableCoCs(cocsData);
+      // Auto-select the most recent CoC (first in the list)
+      if (cocsData.length > 0) {
+        setSelectedCoCId(cocsData[0].id);
+      }
+    }
+  };
+
   const handleAddMember = () => {
     if (selectedMember && !selectedContacts.find((c) => c.userId === selectedMember.user_id)) {
       const newContact: WelfareContact = {
@@ -1117,7 +1137,7 @@ const DuplicateEvent = () => {
           open={createCoCDialogOpen}
           onOpenChange={setCreateCoCDialogOpen}
           societyId={society?.id || ""}
-          onSuccess={fetchData}
+          onSuccess={fetchCoCs}
         />
 
         {showSafetyPreview && society && (
