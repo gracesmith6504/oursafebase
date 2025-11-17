@@ -53,6 +53,7 @@ const Auth = () => {
   const [passwordResetSent, setPasswordResetSent] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<boolean>(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [societyInfo, setSocietyInfo] = useState<{
     name: string;
     role: string;
@@ -294,6 +295,8 @@ const Auth = () => {
   }, [user, navigate, inviteCode, redirectPath, societyInfo, loadingSocietyInfo, showEmailConfirmation, showPasswordReset, loading]);
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setEmailError(null); // Clear previous errors
+    
     if (!name || !email || !password || !confirmPassword) {
       toast.error("Please fill in all fields");
       return;
@@ -312,6 +315,18 @@ const Auth = () => {
     }
     setLoading(true);
     try {
+      // Check if email already exists
+      const { data: checkData, error: checkError } = await supabase.functions.invoke(
+        'check-email-exists',
+        { body: { email } }
+      );
+      
+      if (checkData?.exists) {
+        setEmailError("This email already has an account. Please log in instead.");
+        setLoading(false);
+        return;
+      }
+      
       const displayName = name.trim();
       const {
         error
@@ -329,15 +344,8 @@ const Auth = () => {
       if (error) {
         // Check if the error is about email already being registered
         if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already been registered")) {
-          toast.error("This email is already registered. Please sign in instead.");
+          setEmailError("This email already has an account. Please log in instead.");
           setLoading(false);
-          // Switch to sign-in tab after a brief delay
-          setTimeout(() => {
-            const signInTab = document.querySelector('[value="signin"]');
-            if (signInTab) {
-              (signInTab as HTMLElement).click();
-            }
-          }, 1500);
           return;
         }
         toast.error(error.message);
@@ -755,9 +763,26 @@ const Auth = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="signup-email">Email</Label>
-                        <Input id="signup-email" type="email" placeholder="you@gmail.com" value={email} onChange={e => setEmail(e.target.value)} disabled={loading} required />
-                        <p className="text-xs text-muted-foreground">Use a personal email like @gmail.com for best experience 
+                        <Input 
+                          id="signup-email" 
+                          type="email" 
+                          placeholder="you@gmail.com" 
+                          value={email} 
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            setEmailError(null); // Clear error when user types
+                          }}
+                          disabled={loading} 
+                          required 
+                          className={emailError ? "border-destructive" : ""}
+                        />
+                        {emailError && (
+                          <p className="text-xs text-destructive">{emailError}</p>
+                        )}
+                        {!emailError && (
+                          <p className="text-xs text-muted-foreground">Use a personal email like @gmail.com for best experience 
 (university emails may be slower)</p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="signup-password">Password</Label>
