@@ -77,6 +77,32 @@ const Auth = () => {
   const redirectPath = searchParams.get("redirect");
   const redirectTo = searchParams.get("redirectTo");
 
+  // Helper function to get redirectTo from URL or localStorage
+  const getRedirectTo = () => {
+    return redirectTo || localStorage.getItem('auth_redirectTo');
+  };
+
+  // Store redirectTo in localStorage when present in URL
+  useEffect(() => {
+    if (redirectTo) {
+      localStorage.setItem('auth_redirectTo', redirectTo);
+    }
+  }, [redirectTo]);
+
+  // Immediate redirect for already logged-in users
+  useEffect(() => {
+    if (user && !checkingConsent && !processingAuth) {
+      const targetRedirect = getRedirectTo();
+      if (targetRedirect) {
+        localStorage.removeItem('auth_redirectTo');
+        navigate(targetRedirect);
+        return;
+      }
+      
+      // Existing invite/dashboard logic continues in checkConsent
+    }
+  }, [user, checkingConsent, processingAuth]);
+
   // Check if user is on an in-app browser on mount
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
@@ -204,19 +230,22 @@ const Auth = () => {
 
       // If consent already exists, proceed with redirect
       if (consent) {
-        // If there's an invite code, wait for society info to load
-        if (inviteCode && loadingSocietyInfo) return;
-
-        // Now we can safely clean the URL and redirect
-        const cleaned = new URLSearchParams();
-        if (inviteCode) cleaned.set("invite", inviteCode);
-        if (redirectPath) cleaned.set("redirect", redirectPath);
-        const newUrl = `${window.location.pathname}${cleaned.toString() ? `?${cleaned.toString()}` : ""}`;
-        window.history.replaceState({}, document.title, newUrl);
-        if (inviteCode && societyInfo?.role === "committee") {
-          navigate(`/onboarding?invite=${inviteCode}`);
+        setCheckingConsent(false);
+        
+        // Redirect logic with redirectTo taking priority
+        const targetRedirect = getRedirectTo();
+        if (targetRedirect) {
+          localStorage.removeItem('auth_redirectTo');
+          navigate(targetRedirect);
         } else if (inviteCode) {
-          navigate(`/invite/${inviteCode}`);
+          // Wait for society info to load if needed
+          if (loadingSocietyInfo) return;
+          
+          if (societyInfo?.role === 'committee') {
+            navigate(`/onboarding?invite=${inviteCode}`);
+          } else {
+            navigate(`/invite/${inviteCode}`);
+          }
         } else if (redirectPath) {
           navigate(redirectPath);
         } else {
@@ -248,21 +277,40 @@ const Auth = () => {
         });
 
         if (!insertError) {
-          // Proceed with redirect after recording consent
-          if (inviteCode && loadingSocietyInfo) return;
-
-          const cleaned = new URLSearchParams();
-          if (inviteCode) cleaned.set("invite", inviteCode);
-          if (redirectPath) cleaned.set("redirect", redirectPath);
-          if (redirectTo) cleaned.set("redirectTo", redirectTo);
-          const newUrl = `${window.location.pathname}${cleaned.toString() ? `?${cleaned.toString()}` : ""}`;
-          window.history.replaceState({}, document.title, newUrl);
-          if (redirectTo) {
-            navigate(redirectTo);
-          } else if (inviteCode && societyInfo?.role === "committee") {
-            navigate(`/onboarding?invite=${inviteCode}`);
+          setCheckingConsent(false);
+          // Redirect after auto-recording consent with redirectTo priority
+          const targetRedirect = getRedirectTo();
+          if (targetRedirect) {
+            localStorage.removeItem('auth_redirectTo');
+            navigate(targetRedirect);
           } else if (inviteCode) {
-            navigate(`/invite/${inviteCode}`);
+            if (loadingSocietyInfo) return;
+            
+            if (societyInfo?.role === 'committee') {
+              navigate(`/onboarding?invite=${inviteCode}`);
+            } else {
+              navigate(`/invite/${inviteCode}`);
+            }
+          } else if (redirectPath) {
+            navigate(redirectPath);
+          } else {
+            navigate("/dashboard");
+          }
+          return;
+        } else {
+          console.error("Error recording consent:", insertError);
+          // If consent recording fails, still allow user through
+          setCheckingConsent(false);
+          const targetRedirect = getRedirectTo();
+          if (targetRedirect) {
+            localStorage.removeItem('auth_redirectTo');
+            navigate(targetRedirect);
+          } else if (inviteCode) {
+            if (societyInfo?.role === 'committee') {
+              navigate(`/onboarding?invite=${inviteCode}`);
+            } else {
+              navigate(`/invite/${inviteCode}`);
+            }
           } else if (redirectPath) {
             navigate(redirectPath);
           } else {
@@ -377,15 +425,19 @@ const Auth = () => {
     }
     setLoading(true);
     const {
-      error
+      error,
+      data
     } = await supabase.auth.signInWithPassword({
       email,
       password
     });
     if (error) {
       toast.error(error.message);
+      setLoading(false);
+    } else if (data.session) {
+      // Don't set loading false - let redirect happen
+      // The useEffect will handle the redirect
     }
-    setLoading(false);
   };
   const handleResendConfirmation = async () => {
     if (!email) {
@@ -431,12 +483,22 @@ const Auth = () => {
   };
   const handleGoogleSignIn = async () => {
     setLoading(true);
+    
+    // Build query params preserving both inviteCode and redirectTo
+    const params = new URLSearchParams();
+    if (inviteCode) params.set('invite', inviteCode);
+    
+    const targetRedirect = getRedirectTo();
+    if (targetRedirect) params.set('redirectTo', targetRedirect);
+    
+    const redirectUrl = `${window.location.origin}/auth${params.toString() ? `?${params.toString()}` : ''}`;
+    
     const {
       error
     } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth${inviteCode ? `?invite=${inviteCode}` : ""}`
+        redirectTo: redirectUrl
       }
     });
     if (error) {
@@ -473,8 +535,10 @@ const Auth = () => {
       setRecordingConsent(false);
 
       // Redirect based on redirectTo, invite code and role
-      if (redirectTo) {
-        navigate(redirectTo);
+      const targetRedirect = getRedirectTo();
+      if (targetRedirect) {
+        localStorage.removeItem('auth_redirectTo');
+        navigate(targetRedirect);
       } else if (inviteCode) {
         if (societyInfo?.role === 'committee') {
           navigate(`/onboarding?invite=${inviteCode}`);
