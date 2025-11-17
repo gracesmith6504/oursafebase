@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, CheckCircle2, XCircle, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AttendeeAcceptance, calculateAcceptanceRate } from "@/lib/reportAnalytics";
 import { format } from "date-fns";
 
@@ -17,6 +18,7 @@ export const EventCoCAcceptancesList = ({ attendees, loading }: EventCoCAcceptan
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<'all' | 'accepted' | 'not_accepted'>('all');
   const [roleFilter, setRoleFilter] = useState<'all' | 'committee' | 'attendee'>('all');
+  const [displayCount, setDisplayCount] = useState(10);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -26,7 +28,7 @@ export const EventCoCAcceptancesList = ({ attendees, loading }: EventCoCAcceptan
     return { total, accepted, rate };
   }, [attendees]);
 
-  // Filter attendees
+  // Filter attendees (search and filter across ALL attendees)
   const filteredAttendees = useMemo(() => {
     return attendees.filter(attendee => {
       // Search filter
@@ -47,6 +49,13 @@ export const EventCoCAcceptancesList = ({ attendees, loading }: EventCoCAcceptan
       return matchesSearch && matchesStatus && matchesRole;
     });
   }, [attendees, searchQuery, statusFilter, roleFilter]);
+
+  // Get currently displayed attendees (for load more pattern)
+  const displayedAttendees = useMemo(() => {
+    return filteredAttendees.slice(0, displayCount);
+  }, [filteredAttendees, displayCount]);
+
+  const hasMore = filteredAttendees.length > displayCount;
 
   if (loading) {
     return (
@@ -110,51 +119,65 @@ export const EventCoCAcceptancesList = ({ attendees, loading }: EventCoCAcceptan
               <p>No attendees found matching your filters</p>
             </div>
           ) : (
-            filteredAttendees.map((attendee) => (
-              <div
-                key={attendee.user_id}
-                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={attendee.avatar_url || undefined} />
-                    <AvatarFallback>
-                      {attendee.display_name?.charAt(0).toUpperCase() || '?'}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-medium truncate">
-                        {attendee.display_name || 'Unknown User'}
-                      </p>
-                      <Badge variant={attendee.role === 'committee' ? 'default' : 'secondary'}>
-                        {attendee.role}
-                      </Badge>
-                    </div>
+            <>
+              {displayedAttendees.map((attendee) => (
+                <div
+                  key={attendee.user_id}
+                  className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={attendee.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {attendee.display_name?.charAt(0).toUpperCase() || '?'}
+                      </AvatarFallback>
+                    </Avatar>
                     
-                    {attendee.has_accepted && attendee.accepted_at ? (
-                      <p className="text-xs text-muted-foreground">
-                        Accepted {format(new Date(attendee.accepted_at), 'MMM d, yyyy')}
-                        {attendee.accepted_version && ` • v${attendee.accepted_version}`}
-                      </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium truncate">
+                          {attendee.display_name || 'Unknown User'}
+                        </p>
+                        <Badge variant={attendee.role === 'committee' ? 'default' : 'secondary'}>
+                          {attendee.role}
+                        </Badge>
+                      </div>
+                      
+                      {attendee.has_accepted && attendee.accepted_at ? (
+                        <p className="text-xs text-muted-foreground">
+                          Accepted {format(new Date(attendee.accepted_at), 'MMM d, yyyy')}
+                          {attendee.accepted_version && ` • v${attendee.accepted_version}`}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Not accepted yet
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex-shrink-0">
+                    {attendee.has_accepted ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-600" />
                     ) : (
-                      <p className="text-xs text-muted-foreground">
-                        Not accepted yet
-                      </p>
+                      <XCircle className="h-5 w-5 text-muted-foreground" />
                     )}
                   </div>
                 </div>
-
-                <div className="flex-shrink-0">
-                  {attendee.has_accepted ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-muted-foreground" />
-                  )}
+              ))}
+              
+              {/* Load More Button */}
+              {hasMore && (
+                <div className="pt-4 flex justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => setDisplayCount(prev => prev + 10)}
+                  >
+                    Load More ({filteredAttendees.length - displayCount} remaining)
+                  </Button>
                 </div>
-              </div>
-            ))
+              )}
+            </>
           )}
         </div>
       </CardContent>
