@@ -235,8 +235,7 @@ const DuplicateEvent = () => {
   const [editingFAQ, setEditingFAQ] = useState<FAQ | null>(null);
 
   // Feedback state
-  const [feedbackEnabled, setFeedbackEnabled] = useState(false);
-  const [feedbackAutoSend, setFeedbackAutoSend] = useState(true);
+  const [feedbackAutoSend, setFeedbackAutoSend] = useState(false);
   const [feedbackQuestions, setFeedbackQuestions] = useState<FeedbackQuestionType[]>([]);
   const [batchFeedbackDialogOpen, setBatchFeedbackDialogOpen] = useState(false);
   const [editFeedbackDialogOpen, setEditFeedbackDialogOpen] = useState(false);
@@ -422,7 +421,6 @@ const DuplicateEvent = () => {
         .maybeSingle();
 
       if (feedbackConfigData) {
-        setFeedbackEnabled(feedbackConfigData.enabled);
         setFeedbackAutoSend(feedbackConfigData.auto_send_enabled);
       }
 
@@ -627,8 +625,13 @@ const DuplicateEvent = () => {
       ...q,
       id: crypto.randomUUID(),
       display_order: nextOrder + index,
+      is_required: false,
     }));
     setFeedbackQuestions([...feedbackQuestions, ...createdQuestions]);
+    // Auto-enable auto-send when adding questions
+    if (!feedbackAutoSend) {
+      setFeedbackAutoSend(true);
+    }
   };
 
   const handleEditFeedbackQuestion = (id: string, updates: Partial<FeedbackQuestionType>) => {
@@ -636,7 +639,12 @@ const DuplicateEvent = () => {
   };
 
   const handleDeleteFeedbackQuestion = (id: string) => {
-    setFeedbackQuestions(feedbackQuestions.filter(q => q.id !== id));
+    const updated = feedbackQuestions.filter(q => q.id !== id);
+    setFeedbackQuestions(updated);
+    // Auto-disable auto-send when no questions remain
+    if (updated.length === 0) {
+      setFeedbackAutoSend(false);
+    }
   };
 
   const handleFeedbackQuestionDragEnd = (event: DragEndEvent) => {
@@ -792,13 +800,13 @@ const DuplicateEvent = () => {
         if (faqInsertError) throw faqInsertError;
       }
 
-      // Create feedback config and questions if enabled
-      if (feedbackEnabled) {
+      // Create feedback config and questions if there are questions
+      if (feedbackQuestions.length > 0) {
         const { error: feedbackConfigError } = await supabase
           .from("event_feedback_config")
           .insert({
             event_id: eventData.id,
-            enabled: feedbackEnabled,
+            enabled: true,
             auto_send_enabled: feedbackAutoSend,
             auto_send_hours: 24,
           });
@@ -1283,48 +1291,31 @@ const DuplicateEvent = () => {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                 <div className="space-y-1">
-                  <Label htmlFor="feedback-enabled" className="text-base">Enable Feedback</Label>
+                  <Label htmlFor="auto-send" className="text-base">Auto-send Feedback Email</Label>
                   <p className="text-sm text-muted-foreground">
-                    Allow attendees to submit feedback after the event
+                    Send feedback email 24 hours after event ends
                   </p>
                 </div>
                 <Switch
-                  id="feedback-enabled"
-                  checked={feedbackEnabled}
-                  onCheckedChange={setFeedbackEnabled}
+                  id="auto-send"
+                  checked={feedbackAutoSend}
+                  onCheckedChange={setFeedbackAutoSend}
+                  disabled={feedbackQuestions.length === 0}
                 />
               </div>
 
-              {feedbackEnabled && (
-                <>
-                  <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                    <div className="space-y-1">
-                      <Label htmlFor="auto-send" className="text-base">Auto-send Feedback Email</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Send feedback email 24 hours after event ends
-                      </p>
-                    </div>
-                    <Switch
-                      id="auto-send"
-                      checked={feedbackAutoSend}
-                      onCheckedChange={setFeedbackAutoSend}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Feedback Questions</Label>
-                    <FeedbackSection
-                      questions={feedbackQuestions}
-                      onDragEnd={handleFeedbackQuestionDragEnd}
-                      onEdit={openEditFeedbackQuestionDialog}
-                      onDelete={handleDeleteFeedbackQuestion}
-                      onBatchAdd={() => setBatchFeedbackDialogOpen(true)}
-                      onMoveUp={handleMoveFeedbackQuestionUp}
-                      onMoveDown={handleMoveFeedbackQuestionDown}
-                    />
-                  </div>
-                </>
-              )}
+              <div className="space-y-2">
+                <Label>Feedback Questions</Label>
+                <FeedbackSection
+                  questions={feedbackQuestions}
+                  onDragEnd={handleFeedbackQuestionDragEnd}
+                  onEdit={openEditFeedbackQuestionDialog}
+                  onDelete={handleDeleteFeedbackQuestion}
+                  onBatchAdd={() => setBatchFeedbackDialogOpen(true)}
+                  onMoveUp={handleMoveFeedbackQuestionUp}
+                  onMoveDown={handleMoveFeedbackQuestionDown}
+                />
+              </div>
             </CardContent>
           </Card>
 

@@ -28,7 +28,6 @@ interface FeedbackQuestionRow {
   tempId: string;
   question: string;
   question_type: 'text' | 'rating';
-  is_required: boolean;
 }
 
 interface SortableFeedbackQuestionRowProps {
@@ -84,37 +83,22 @@ const SortableFeedbackQuestionRow = ({
           />
         </div>
 
-        <div className="flex gap-4 flex-wrap">
-          <div className="space-y-2 flex-1 min-w-[200px]">
-            <Label htmlFor={`type-${row.tempId}`}>Response Type</Label>
-            <Select
-              value={row.question_type}
-              onValueChange={(value: 'text' | 'rating') =>
-                onUpdate(row.tempId, { question_type: value })
-              }
-            >
-              <SelectTrigger id={`type-${row.tempId}`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="text">Text Response</SelectItem>
-                <SelectItem value="rating">Rating (1-5)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor={`required-${row.tempId}`}>Required</Label>
-            <div className="flex items-center h-10">
-              <Switch
-                id={`required-${row.tempId}`}
-                checked={row.is_required}
-                onCheckedChange={(checked) =>
-                  onUpdate(row.tempId, { is_required: checked })
-                }
-              />
-            </div>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor={`type-${row.tempId}`}>Response Type</Label>
+          <Select
+            value={row.question_type}
+            onValueChange={(value: 'text' | 'rating') =>
+              onUpdate(row.tempId, { question_type: value })
+            }
+          >
+            <SelectTrigger id={`type-${row.tempId}`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="text">Text Response</SelectItem>
+              <SelectItem value="rating">Rating (1-5)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -142,7 +126,7 @@ export function BatchCreateFeedbackQuestionDialog({
   onSuccess,
 }: BatchCreateFeedbackQuestionDialogProps) {
   const [rows, setRows] = useState<FeedbackQuestionRow[]>([
-    { tempId: crypto.randomUUID(), question: "", question_type: "text", is_required: true },
+    { tempId: crypto.randomUUID(), question: "", question_type: "text" },
   ]);
 
   const sensors = useSensors(
@@ -155,7 +139,7 @@ export function BatchCreateFeedbackQuestionDialog({
   const addRow = () => {
     setRows([
       ...rows,
-      { tempId: crypto.randomUUID(), question: "", question_type: "text", is_required: true },
+      { tempId: crypto.randomUUID(), question: "", question_type: "text" },
     ]);
   };
 
@@ -191,14 +175,14 @@ export function BatchCreateFeedbackQuestionDialog({
     
     // Reset form
     setRows([
-      { tempId: crypto.randomUUID(), question: "", question_type: "text", is_required: true },
+      { tempId: crypto.randomUUID(), question: "", question_type: "text" },
     ]);
     onOpenChange(false);
   };
 
   const handleCancel = () => {
     setRows([
-      { tempId: crypto.randomUUID(), question: "", question_type: "text", is_required: true },
+      { tempId: crypto.randomUUID(), question: "", question_type: "text" },
     ]);
     onOpenChange(false);
   };
