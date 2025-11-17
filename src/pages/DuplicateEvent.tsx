@@ -49,6 +49,11 @@ import { Eye, HelpCircle } from "lucide-react";
 import { BatchCreateFAQDialog } from "@/components/BatchCreateFAQDialog";
 import { EditFAQDialog } from "@/components/EditFAQDialog";
 import { FAQSection, FAQ } from "@/components/FAQSection";
+import { BatchCreateFeedbackQuestionDialog } from "@/components/BatchCreateFeedbackQuestionDialog";
+import { EditFeedbackQuestionDialog } from "@/components/EditFeedbackQuestionDialog";
+import { FeedbackSection, FeedbackQuestionType } from "@/components/FeedbackSection";
+import { Switch } from "@/components/ui/switch";
+import { MessageSquare } from "lucide-react";
 
 interface Society {
   id: string;
@@ -229,6 +234,14 @@ const DuplicateEvent = () => {
   const [editFAQDialogOpen, setEditFAQDialogOpen] = useState(false);
   const [editingFAQ, setEditingFAQ] = useState<FAQ | null>(null);
 
+  // Feedback state
+  const [feedbackEnabled, setFeedbackEnabled] = useState(false);
+  const [feedbackAutoSend, setFeedbackAutoSend] = useState(true);
+  const [feedbackQuestions, setFeedbackQuestions] = useState<FeedbackQuestionType[]>([]);
+  const [batchFeedbackDialogOpen, setBatchFeedbackDialogOpen] = useState(false);
+  const [editFeedbackDialogOpen, setEditFeedbackDialogOpen] = useState(false);
+  const [editingFeedbackQuestion, setEditingFeedbackQuestion] = useState<FeedbackQuestionType | null>(null);
+
   const countryCodes = [
     { code: "+353", country: "Ireland", flag: "🇮🇪" },
     { code: "+44", country: "UK", flag: "🇬🇧" },
@@ -394,6 +407,41 @@ const DuplicateEvent = () => {
       if (faqsData) {
         setFaqs(faqsData.map((faq: any) => ({
           id: crypto.randomUUID(), // New ID for duplicated FAQ
+          question: faq.question,
+          answer: faq.answer,
+          displayOrder: faq.display_order,
+          isVisible: faq.is_visible,
+        })));
+      }
+
+      // Fetch feedback config from source event
+      const { data: feedbackConfigData } = await supabase
+        .from("event_feedback_config")
+        .select("*")
+        .eq("event_id", eventId)
+        .maybeSingle();
+
+      if (feedbackConfigData) {
+        setFeedbackEnabled(feedbackConfigData.enabled);
+        setFeedbackAutoSend(feedbackConfigData.auto_send_enabled);
+      }
+
+      // Fetch feedback questions from source event
+      const { data: feedbackQuestionsData } = await supabase
+        .from("event_feedback_questions")
+        .select("*")
+        .eq("event_id", eventId)
+        .order("display_order");
+
+      if (feedbackQuestionsData) {
+        setFeedbackQuestions(feedbackQuestionsData.map((q: any) => ({
+          id: crypto.randomUUID(), // New ID for duplicated question
+          question: q.question,
+          question_type: q.question_type,
+          display_order: q.display_order,
+          is_required: q.is_required,
+        })));
+      }
           question: faq.question,
           answer: faq.answer,
           displayOrder: faq.display_order,
@@ -577,6 +625,57 @@ const DuplicateEvent = () => {
   const openEditFAQDialog = (faq: FAQ) => {
     setEditingFAQ(faq);
     setEditFAQDialogOpen(true);
+  };
+
+  const handleBatchAddFeedbackQuestions = (questions: Omit<FeedbackQuestionType, 'id' | 'display_order'>[]) => {
+    const nextOrder = feedbackQuestions.length;
+    const createdQuestions = questions.map((q, index) => ({
+      ...q,
+      id: crypto.randomUUID(),
+      display_order: nextOrder + index,
+    }));
+    setFeedbackQuestions([...feedbackQuestions, ...createdQuestions]);
+  };
+
+  const handleEditFeedbackQuestion = (id: string, updates: Partial<FeedbackQuestionType>) => {
+    setFeedbackQuestions(feedbackQuestions.map(q => q.id === id ? { ...q, ...updates } : q));
+  };
+
+  const handleDeleteFeedbackQuestion = (id: string) => {
+    setFeedbackQuestions(feedbackQuestions.filter(q => q.id !== id));
+  };
+
+  const handleFeedbackQuestionDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setFeedbackQuestions((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        const reordered = arrayMove(items, oldIndex, newIndex);
+        return reordered.map((item, index) => ({ ...item, display_order: index }));
+      });
+    }
+  };
+
+  const handleMoveFeedbackQuestionUp = (id: string) => {
+    const index = feedbackQuestions.findIndex(q => q.id === id);
+    if (index > 0) {
+      const reordered = arrayMove(feedbackQuestions, index, index - 1);
+      setFeedbackQuestions(reordered.map((item, idx) => ({ ...item, display_order: idx })));
+    }
+  };
+
+  const handleMoveFeedbackQuestionDown = (id: string) => {
+    const index = feedbackQuestions.findIndex(q => q.id === id);
+    if (index < feedbackQuestions.length - 1) {
+      const reordered = arrayMove(feedbackQuestions, index, index + 1);
+      setFeedbackQuestions(reordered.map((item, idx) => ({ ...item, display_order: idx })));
+    }
+  };
+
+  const openEditFeedbackQuestionDialog = (question: FeedbackQuestionType) => {
+    setEditingFeedbackQuestion(question);
+    setEditFeedbackDialogOpen(true);
   };
 
   const handleSubmit = async () => {
@@ -1145,6 +1244,63 @@ const DuplicateEvent = () => {
               onDelete={handleDeleteFAQ}
               onBatchAdd={() => setBatchCreateFAQDialogOpen(true)}
             />
+            </CardContent>
+          </Card>
+
+          {/* Post-Event Feedback */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Post-Event Feedback
+              </CardTitle>
+              <CardDescription>Copied from original event - customize as needed</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div className="space-y-1">
+                  <Label htmlFor="feedback-enabled" className="text-base">Enable Feedback</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Allow attendees to submit feedback after the event
+                  </p>
+                </div>
+                <Switch
+                  id="feedback-enabled"
+                  checked={feedbackEnabled}
+                  onCheckedChange={setFeedbackEnabled}
+                />
+              </div>
+
+              {feedbackEnabled && (
+                <>
+                  <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                    <div className="space-y-1">
+                      <Label htmlFor="auto-send" className="text-base">Auto-send Feedback Email</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Send feedback email 24 hours after event ends
+                      </p>
+                    </div>
+                    <Switch
+                      id="auto-send"
+                      checked={feedbackAutoSend}
+                      onCheckedChange={setFeedbackAutoSend}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Feedback Questions</Label>
+                    <FeedbackSection
+                      questions={feedbackQuestions}
+                      onDragEnd={handleFeedbackQuestionDragEnd}
+                      onEdit={openEditFeedbackQuestionDialog}
+                      onDelete={handleDeleteFeedbackQuestion}
+                      onBatchAdd={() => setBatchFeedbackDialogOpen(true)}
+                      onMoveUp={handleMoveFeedbackQuestionUp}
+                      onMoveDown={handleMoveFeedbackQuestionDown}
+                    />
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
