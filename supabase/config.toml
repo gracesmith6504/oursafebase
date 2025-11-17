@@ -8,3 +8,10 @@ verify_jwt = true
 
 [functions.check-email-exists]
 verify_jwt = false
+
+[functions.send-feedback-request]
+verify_jwt = true
+
+[functions.auto-send-feedback]
+verify_jwt = false
+
