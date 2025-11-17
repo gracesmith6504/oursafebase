@@ -568,17 +568,14 @@ const EditEvent = () => {
       isVisible: true,
     }));
     setFaqs([...faqs, ...createdFAQs]);
-    toast.success(`${newFAQs.length} FAQ${newFAQs.length === 1 ? '' : 's'} added`);
   };
 
   const handleEditFAQ = (id: string, question: string, answer: string, isVisible: boolean) => {
     setFaqs(faqs.map(faq => faq.id === id ? { ...faq, question, answer, isVisible } : faq));
-    toast.success("FAQ updated");
   };
 
   const handleDeleteFAQ = (id: string) => {
     setFaqs(faqs.filter(faq => faq.id !== id));
-    toast.success("FAQ deleted");
   };
 
   const handleFAQDragEnd = (event: DragEndEvent) => {

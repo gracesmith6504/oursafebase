@@ -256,7 +256,10 @@ const EventSafetyPage = () => {
 
       // Process FAQs
       if (results[5].status === 'fulfilled' && results[5].value.data) {
+        console.log('FAQs loaded:', results[5].value.data);
         setFaqs(results[5].value.data);
+      } else if (results[5].status === 'rejected') {
+        console.error("Failed to fetch FAQs:", results[5].reason);
       }
 
       // Check CoC acceptance and membership after fetching event
