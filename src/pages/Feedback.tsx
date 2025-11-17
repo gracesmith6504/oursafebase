@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Star, CheckCircle2 } from "lucide-react";
+import { Loader2, Star, CheckCircle2, ArrowLeft } from "lucide-react";
 import { ProtectedRoute } from "@/lib/auth";
 import { Switch } from "@/components/ui/switch";
+import { Footer } from "@/components/Footer";
 
 interface FeedbackQuestion {
   id: string;
@@ -217,21 +218,24 @@ const Feedback = () => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-2xl">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
-              <h2 className="text-2xl font-bold">Thank you for your feedback!</h2>
-              <p className="text-muted-foreground">
-                Your response has been submitted successfully.
-              </p>
-              <Button onClick={() => navigate(`/${societySlug}/${eventSlug}`)}>
-                Return to Event
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
+                <h2 className="text-2xl font-bold">Thank you for your feedback!</h2>
+                <p className="text-muted-foreground">
+                  Your response has been submitted successfully.
+                </p>
+                <Button onClick={() => navigate(`/${societySlug}/${eventSlug}`)}>
+                  Return to Event
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
       </div>
     );
   }
@@ -241,8 +245,19 @@ const Feedback = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="min-h-screen bg-background py-8 px-4 flex flex-col">
+      <div className="max-w-2xl mx-auto space-y-6 flex-1">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(`/${societySlug}/${eventSlug}`)}
+          className="mb-2"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Event
+        </Button>
+
         {/* Header */}
         <Card>
           <CardHeader className="space-y-4">
@@ -349,6 +364,7 @@ const Feedback = () => {
           </Button>
         )}
       </div>
+      <Footer />
     </div>
   );
 };
