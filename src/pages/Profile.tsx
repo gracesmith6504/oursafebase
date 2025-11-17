@@ -338,7 +338,7 @@ const Profile = () => {
 
       if (error) {
         console.error("Delete account error:", error);
-        toast.error("Failed to delete account. Please contact support.");
+        toast.error("Failed to delete account. Please contact support!");
         setDeleting(false);
         setDeleteDialogOpen(false);
         return;
