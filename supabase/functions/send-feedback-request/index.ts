@@ -123,7 +123,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Get society slug for building the feedback URL
     const societySlug = (event.societies as any)?.slug;
-    const feedbackUrl = `${Deno.env.get("SUPABASE_URL")?.replace("/rest/v1", "")?.replace("https://kusgjgstdabonfntxwsq.supabase.co", "https://lovable.app")}/society/${societySlug}/events/${event.slug}/feedback`;
+    const appUrl = Deno.env.get("VITE_PUBLIC_APP_URL") || "https://oursafebase.com";
+    const feedbackPath = `/society/${societySlug}/events/${event.slug}/feedback`;
+    const feedbackUrl = `${appUrl}/auth?redirectTo=${encodeURIComponent(feedbackPath)}`;
 
     for (const attendee of attendees) {
       try {
