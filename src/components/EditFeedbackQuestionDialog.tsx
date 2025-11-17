@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 
 interface FeedbackQuestion {
   id: string;
@@ -28,13 +27,11 @@ export function EditFeedbackQuestionDialog({
 }: EditFeedbackQuestionDialogProps) {
   const [questionText, setQuestionText] = useState("");
   const [questionType, setQuestionType] = useState<'text' | 'rating'>("text");
-  const [isRequired, setIsRequired] = useState(true);
 
   useEffect(() => {
     if (question) {
       setQuestionText(question.question);
       setQuestionType(question.question_type);
-      setIsRequired(question.is_required);
     }
   }, [question]);
 
@@ -44,7 +41,6 @@ export function EditFeedbackQuestionDialog({
     onSuccess(question.id, {
       question: questionText.trim(),
       question_type: questionType,
-      is_required: isRequired,
     });
 
     onOpenChange(false);
@@ -82,15 +78,6 @@ export function EditFeedbackQuestionDialog({
                 <SelectItem value="rating">Rating (1-5)</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="edit-required">Required</Label>
-            <Switch
-              id="edit-required"
-              checked={isRequired}
-              onCheckedChange={setIsRequired}
-            />
           </div>
         </div>
 

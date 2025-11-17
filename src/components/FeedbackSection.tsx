@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus, GripVertical, Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, GripVertical, Pencil, Trash2 } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -93,24 +93,6 @@ const SortableFeedbackQuestionItem = ({
           variant="ghost"
           size="icon"
           className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={() => onMoveUp(question.id)}
-          disabled={isFirst}
-        >
-          <ChevronUp className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={() => onMoveDown(question.id)}
-          disabled={isLast}
-        >
-          <ChevronDown className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={() => onEdit(question)}
         >
           <Pencil className="h-4 w-4" />
@@ -182,12 +164,7 @@ export function FeedbackSection({
             </div>
           </SortableContext>
         </DndContext>
-      ) : (
-        <div className="text-center py-8 text-muted-foreground">
-          <p className="text-sm">No feedback questions added yet</p>
-          <p className="text-xs mt-1">Click the button below to add questions for attendees</p>
-        </div>
-      )}
+      ) : null}
 
       <Button
         variant="outline"
