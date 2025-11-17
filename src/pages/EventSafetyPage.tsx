@@ -29,6 +29,8 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { HelpCircle } from "lucide-react";
 
 interface Event {
   id: string;
@@ -72,6 +74,13 @@ interface CodeOfConduct {
   version?: number;
 }
 
+interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+  display_order: number;
+}
+
 const EventSafetyPage = () => {
   const { eventId, societySlug, eventSlug } = useParams();
   const navigate = useNavigate();
@@ -94,6 +103,7 @@ const EventSafetyPage = () => {
   const [membershipLoading, setMembershipLoading] = useState(true);
   const [showViewCoCDialog, setShowViewCoCDialog] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
   
   const { isCommittee, loading: roleLoading } = useCommitteeRole(event?.society_id);
 
@@ -191,7 +201,15 @@ const EventSafetyPage = () => {
           .eq("society_id", eventData.society_id)
           .is("event_id", null)
           .eq("is_active", true)
-          .maybeSingle()
+          .maybeSingle(),
+        
+        // Fetch visible FAQs
+        supabase
+          .from("event_faqs")
+          .select("*")
+          .eq("event_id", eventData.id)
+          .eq("is_visible", true)
+          .order("display_order")
       ]);
 
       // Process society data
@@ -234,6 +252,11 @@ const EventSafetyPage = () => {
       
       if (cocData) {
         setCodeOfConduct(cocData);
+      }
+
+      // Process FAQs
+      if (results[5].status === 'fulfilled' && results[5].value.data) {
+        setFaqs(results[5].value.data);
       }
 
       // Check CoC acceptance and membership after fetching event
@@ -622,6 +645,32 @@ const EventSafetyPage = () => {
             Submit Feedback
           </Button>
         </div>
+
+        {/* FAQs Section */}
+        {faqs.length > 0 && (
+          <Card className="rounded-2xl hover:scale-[1.02] transition-all duration-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5" />
+                Frequently Asked Questions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                {faqs.map((faq, index) => (
+                  <AccordionItem key={faq.id} value={`faq-${index}`}>
+                    <AccordionTrigger className="text-left">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground whitespace-pre-wrap">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Code of Conduct - Bottom Section */}
         {codeOfConduct && (
