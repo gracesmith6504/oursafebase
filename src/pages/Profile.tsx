@@ -10,7 +10,16 @@ import { Switch } from "@/components/ui/switch";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { ArrowLeft, Upload, Bell, LogOut, Download } from "lucide-react";
 import { toast } from "sonner";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import logo from "@/assets/logo.png";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 
@@ -29,19 +38,17 @@ interface Society {
 }
 interface SocietyMembership {
   id: string;
-  role: 'committee' | 'attendee';
+  role: "committee" | "attendee";
   email_notifications_enabled: boolean;
   society: Society;
 }
 const Profile = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile>({
     display_name: "",
     phone_number: "",
-    avatar_url: null
+    avatar_url: null,
   });
   const [societies, setSocieties] = useState<SocietyMembership[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,18 +69,17 @@ const Profile = () => {
     }
   }, [user]);
   const fetchUserEmail = async () => {
-    const {
-      data
-    } = await supabase.auth.getUser();
+    const { data } = await supabase.auth.getUser();
     if (data?.user?.email) {
       setUserEmail(data.user.email);
     }
   };
   const fetchProfile = async () => {
-    const {
-      data,
-      error
-    } = await supabase.from("profiles").select("display_name, phone_number, avatar_url").eq("id", user?.id).single();
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("display_name, phone_number, avatar_url")
+      .eq("id", user?.id)
+      .single();
     if (error) {
       console.error(error);
     } else if (data) {
@@ -83,10 +89,12 @@ const Profile = () => {
     setLoading(false);
   };
   const fetchSocieties = async () => {
-    const {
-      data,
-      error
-    } = await supabase.from("society_members").select("id, role, email_notifications_enabled, society:societies(id, name, slug, logo_url, creator_email, is_verified)").eq("user_id", user?.id);
+    const { data, error } = await supabase
+      .from("society_members")
+      .select(
+        "id, role, email_notifications_enabled, society:societies(id, name, slug, logo_url, creator_email, is_verified)",
+      )
+      .eq("user_id", user?.id);
     if (error) {
       console.error(error);
     } else {
@@ -95,15 +103,22 @@ const Profile = () => {
   };
   const handleNotificationToggle = async (membershipId: string, enabled: boolean) => {
     // Optimistic update: Update UI immediately
-    setSocieties(prev => prev.map(m => m.id === membershipId ? {
-      ...m,
-      email_notifications_enabled: enabled
-    } : m));
-    const {
-      error
-    } = await supabase.from("society_members").update({
-      email_notifications_enabled: enabled
-    }).eq("id", membershipId);
+    setSocieties((prev) =>
+      prev.map((m) =>
+        m.id === membershipId
+          ? {
+              ...m,
+              email_notifications_enabled: enabled,
+            }
+          : m,
+      ),
+    );
+    const { error } = await supabase
+      .from("society_members")
+      .update({
+        email_notifications_enabled: enabled,
+      })
+      .eq("id", membershipId);
     if (error) {
       console.error(error);
       // Revert on error
@@ -137,26 +152,23 @@ const Profile = () => {
       if (avatarFile && user) {
         const fileExt = avatarFile.name.split(".").pop();
         const fileName = `${user.id}.${fileExt}`;
-        const {
-          error: uploadError
-        } = await supabase.storage.from("avatars").upload(fileName, avatarFile, {
-          upsert: true
+        const { error: uploadError } = await supabase.storage.from("avatars").upload(fileName, avatarFile, {
+          upsert: true,
         });
         if (uploadError) throw uploadError;
-        const {
-          data: urlData
-        } = supabase.storage.from("avatars").getPublicUrl(fileName);
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(fileName);
         avatarUrl = urlData.publicUrl;
       }
 
       // Update profile
-      const {
-        error
-      } = await supabase.from("profiles").update({
-        display_name: profile.display_name,
-        phone_number: profile.phone_number,
-        avatar_url: avatarUrl
-      }).eq("id", user?.id);
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          display_name: profile.display_name,
+          phone_number: profile.phone_number,
+          avatar_url: avatarUrl,
+        })
+        .eq("id", user?.id);
       if (error) throw error;
       toast.success("Profile updated successfully");
       setAvatarFile(null);
@@ -169,9 +181,7 @@ const Profile = () => {
   };
   const handleLeaveSociety = async (membershipId: string, societyName: string) => {
     try {
-      const {
-        error
-      } = await supabase.from("society_members").delete().eq("id", membershipId);
+      const { error } = await supabase.from("society_members").delete().eq("id", membershipId);
       if (error) {
         console.error("Leave society error:", error);
         if (error.message.includes("policy")) {
@@ -188,7 +198,7 @@ const Profile = () => {
       setSocietyToLeave(null);
 
       // Navigate to dashboard if user left all societies
-      const updatedSocieties = societies.filter(s => s.society.id !== societyToLeave?.id);
+      const updatedSocieties = societies.filter((s) => s.society.id !== societyToLeave?.id);
       if (updatedSocieties.length === 0) {
         setTimeout(() => {
           toast.info("Redirecting to dashboard...");
@@ -210,15 +220,27 @@ const Profile = () => {
     setExporting(true);
     try {
       // Fetch all user data
-      const [profileData, societiesData, eventsData, reportsData, feedbackData, acceptancesData, notesData, bookmarksData] = await Promise.all([
+      const [
+        profileData,
+        societiesData,
+        eventsData,
+        reportsData,
+        feedbackData,
+        acceptancesData,
+        notesData,
+        bookmarksData,
+      ] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single(),
-        supabase.from("society_members").select("role, joined_at, email_notifications_enabled, society:societies(name)").eq("user_id", user.id),
+        supabase
+          .from("society_members")
+          .select("role, joined_at, email_notifications_enabled, society:societies(name)")
+          .eq("user_id", user.id),
         supabase.from("events").select("*").eq("created_by", user.id),
         supabase.from("reports").select("*").eq("reporter_email", userEmail),
         supabase.from("event_feedback").select("*").eq("contact_email", userEmail),
         supabase.from("code_acceptances").select("*").eq("user_id", user.id),
         supabase.from("event_notes").select("*").eq("user_id", user.id),
-        supabase.from("report_bookmarks").select("*").eq("user_id", user.id)
+        supabase.from("report_bookmarks").select("*").eq("user_id", user.id),
       ]);
 
       // Sanitize data to include only user's personal information
@@ -268,7 +290,8 @@ const Profile = () => {
       const exportData = {
         exportDate: new Date().toISOString(),
         userEmail: userEmail,
-        dataDescription: "This export contains your personal data and activity only. It does not include other members' information, internal system IDs, or sensitive society details.",
+        dataDescription:
+          "This export contains your personal data and activity only. It does not include other members' information, internal system IDs, or sensitive society details.",
         profile: {
           display_name: profileData.data?.display_name,
           phone_number: profileData.data?.phone_number,
@@ -290,7 +313,7 @@ const Profile = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `oursafebase-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `oursafebase-data-export-${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -311,8 +334,8 @@ const Profile = () => {
     setDeleting(true);
     try {
       // Call the secure edge function to delete the account
-      const { data, error } = await supabase.functions.invoke('delete-account');
-      
+      const { data, error } = await supabase.functions.invoke("delete-account");
+
       if (error) {
         console.error("Delete account error:", error);
         toast.error("Failed to delete account. Please contact support.");
@@ -322,17 +345,17 @@ const Profile = () => {
       }
 
       toast.success("Account deleted successfully. Redirecting...");
-      
+
       // Sign out to clear the session
       await supabase.auth.signOut();
-      
+
       // Navigate to home page after a brief delay
       setTimeout(() => {
         navigate("/");
       }, 1500);
     } catch (error) {
       console.error("Delete account error:", error);
-      toast.error("Failed to delete account. Please contact support.");
+      toast.error("Failed to delete account. Please contact support..");
       setDeleting(false);
       setDeleteDialogOpen(false);
     }
@@ -340,16 +363,24 @@ const Profile = () => {
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
-    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
   if (loading) {
-    return <ProtectedRoute>
+    return (
+      <ProtectedRoute>
         <div className="flex min-h-screen items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
         </div>
-      </ProtectedRoute>;
+      </ProtectedRoute>
+    );
   }
-  return <ProtectedRoute>
+  return (
+    <ProtectedRoute>
       <div className="min-h-screen bg-muted overflow-x-hidden">
         <header className="border-b bg-background">
           <div className="container mx-auto flex items-center justify-between px-4 py-4">
@@ -371,9 +402,7 @@ const Profile = () => {
         <main className="container mx-auto max-w-4xl px-3 py-4 md:px-4 md:py-8">
           <div className="mb-8">
             <h2 className="mb-2 text-3xl font-bold">Edit Profile</h2>
-            <p className="text-muted-foreground">
-              Update your personal information and manage society memberships
-            </p>
+            <p className="text-muted-foreground">Update your personal information and manage society memberships</p>
           </div>
 
           <div className="space-y-6">
@@ -381,18 +410,14 @@ const Profile = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
-                <CardDescription>
-                  Your display name and contact details
-                </CardDescription>
+                <CardDescription>Your display name and contact details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Avatar */}
                 <div className="flex items-center gap-6">
                   <Avatar className="h-24 w-24">
                     <AvatarImage src={avatarPreview || undefined} />
-                    <AvatarFallback className="text-2xl">
-                      {getInitials(profile.display_name)}
-                    </AvatarFallback>
+                    <AvatarFallback className="text-2xl">{getInitials(profile.display_name)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <Label htmlFor="avatar" className="cursor-pointer">
@@ -405,9 +430,7 @@ const Profile = () => {
                             </span>
                           </Button>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          Max 2MB
-                        </p>
+                        <p className="text-sm text-muted-foreground">Max 2MB</p>
                       </div>
                     </Label>
                     <Input id="avatar" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
@@ -417,28 +440,41 @@ const Profile = () => {
                 {/* Display Name */}
                 <div className="space-y-2">
                   <Label htmlFor="display_name">Display Name</Label>
-                  <Input id="display_name" value={profile.display_name || ""} onChange={e => setProfile({
-                  ...profile,
-                  display_name: e.target.value
-                })} placeholder="Enter your name" />
+                  <Input
+                    id="display_name"
+                    value={profile.display_name || ""}
+                    onChange={(e) =>
+                      setProfile({
+                        ...profile,
+                        display_name: e.target.value,
+                      })
+                    }
+                    placeholder="Enter your name"
+                  />
                 </div>
 
                 {/* Email Address (read-only) */}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
                   <Input id="email" type="email" value={userEmail} readOnly disabled className="bg-muted" />
-                  <p className="text-xs text-muted-foreground">
-                    Email cannot be changed. Contact support if needed.
-                  </p>
+                  <p className="text-xs text-muted-foreground">Email cannot be changed. Contact support if needed.</p>
                 </div>
 
                 {/* Phone Number */}
                 <div className="space-y-2">
                   <Label htmlFor="phone_number">Phone Number</Label>
-                  <Input id="phone_number" type="tel" value={profile.phone_number || ""} onChange={e => setProfile({
-                  ...profile,
-                  phone_number: e.target.value
-                })} placeholder="Enter your phone number" />
+                  <Input
+                    id="phone_number"
+                    type="tel"
+                    value={profile.phone_number || ""}
+                    onChange={(e) =>
+                      setProfile({
+                        ...profile,
+                        phone_number: e.target.value,
+                      })
+                    }
+                    placeholder="Enter your phone number"
+                  />
                 </div>
 
                 <Button onClick={handleSaveProfile} disabled={saving}>
@@ -448,7 +484,8 @@ const Profile = () => {
             </Card>
 
             {/* Notification Preferences */}
-            {societies.some(m => m.role === 'committee') && <Card>
+            {societies.some((m) => m.role === "committee") && (
+              <Card>
                 <CardHeader>
                   <CardTitle>Notification Preferences</CardTitle>
                   <CardDescription>
@@ -457,33 +494,38 @@ const Profile = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {societies.filter(m => m.role === 'committee').map(membership => <div key={membership.id} className="flex items-center justify-between rounded-lg border p-4">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <Bell className="h-5 w-5 text-muted-foreground shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium break-words">{membership.society.name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              Report email notifications
-                            </p>
+                    {societies
+                      .filter((m) => m.role === "committee")
+                      .map((membership) => (
+                        <div key={membership.id} className="flex items-center justify-between rounded-lg border p-4">
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <Bell className="h-5 w-5 text-muted-foreground shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium break-words">{membership.society.name}</p>
+                              <p className="text-sm text-muted-foreground">Report email notifications</p>
+                            </div>
                           </div>
+                          <Switch
+                            checked={membership.email_notifications_enabled}
+                            onCheckedChange={(checked) => handleNotificationToggle(membership.id, checked)}
+                          />
                         </div>
-                        <Switch checked={membership.email_notifications_enabled} onCheckedChange={checked => handleNotificationToggle(membership.id, checked)} />
-                      </div>)}
+                      ))}
                   </div>
                 </CardContent>
-              </Card>}
+              </Card>
+            )}
 
             {/* Data Export (GDPR) */}
             <Card>
               <CardHeader>
                 <CardTitle>Data Export</CardTitle>
-                <CardDescription>
-                  Download all your data in JSON format (GDPR Article 20)
-                </CardDescription>
+                <CardDescription>Download all your data in JSON format (GDPR Article 20)</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Export includes your personal data and activity only. Does not include other members' information, internal system IDs, or sensitive society details.
+                  Export includes your personal data and activity only. Does not include other members' information,
+                  internal system IDs, or sensitive society details.
                 </p>
                 <Button onClick={handleExportData} disabled={exporting} variant="outline">
                   <Download className="mr-2 h-4 w-4" />
@@ -496,27 +538,33 @@ const Profile = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Society Memberships</CardTitle>
-                <CardDescription>
-                  Societies you are currently a member of
-                </CardDescription>
+                <CardDescription>Societies you are currently a member of</CardDescription>
               </CardHeader>
               <CardContent>
-                {societies.length === 0 ? <p className="text-sm text-muted-foreground">
-                    You are not a member of any societies yet.
-                  </p> : <div className="space-y-3">
-                    {societies.map(membership => <div key={membership.id} className="flex items-center justify-between rounded-lg border p-4">
+                {societies.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">You are not a member of any societies yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {societies.map((membership) => (
+                      <div key={membership.id} className="flex items-center justify-between rounded-lg border p-4">
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold break-words flex items-center gap-2">
                             {membership.society.name}
                             {membership.society.is_verified && <VerifiedBadge size="sm" />}
                           </h3>
-                          
                         </div>
-                        <Button variant="destructive" size="sm" onClick={() => setSocietyToLeave(membership.society)} className="mx-[10px]">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setSocietyToLeave(membership.society)}
+                          className="mx-[10px]"
+                        >
                           Leave
                         </Button>
-                      </div>)}
-                  </div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -524,9 +572,7 @@ const Profile = () => {
             <Card className="border-destructive">
               <CardHeader>
                 <CardTitle className="text-destructive">Delete Account</CardTitle>
-                <CardDescription>
-                  Permanently delete your account and personal data
-                </CardDescription>
+                <CardDescription>Permanently delete your account and personal data</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="rounded-lg bg-destructive/10 p-4 space-y-2">
@@ -552,11 +598,7 @@ const Profile = () => {
                 </div>
 
                 <div className="pt-2">
-                  <Button 
-                    variant="destructive" 
-                    onClick={() => setDeleteDialogOpen(true)}
-                    disabled={deleting}
-                  >
+                  <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)} disabled={deleting}>
                     Delete My Account
                   </Button>
                 </div>
@@ -571,18 +613,19 @@ const Profile = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>Leave Society?</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to leave {societyToLeave?.name}? You will need
-                an invite code to rejoin.
+                Are you sure you want to leave {societyToLeave?.name}? You will need an invite code to rejoin.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => {
-              const membership = societies.find(m => m.society.id === societyToLeave?.id);
-              if (membership && societyToLeave) {
-                handleLeaveSociety(membership.id, societyToLeave.name);
-              }
-            }}>
+              <AlertDialogAction
+                onClick={() => {
+                  const membership = societies.find((m) => m.society.id === societyToLeave?.id);
+                  if (membership && societyToLeave) {
+                    handleLeaveSociety(membership.id, societyToLeave.name);
+                  }
+                }}
+              >
                 Leave Society
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -596,12 +639,13 @@ const Profile = () => {
               <AlertDialogTitle>Log out of your account?</AlertDialogTitle>
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-col gap-2 sm:flex-col">
-              <AlertDialogAction onClick={handleSignOut} className="w-full border border-input bg-background text-destructive hover:bg-accent hover:text-destructive">
+              <AlertDialogAction
+                onClick={handleSignOut}
+                className="w-full border border-input bg-background text-destructive hover:bg-accent hover:text-destructive"
+              >
                 Log Out
               </AlertDialogAction>
-              <AlertDialogCancel className="w-full mt-0">
-                Cancel
-              </AlertDialogCancel>
+              <AlertDialogCancel className="w-full mt-0">Cancel</AlertDialogCancel>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -613,24 +657,26 @@ const Profile = () => {
               <AlertDialogTitle>Delete Account Permanently?</AlertDialogTitle>
               <AlertDialogDescription className="space-y-3">
                 <p>
-                  This action <strong>cannot be undone</strong>. Your account and personal data will be permanently deleted.
+                  This action <strong>cannot be undone</strong>. Your account and personal data will be permanently
+                  deleted.
                 </p>
                 <div className="rounded-lg bg-muted p-3 space-y-2 text-left">
                   <p className="font-medium text-foreground text-sm">Data Retention Policy:</p>
                   <ul className="text-xs space-y-1 ml-4 list-disc">
                     <li>Anonymous reports remain for safety records (untraceable to you)</li>
-                    <li>Non-anonymous reports: your contact info is removed, but report content is kept for welfare and legal purposes</li>
+                    <li>
+                      Non-anonymous reports: your contact info is removed, but report content is kept for welfare and
+                      legal purposes
+                    </li>
                     <li>Events you created remain active (your name removed)</li>
                   </ul>
                 </div>
-                <p className="text-sm">
-                  Are you absolutely sure you want to delete your account?
-                </p>
+                <p className="text-sm">Are you absolutely sure you want to delete your account?</p>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
-              <AlertDialogAction 
+              <AlertDialogAction
                 onClick={handleDeleteAccount}
                 disabled={deleting}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -641,6 +687,7 @@ const Profile = () => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </ProtectedRoute>;
+    </ProtectedRoute>
+  );
 };
 export default Profile;
