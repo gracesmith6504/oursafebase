@@ -651,10 +651,6 @@ const EditEvent = () => {
       is_required: false,
     }));
     setFeedbackQuestions([...feedbackQuestions, ...createdQuestions]);
-    // Auto-enable auto-send when adding questions
-    if (!feedbackAutoSend) {
-      setFeedbackAutoSend(true);
-    }
   };
 
   const handleEditFeedbackQuestion = (id: string, updates: Partial<FeedbackQuestionType>) => {
