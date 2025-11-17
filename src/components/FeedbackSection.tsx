@@ -167,6 +167,7 @@ export function FeedbackSection({
       ) : null}
 
       <Button
+        type="button"
         variant="outline"
         onClick={onBatchAdd}
         className="w-full"
