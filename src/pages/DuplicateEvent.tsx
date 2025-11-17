@@ -442,12 +442,6 @@ const DuplicateEvent = () => {
           is_required: q.is_required,
         })));
       }
-          question: faq.question,
-          answer: faq.answer,
-          displayOrder: faq.display_order,
-          isVisible: faq.is_visible,
-        })));
-      }
 
       // Fetch active CoC for the original event
       const { data: eventCoCData } = await supabase
@@ -796,6 +790,36 @@ const DuplicateEvent = () => {
           .insert(faqsToInsert);
         
         if (faqInsertError) throw faqInsertError;
+      }
+
+      // Create feedback config and questions if enabled
+      if (feedbackEnabled) {
+        const { error: feedbackConfigError } = await supabase
+          .from("event_feedback_config")
+          .insert({
+            event_id: eventData.id,
+            enabled: feedbackEnabled,
+            auto_send_enabled: feedbackAutoSend,
+            auto_send_hours: 24,
+          });
+
+        if (feedbackConfigError) throw feedbackConfigError;
+
+        if (feedbackQuestions.length > 0) {
+          const questionsToInsert = feedbackQuestions.map((q) => ({
+            event_id: eventData.id,
+            question: q.question,
+            question_type: q.question_type,
+            display_order: q.display_order,
+            is_required: q.is_required,
+          }));
+
+          const { error: questionsError } = await supabase
+            .from("event_feedback_questions")
+            .insert(questionsToInsert);
+
+          if (questionsError) throw questionsError;
+        }
       }
 
       // Create a copy of the selected CoC for this event
@@ -1420,6 +1444,20 @@ const DuplicateEvent = () => {
           onOpenChange={setEditFAQDialogOpen}
           faq={editingFAQ}
           onSuccess={handleEditFAQ}
+        />
+
+        {/* Feedback Dialogs */}
+        <BatchCreateFeedbackQuestionDialog
+          open={batchFeedbackDialogOpen}
+          onOpenChange={setBatchFeedbackDialogOpen}
+          onSuccess={handleBatchAddFeedbackQuestions}
+        />
+        
+        <EditFeedbackQuestionDialog
+          open={editFeedbackDialogOpen}
+          onOpenChange={setEditFeedbackDialogOpen}
+          question={editingFeedbackQuestion}
+          onSuccess={handleEditFeedbackQuestion}
         />
 
         {showSafetyPreview && society && (
