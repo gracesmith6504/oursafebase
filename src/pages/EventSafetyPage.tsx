@@ -654,16 +654,17 @@ const EventSafetyPage = () => {
         {getEventStatus(event.event_date) === 'past' && isSocietyMember && (
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="pt-6">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h3 className="font-semibold mb-1">Share Your Experience</h3>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-base">Share Your Experience</h3>
                   <p className="text-sm text-muted-foreground">
                     Help us improve future events with your feedback
                   </p>
                 </div>
                 <Button
                   onClick={() => navigate(`/${societySlug}/${eventSlug}/feedback`)}
-                  className="flex-shrink-0"
+                  className="w-full sm:w-auto sm:flex-shrink-0"
+                  size="lg"
                 >
                   <MessageSquare className="mr-2 h-4 w-4" />
                   Submit Feedback
