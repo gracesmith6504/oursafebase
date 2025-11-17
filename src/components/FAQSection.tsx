@@ -99,10 +99,10 @@ interface FAQSectionProps {
   onDragEnd: (event: DragEndEvent) => void;
   onEdit: (faq: FAQ) => void;
   onDelete: (id: string) => void;
-  onAdd: () => void;
+  onBatchAdd: () => void;
 }
 
-export function FAQSection({ faqs, onDragEnd, onEdit, onDelete, onAdd }: FAQSectionProps) {
+export function FAQSection({ faqs, onDragEnd, onEdit, onDelete, onBatchAdd }: FAQSectionProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -135,11 +135,11 @@ export function FAQSection({ faqs, onDragEnd, onEdit, onDelete, onAdd }: FAQSect
       <Button
         type="button"
         variant="outline"
-        onClick={onAdd}
+        onClick={onBatchAdd}
         className="w-full"
       >
         <Plus className="mr-2 h-4 w-4" />
-        Add FAQ
+        Add FAQs
       </Button>
     </div>
   );

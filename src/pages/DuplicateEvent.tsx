@@ -46,7 +46,7 @@ import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
 import { generateUniqueSlug } from "@/lib/eventHelpers";
 import { EventSafetyPreviewDialog } from "@/components/EventSafetyPreviewDialog";
 import { Eye, HelpCircle } from "lucide-react";
-import { CreateFAQDialog } from "@/components/CreateFAQDialog";
+import { BatchCreateFAQDialog } from "@/components/BatchCreateFAQDialog";
 import { EditFAQDialog } from "@/components/EditFAQDialog";
 import { FAQSection, FAQ } from "@/components/FAQSection";
 
@@ -225,7 +225,7 @@ const DuplicateEvent = () => {
   
   // FAQ state
   const [faqs, setFaqs] = useState<FAQ[]>([]);
-  const [createFAQDialogOpen, setCreateFAQDialogOpen] = useState(false);
+  const [batchCreateFAQDialogOpen, setBatchCreateFAQDialogOpen] = useState(false);
   const [editFAQDialogOpen, setEditFAQDialogOpen] = useState(false);
   const [editingFAQ, setEditingFAQ] = useState<FAQ | null>(null);
 
@@ -541,16 +541,17 @@ const DuplicateEvent = () => {
   };
 
   // FAQ handlers
-  const handleAddFAQ = (question: string, answer: string) => {
-    const newFAQ: FAQ = {
+  const handleBatchAddFAQ = (newFAQs: { question: string; answer: string }[]) => {
+    const currentMaxOrder = faqs.length;
+    const createdFAQs: FAQ[] = newFAQs.map((faq, index) => ({
       id: crypto.randomUUID(),
-      question,
-      answer,
-      displayOrder: faqs.length,
+      question: faq.question,
+      answer: faq.answer,
+      displayOrder: currentMaxOrder + index,
       isVisible: true,
-    };
-    setFaqs([...faqs, newFAQ]);
-    toast.success("FAQ added");
+    }));
+    setFaqs([...faqs, ...createdFAQs]);
+    toast.success(`${newFAQs.length} FAQ${newFAQs.length === 1 ? '' : 's'} added`);
   };
 
   const handleEditFAQ = (id: string, question: string, answer: string, isVisible: boolean) => {
@@ -1140,13 +1141,13 @@ const DuplicateEvent = () => {
               <CardDescription>Copied from original event - edit as needed</CardDescription>
             </CardHeader>
             <CardContent>
-              <FAQSection
-                faqs={faqs}
-                onDragEnd={handleFAQDragEnd}
-                onEdit={openEditFAQDialog}
-                onDelete={handleDeleteFAQ}
-                onAdd={() => setCreateFAQDialogOpen(true)}
-              />
+            <FAQSection
+              faqs={faqs}
+              onDragEnd={handleFAQDragEnd}
+              onEdit={openEditFAQDialog}
+              onDelete={handleDeleteFAQ}
+              onBatchAdd={() => setBatchCreateFAQDialogOpen(true)}
+            />
             </CardContent>
           </Card>
 
@@ -1255,11 +1256,11 @@ const DuplicateEvent = () => {
           onSuccess={fetchCoCs}
         />
 
-        <CreateFAQDialog
-          open={createFAQDialogOpen}
-          onOpenChange={setCreateFAQDialogOpen}
-          onSuccess={handleAddFAQ}
-        />
+      <BatchCreateFAQDialog
+        open={batchCreateFAQDialogOpen}
+        onOpenChange={setBatchCreateFAQDialogOpen}
+        onSuccess={handleBatchAddFAQ}
+      />
 
         <EditFAQDialog
           open={editFAQDialogOpen}
