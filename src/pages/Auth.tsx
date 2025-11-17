@@ -328,8 +328,17 @@ const Auth = () => {
       });
       if (error) {
         // Check if the error is about email already being registered
-        if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("already been registered")) {
-          toast.error("This email is already registered. Please sign in instead.");
+        const errorMsg = error.message.toLowerCase();
+        if (
+          errorMsg.includes("already registered") || 
+          errorMsg.includes("already been registered") ||
+          errorMsg.includes("user already exists") ||
+          errorMsg.includes("email already exists") ||
+          error.status === 422
+        ) {
+          const duplicateEmailMessage = "This email already has an account. Please log in instead.";
+          setAuthError(duplicateEmailMessage);
+          toast.error(duplicateEmailMessage);
           setLoading(false);
           // Switch to sign-in tab after a brief delay
           setTimeout(() => {
@@ -337,9 +346,10 @@ const Auth = () => {
             if (signInTab) {
               (signInTab as HTMLElement).click();
             }
-          }, 1500);
+          }, 2000);
           return;
         }
+        setAuthError(error.message);
         toast.error(error.message);
         setLoading(false);
         return;
@@ -682,7 +692,7 @@ const Auth = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="signin">
+                <Tabs defaultValue="signin" onValueChange={() => setAuthError(null)}>
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="signin">Sign In</TabsTrigger>
                     <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -711,7 +721,17 @@ const Auth = () => {
 
                       <div className="space-y-2">
                         <Label htmlFor="signin-email">Email</Label>
-                        <Input id="signin-email" type="email" placeholder="you@gmail.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                        <Input 
+                          id="signin-email" 
+                          type="email" 
+                          placeholder="you@gmail.com" 
+                          value={email} 
+                          onChange={e => {
+                            setEmail(e.target.value);
+                            if (authError) setAuthError(null);
+                          }} 
+                          required 
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="signin-password">Password</Label>
@@ -755,8 +775,19 @@ const Auth = () => {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="signup-email">Email</Label>
-                        <Input id="signup-email" type="email" placeholder="you@gmail.com" value={email} onChange={e => setEmail(e.target.value)} disabled={loading} required />
-                        <p className="text-xs text-muted-foreground">Use a personal email like @gmail.com for best experience 
+                        <Input 
+                          id="signup-email" 
+                          type="email" 
+                          placeholder="you@gmail.com" 
+                          value={email} 
+                          onChange={e => {
+                            setEmail(e.target.value);
+                            if (authError) setAuthError(null);
+                          }} 
+                          disabled={loading} 
+                          required 
+                        />
+                        <p className="text-xs text-muted-foreground">Use a personal email like @gmail.com for best experience 
 (university emails may be slower)</p>
                       </div>
                       <div className="space-y-2">
