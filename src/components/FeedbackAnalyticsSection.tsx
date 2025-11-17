@@ -406,7 +406,7 @@ export const FeedbackAnalyticsSection = ({
           )}
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[400px] sm:h-[500px] lg:h-[600px] pr-4">
+          <ScrollArea className="max-h-[400px] sm:max-h-[500px] lg:max-h-[600px] pr-4">
             <div className="space-y-4 pb-4">
               {filteredResponses.map((group) => (
                 <Collapsible
