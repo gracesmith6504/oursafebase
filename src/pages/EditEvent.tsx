@@ -725,6 +725,25 @@ const EditEvent = () => {
         if (emergencyError) throw emergencyError;
       }
 
+      // Update FAQs - delete all and reinsert
+      await supabase.from('event_faqs').delete().eq('event_id', eventId);
+      
+      const faqsToInsert = faqs.map(f => ({
+        event_id: eventId!,
+        question: f.question,
+        answer: f.answer,
+        display_order: f.displayOrder,
+        is_visible: f.isVisible,
+      }));
+      
+      if (faqsToInsert.length > 0) {
+        const { error: faqError } = await supabase
+          .from('event_faqs')
+          .insert(faqsToInsert);
+        
+        if (faqError) throw faqError;
+      }
+
       // Update CoC association
       // First, delete any existing event-specific CoC
       await supabase

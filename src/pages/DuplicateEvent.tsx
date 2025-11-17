@@ -684,6 +684,23 @@ const DuplicateEvent = () => {
         if (emergencyError) throw emergencyError;
       }
 
+      // Insert FAQs if any
+      const faqsToInsert = faqs.map(f => ({
+        event_id: eventData.id,
+        question: f.question,
+        answer: f.answer,
+        display_order: f.displayOrder,
+        is_visible: f.isVisible,
+      }));
+      
+      if (faqsToInsert.length > 0) {
+        const { error: faqInsertError } = await supabase
+          .from('event_faqs')
+          .insert(faqsToInsert);
+        
+        if (faqInsertError) throw faqInsertError;
+      }
+
       // Create a copy of the selected CoC for this event
       if (selectedCoCId) {
         const selectedCoC = availableCoCs.find((c) => c.id === selectedCoCId);
@@ -1236,6 +1253,19 @@ const DuplicateEvent = () => {
           onOpenChange={setCreateCoCDialogOpen}
           societyId={society?.id || ""}
           onSuccess={fetchCoCs}
+        />
+
+        <CreateFAQDialog
+          open={createFAQDialogOpen}
+          onOpenChange={setCreateFAQDialogOpen}
+          onSuccess={handleAddFAQ}
+        />
+
+        <EditFAQDialog
+          open={editFAQDialogOpen}
+          onOpenChange={setEditFAQDialogOpen}
+          faq={editingFAQ}
+          onSuccess={handleEditFAQ}
         />
 
         {showSafetyPreview && society && (
