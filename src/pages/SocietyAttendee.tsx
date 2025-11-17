@@ -145,13 +145,22 @@ const SocietyAttendee = () => {
                               )}
                             </CardDescription>
                           </CardHeader>
-                          <CardContent>
+                          <CardContent className="space-y-2">
                             <Button
                               onClick={() => navigate(`/${society?.slug}/${event.slug}`)}
                               className="w-full"
                             >
                               View Safety Page →
                             </Button>
+                            {status === 'past' && (
+                              <Button
+                                onClick={() => navigate(`/${society?.slug}/${event.slug}/feedback`)}
+                                className="w-full"
+                                variant="outline"
+                              >
+                                Submit Post-Event Feedback
+                              </Button>
+                            )}
                           </CardContent>
                         </Card>
                       );

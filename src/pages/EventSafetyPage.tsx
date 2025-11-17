@@ -9,6 +9,7 @@ import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy
 import { format } from "date-fns";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
+import { getEventStatus } from "@/lib/eventHelpers";
 import { ReportConcernDialog } from "@/components/ReportConcernDialog";
 import { SubmitFeedbackDialog } from "@/components/SubmitFeedbackDialog";
 import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
@@ -648,6 +649,30 @@ const EventSafetyPage = () => {
             Submit Feedback
           </Button>
         </div>
+
+        {/* Post-Event Feedback Link */}
+        {getEventStatus(event.event_date) === 'past' && isSocietyMember && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-semibold mb-1">Share Your Experience</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Help us improve future events with your feedback
+                  </p>
+                </div>
+                <Button
+                  onClick={() => navigate(`/${societySlug}/${eventSlug}/feedback`)}
+                  className="flex-shrink-0"
+                >
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Submit Feedback
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* FAQs Section */}
         {faqs.length > 0 && (
