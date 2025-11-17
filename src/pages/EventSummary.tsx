@@ -98,6 +98,7 @@ const EventSummary = () => {
   const [feedbackMetrics, setFeedbackMetrics] = useState<FeedbackMetrics | null>(null);
   const [ratingAverages, setRatingAverages] = useState<RatingAverage[]>([]);
   const [textThemes, setTextThemes] = useState<TextTheme[]>([]);
+  const [societyName, setSocietyName] = useState<string>("");
   const [groupedResponses, setGroupedResponses] = useState<GroupedResponse[]>([]);
   const { isCommittee, loading: roleLoading } = useCommitteeRole(event?.society_id);
 
@@ -114,12 +115,18 @@ const EventSummary = () => {
       // Fetch event details
       const { data: eventData, error: eventError } = await supabase
         .from("events")
-        .select("*")
+        .select(`
+          *,
+          societies:society_id (
+            name
+          )
+        `)
         .eq("id", eventId)
         .single();
 
       if (eventError) throw eventError;
       setEvent(eventData);
+      setSocietyName(eventData.societies?.name || "");
 
       // Fetch metrics
       const metricsData = await getEventDetailedMetrics(eventId!);
@@ -423,8 +430,9 @@ const EventSummary = () => {
           {/* Post-Event Feedback Analysis */}
           {feedbackMetrics && feedbackMetrics.totalResponses > 0 && (
             <section>
-              <h2 className="text-xl font-semibold mb-4">Post-Event Feedback Analysis</h2>
               <FeedbackAnalyticsSection
+                eventName={event?.title || "Event"}
+                societyName={societyName}
                 metrics={feedbackMetrics}
                 ratingAverages={ratingAverages}
                 textThemes={textThemes}
