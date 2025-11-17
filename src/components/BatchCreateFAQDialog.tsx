@@ -85,16 +85,16 @@ export function BatchCreateFAQDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] p-0">
-        <DialogHeader className="px-6 pt-6">
+      <DialogContent className="sm:max-w-[600px] flex flex-col max-h-[90vh] p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0">
           <DialogTitle>Add FAQs</DialogTitle>
           <DialogDescription>
             Add multiple FAQs at once. Empty rows will be skipped.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col h-full">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <ScrollArea className="flex-1 px-6">
-            <div className="space-y-6 py-4">
+            <div className="space-y-6 py-4 pb-6">
               {rows.map((row, index) => (
                 <div
                   key={row.tempId}
@@ -139,7 +139,7 @@ export function BatchCreateFAQDialog({
               ))}
             </div>
           </ScrollArea>
-          <div className="px-6 pb-6 space-y-3">
+          <div className="px-6 py-4 border-t space-y-3 shrink-0">
             <Button
               type="button"
               variant="outline"
@@ -149,26 +149,17 @@ export function BatchCreateFAQDialog({
               <Plus className="mr-2 h-4 w-4" />
               Add Another FAQ
             </Button>
-            <DialogFooter className="gap-2 sm:gap-0">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={
-                  isSubmitting ||
-                  !rows.some((r) => r.question.trim() && r.answer.trim())
-                }
-              >
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save All
-              </Button>
-            </DialogFooter>
+            <Button
+              type="submit"
+              disabled={
+                isSubmitting ||
+                !rows.some((r) => r.question.trim() && r.answer.trim())
+              }
+              className="w-full"
+            >
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save All
+            </Button>
           </div>
         </form>
       </DialogContent>
