@@ -626,8 +626,8 @@ const CreateEvent = () => {
     toast.success("FAQ added");
   };
 
-  const handleEditFAQ = (id: string, question: string, answer: string) => {
-    setFaqs(faqs.map(faq => faq.id === id ? { ...faq, question, answer } : faq));
+  const handleEditFAQ = (id: string, question: string, answer: string, isVisible: boolean) => {
+    setFaqs(faqs.map(faq => faq.id === id ? { ...faq, question, answer, isVisible } : faq));
     toast.success("FAQ updated");
   };
 

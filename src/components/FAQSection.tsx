@@ -1,4 +1,4 @@
-import { GripVertical, X, Plus, Edit } from "lucide-react";
+import { Eye, EyeOff, GripVertical, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -66,6 +66,11 @@ const SortableFAQItem = ({ faq, onEdit, onDelete }: SortableFAQItemProps) => {
         <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{faq.answer}</p>
       </div>
       <div className="flex items-center gap-1 shrink-0">
+        {faq.isVisible ? (
+          <Eye className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <EyeOff className="h-4 w-4 text-muted-foreground" />
+        )}
         <Button
           type="button"
           variant="ghost"
@@ -73,7 +78,7 @@ const SortableFAQItem = ({ faq, onEdit, onDelete }: SortableFAQItemProps) => {
           className="h-8 w-8"
           onClick={onEdit}
         >
-          <Edit className="h-4 w-4" />
+          <Eye className="h-4 w-4" />
         </Button>
         <Button
           type="button"
