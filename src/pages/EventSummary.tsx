@@ -300,7 +300,7 @@ const EventSummary = () => {
           <section>
             <h2 className="text-xl font-semibold mb-4">Key Metrics</h2>
             <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-              <Card>
+              <Card className={metrics?.reports === 0 ? "opacity-50" : ""}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Total Reports</CardTitle>
                 </CardHeader>
@@ -315,7 +315,7 @@ const EventSummary = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className={metrics?.feedback === 0 ? "opacity-50" : ""}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Total Feedback</CardTitle>
                 </CardHeader>
@@ -330,7 +330,7 @@ const EventSummary = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className={metrics?.pageViews === 0 ? "opacity-50" : ""}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Page Views</CardTitle>
                 </CardHeader>
@@ -345,7 +345,7 @@ const EventSummary = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className={metrics?.codeAcceptances === 0 ? "opacity-50" : ""}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">CoC Acceptances</CardTitle>
                 </CardHeader>
