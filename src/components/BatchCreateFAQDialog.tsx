@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +30,28 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+const SAMPLE_FAQ_QUESTIONS = [
+  "What time does the event start?",
+  "Where is the event location?",
+  "Is there a dress code for this event?",
+  "Can I bring a guest or plus-one?",
+  "Will food and drinks be provided?",
+  "How do I get tickets or register?",
+  "Is the venue wheelchair accessible?",
+  "What should I do if I need to cancel?",
+];
+
+const SAMPLE_FAQ_ANSWERS = [
+  "The event starts at 7:00 PM. Please arrive 15 minutes early for check-in.",
+  "We're located at the Main Hall on campus. Detailed directions will be sent via email.",
+  "Smart casual attire is recommended for this event.",
+  "Yes, each ticket includes one guest. Please register them during sign-up.",
+  "Light refreshments and drinks will be provided throughout the event.",
+  "Registration opens two weeks before the event on our website.",
+  "Yes, the venue is fully accessible with ramps and elevators available.",
+  "Please contact us at least 48 hours in advance to cancel your registration.",
+];
+
 interface FAQRow {
   tempId: string;
   question: string;
@@ -42,9 +64,11 @@ interface SortableFAQRowProps {
   onUpdate: (tempId: string, field: "question" | "answer", value: string) => void;
   onRemove: (tempId: string) => void;
   canRemove: boolean;
+  isLast: boolean;
+  lastRowRef?: React.RefObject<HTMLDivElement>;
 }
 
-function SortableFAQRow({ row, index, onUpdate, onRemove, canRemove }: SortableFAQRowProps) {
+function SortableFAQRow({ row, index, onUpdate, onRemove, canRemove, isLast, lastRowRef }: SortableFAQRowProps) {
   const {
     attributes,
     listeners,
@@ -60,9 +84,17 @@ function SortableFAQRow({ row, index, onUpdate, onRemove, canRemove }: SortableF
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const placeholderQuestion = SAMPLE_FAQ_QUESTIONS[index % SAMPLE_FAQ_QUESTIONS.length];
+  const placeholderAnswer = SAMPLE_FAQ_ANSWERS[index % SAMPLE_FAQ_ANSWERS.length];
+
   return (
     <div
-      ref={setNodeRef}
+      ref={(node) => {
+        setNodeRef(node);
+        if (isLast && lastRowRef) {
+          (lastRowRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        }
+      }}
       style={style}
       className="space-y-3 pb-6 border-b last:border-0 hover:bg-muted/30 rounded-lg p-3 -mx-3"
     >
@@ -92,14 +124,14 @@ function SortableFAQRow({ row, index, onUpdate, onRemove, canRemove }: SortableF
       </div>
       <div className="space-y-2">
         <Input
-          placeholder="What time does the event start?"
+          placeholder={placeholderQuestion}
           value={row.question}
           onChange={(e) => onUpdate(row.tempId, "question", e.target.value)}
         />
       </div>
       <div className="space-y-2">
         <Textarea
-          placeholder="The event starts at 7:00 PM. Please arrive 15 minutes early for check-in."
+          placeholder={placeholderAnswer}
           value={row.answer}
           onChange={(e) => onUpdate(row.tempId, "answer", e.target.value)}
           rows={3}
@@ -124,6 +156,20 @@ export function BatchCreateFAQDialog({
     { tempId: crypto.randomUUID(), question: "", answer: "" },
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const lastRowRef = useRef<HTMLDivElement>(null);
+  const prevRowsLengthRef = useRef(rows.length);
+
+  useEffect(() => {
+    if (rows.length > prevRowsLengthRef.current && lastRowRef.current) {
+      setTimeout(() => {
+        lastRowRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'nearest' 
+        });
+      }, 100);
+    }
+    prevRowsLengthRef.current = rows.length;
+  }, [rows.length]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -220,6 +266,8 @@ export function BatchCreateFAQDialog({
                       onUpdate={updateRow}
                       onRemove={removeRow}
                       canRemove={rows.length > 1}
+                      isLast={index === rows.length - 1}
+                      lastRowRef={lastRowRef}
                     />
                   ))}
                 </div>
