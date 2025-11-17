@@ -307,6 +307,85 @@ export type Database = {
           },
         ]
       }
+      event_feedback_config: {
+        Row: {
+          auto_send_enabled: boolean
+          auto_send_hours: number
+          created_at: string | null
+          enabled: boolean
+          event_id: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          auto_send_enabled?: boolean
+          auto_send_hours?: number
+          created_at?: string | null
+          enabled?: boolean
+          event_id: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          auto_send_enabled?: boolean
+          auto_send_hours?: number
+          created_at?: string | null
+          enabled?: boolean
+          event_id?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_feedback_config_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_feedback_questions: {
+        Row: {
+          created_at: string | null
+          display_order: number
+          event_id: string
+          id: string
+          is_required: boolean
+          question: string
+          question_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number
+          event_id: string
+          id?: string
+          is_required?: boolean
+          question: string
+          question_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number
+          event_id?: string
+          id?: string
+          is_required?: boolean
+          question?: string
+          question_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_feedback_questions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_notes: {
         Row: {
           content: string
