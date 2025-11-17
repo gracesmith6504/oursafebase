@@ -79,13 +79,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Fetch all attendees who accepted CoC and haven't been sent feedback request
     const { data: attendees, error: attendeesError } = await supabaseClient
       .from("code_acceptances")
-      .select(`
-        id,
-        user_id,
-        profiles (
-          display_name
-        )
-      `)
+      .select("id, user_id")
       .eq("event_id", eventId)
       .is("feedback_request_sent_at", null);
 
@@ -111,8 +105,17 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Found ${attendees.length} attendees to send feedback requests to`);
 
-    // Get user emails from auth.users
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    // Create admin client to access auth.users
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
     
     // For each attendee, send feedback request email
     let sentCount = 0;
@@ -124,115 +127,61 @@ const handler = async (req: Request): Promise<Response> => {
 
     for (const attendee of attendees) {
       try {
-        // Get user email from their user_id
-        const { data: profile, error: profileError } = await supabaseClient
-          .from("profiles")
-          .select("id")
-          .eq("id", attendee.user_id)
-          .single();
-
-        if (profileError || !profile) {
-          console.error(`Failed to get profile for user ${attendee.user_id}`);
-          errors.push(`Failed to get profile for user ${attendee.user_id}`);
+        if (!attendee.user_id) {
+          console.log(`Skipping attendee ${attendee.id} - no user_id`);
           continue;
         }
 
-        // For now, we'll use a service role key to get the email
-        // Create admin client
-        const supabaseAdmin = createClient(
-          Deno.env.get("SUPABASE_URL") ?? "",
-          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-        );
-
-        const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(attendee.user_id);
-
-        if (userError || !userData?.user?.email) {
-          console.error(`Failed to get email for user ${attendee.user_id}`);
+        // Get user email using admin client
+        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(attendee.user_id);
+        
+        if (authError || !authUser.user?.email) {
           errors.push(`Failed to get email for user ${attendee.user_id}`);
+          console.error(`Error fetching user ${attendee.user_id}:`, authError);
           continue;
         }
 
-        const email = userData.user.email;
-        const displayName = (attendee.profiles as any)?.display_name || "there";
+        const email = authUser.user.email;
+        const displayName = authUser.user.user_metadata?.display_name || email.split('@')[0];
 
-        // Send email via Resend
+        console.log(`Sending feedback request to ${email}`);
+
+        // Send email
         const emailResponse = await resend.emails.send({
-          from: `${Deno.env.get("RESEND_FROM_NAME")} <${Deno.env.get("RESEND_FROM_EMAIL")}>`,
+          from: `${Deno.env.get("RESEND_FROM_NAME") || "Event Feedback"} <${Deno.env.get("RESEND_FROM_EMAIL") || "onboarding@resend.dev"}>`,
           to: [email],
-          subject: `We'd love your feedback on ${event.title}`,
+          subject: `Share your feedback for ${event.title}`,
           html: `
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              </head>
-              <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-                  <h1 style="color: white; margin: 0; font-size: 24px;">We'd Love Your Feedback!</h1>
-                </div>
-                
-                <div style="background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
-                  <p style="font-size: 16px; margin-bottom: 20px;">Hi ${displayName},</p>
-                  
-                  <p style="font-size: 16px; margin-bottom: 20px;">
-                    Thank you for attending <strong>${event.title}</strong>! We hope you had a great experience.
-                  </p>
-                  
-                  <p style="font-size: 16px; margin-bottom: 30px;">
-                    Your feedback is incredibly valuable to us and helps us improve future events. 
-                    Would you mind taking a few moments to share your thoughts?
-                  </p>
-                  
-                  <div style="text-align: center; margin: 40px 0;">
-                    <a href="${feedbackUrl}" 
-                       style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                              color: white; 
-                              padding: 16px 40px; 
-                              text-decoration: none; 
-                              border-radius: 8px; 
-                              font-weight: 600; 
-                              font-size: 16px;
-                              display: inline-block;
-                              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                      Give Feedback
-                    </a>
-                  </div>
-                  
-                  <p style="font-size: 14px; color: #666; margin-top: 30px;">
-                    This should only take a couple of minutes. Thank you for helping us create better events!
-                  </p>
-                  
-                  <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
-                  
-                  <p style="font-size: 12px; color: #999; text-align: center;">
-                    If the button doesn't work, copy and paste this link into your browser:<br>
-                    <a href="${feedbackUrl}" style="color: #667eea; word-break: break-all;">${feedbackUrl}</a>
-                  </p>
-                </div>
-              </body>
-            </html>
+            <h2>Hi ${displayName},</h2>
+            <p>Thank you for attending <strong>${event.title}</strong>!</p>
+            <p>We'd love to hear about your experience. Your feedback helps us improve future events.</p>
+            <p>
+              <a href="${feedbackUrl}" style="display: inline-block; padding: 12px 24px; background-color: #0066cc; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Submit Feedback
+              </a>
+            </p>
+            <p>Or copy and paste this link into your browser:<br>
+            <a href="${feedbackUrl}">${feedbackUrl}</a></p>
+            <p>Thank you for helping us create better events!</p>
           `,
         });
 
-        console.log(`Email sent to ${email}:`, emailResponse);
-
-        // Mark as sent
-        const { error: updateError } = await supabaseClient
-          .from("code_acceptances")
-          .update({ feedback_request_sent_at: new Date().toISOString() })
-          .eq("id", attendee.id);
-
-        if (updateError) {
-          console.error(`Failed to update feedback_request_sent_at for ${attendee.id}:`, updateError);
-          errors.push(`Failed to update status for attendee ${attendee.id}`);
+        if (emailResponse.error) {
+          errors.push(`Failed to send email to ${email}: ${emailResponse.error}`);
+          console.error(`Email error for ${email}:`, emailResponse.error);
         } else {
+          // Mark feedback request as sent
+          await supabaseClient
+            .from("code_acceptances")
+            .update({ feedback_request_sent_at: new Date().toISOString() })
+            .eq("id", attendee.id);
+          
           sentCount++;
+          console.log(`Email sent successfully to ${email}`);
         }
-      } catch (error: unknown) {
-        console.error(`Error sending to attendee ${attendee.id}:`, error);
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        errors.push(`Error sending to attendee ${attendee.id}: ${errorMessage}`);
+      } catch (error: any) {
+        errors.push(`Error processing attendee ${attendee.id}: ${error.message}`);
+        console.error(`Error processing attendee ${attendee.id}:`, error);
       }
     }
 
