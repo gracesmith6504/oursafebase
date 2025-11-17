@@ -849,15 +849,21 @@ const EditEvent = () => {
       // Update feedback config and questions
       if (feedbackQuestions.length > 0) {
         // Upsert feedback config
+        const feedbackConfigPayload: any = {
+          event_id: eventId!,
+          enabled: true,
+          auto_send_enabled: feedbackAutoSend,
+          auto_send_hours: 24,
+        };
+        
+        // Only include id if it exists (for updates)
+        if (feedbackConfigId) {
+          feedbackConfigPayload.id = feedbackConfigId;
+        }
+        
         const { error: configError } = await supabase
           .from("event_feedback_config")
-          .upsert({
-            id: feedbackConfigId,
-            event_id: eventId!,
-            enabled: true,
-            auto_send_enabled: feedbackAutoSend,
-            auto_send_hours: 24,
-          }, { onConflict: 'event_id' });
+          .upsert(feedbackConfigPayload, { onConflict: 'event_id' });
 
         if (configError) throw configError;
 
