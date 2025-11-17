@@ -10,7 +10,6 @@ export interface FeedbackMetrics {
   totalResponses: number;
   responseRate: number;
   averageRating: number;
-  avgCompletionTime: string;
 }
 
 export interface RatingAverage {
@@ -85,21 +84,10 @@ export async function getFeedbackMetrics(eventId: string): Promise<FeedbackMetri
     ? ratings.reduce((sum, r) => sum + (r || 0), 0) / ratings.length
     : 0;
 
-  // Calculate average completion time (time between event end and submission)
-  const completionTimes = responses?.map(r => {
-    const submitted = new Date(r.submitted_at);
-    return submitted.getTime();
-  }) || [];
-
-  const avgCompletionTime = completionTimes.length > 1
-    ? "Various"
-    : "N/A";
-
   return {
     totalResponses,
     responseRate: Math.round(responseRate),
     averageRating: Math.round(averageRating * 10) / 10,
-    avgCompletionTime,
   };
 }
 
