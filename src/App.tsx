@@ -32,6 +32,7 @@ import About from "./pages/About";
 import AdminSocieties from "./pages/AdminSocieties";
 import SocietySettings from "./pages/SocietySettings";
 import SocietyAnalytics from "./pages/SocietyAnalytics";
+import Feedback from "./pages/Feedback";
 import { ScrollToTop } from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => (
           <Route path="/code-of-conduct/:cocId" element={<CodeOfConductView />} />
           {/* New slug-based route for pretty URLs */}
           <Route path="/:societySlug/:eventSlug" element={<EventSafetyPage />} />
+          <Route path="/:societySlug/:eventSlug/feedback" element={<Feedback />} />
           {/* Keep old UUID route for backwards compatibility */}
           <Route path="/event/:eventId" element={<EventSafetyPage />} />
           <Route path="/society/:slug" element={<SocietyAttendee />} />

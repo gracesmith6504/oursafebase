@@ -490,6 +490,80 @@ export type Database = {
           },
         ]
       }
+      feedback_answers: {
+        Row: {
+          answer_rating: number | null
+          answer_text: string | null
+          created_at: string
+          id: string
+          question_id: string
+          response_id: string
+        }
+        Insert: {
+          answer_rating?: number | null
+          answer_text?: string | null
+          created_at?: string
+          id?: string
+          question_id: string
+          response_id: string
+        }
+        Update: {
+          answer_rating?: number | null
+          answer_text?: string | null
+          created_at?: string
+          id?: string
+          question_id?: string
+          response_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "event_feedback_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_answers_response_id_fkey"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_responses: {
+        Row: {
+          event_id: string
+          id: string
+          is_anonymous: boolean
+          submitted_at: string
+          user_id: string | null
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          is_anonymous?: boolean
+          submitted_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          is_anonymous?: boolean
+          submitted_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_responses_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invite_code_usage: {
         Row: {
           id: string
