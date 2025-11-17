@@ -4,20 +4,109 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2, Plus, X, GripVertical } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface FAQRow {
   tempId: string;
   question: string;
   answer: string;
+}
+
+interface SortableFAQRowProps {
+  row: FAQRow;
+  index: number;
+  onUpdate: (tempId: string, field: "question" | "answer", value: string) => void;
+  onRemove: (tempId: string) => void;
+  canRemove: boolean;
+}
+
+function SortableFAQRow({ row, index, onUpdate, onRemove, canRemove }: SortableFAQRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: row.tempId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="space-y-3 pb-6 border-b last:border-0 hover:bg-muted/30 rounded-lg p-3 -mx-3"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+          <Label className="text-sm font-medium">FAQ {index + 1}</Label>
+        </div>
+        {canRemove && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={() => onRemove(row.tempId)}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Input
+          placeholder="What time does the event start?"
+          value={row.question}
+          onChange={(e) => onUpdate(row.tempId, "question", e.target.value)}
+        />
+      </div>
+      <div className="space-y-2">
+        <Textarea
+          placeholder="The event starts at 7:00 PM. Please arrive 15 minutes early for check-in."
+          value={row.answer}
+          onChange={(e) => onUpdate(row.tempId, "answer", e.target.value)}
+          rows={3}
+        />
+      </div>
+    </div>
+  );
 }
 
 interface BatchCreateFAQDialogProps {
@@ -35,6 +124,25 @@ export function BatchCreateFAQDialog({
     { tempId: crypto.randomUUID(), question: "", answer: "" },
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setRows((items) => {
+        const oldIndex = items.findIndex((item) => item.tempId === active.id);
+        const newIndex = items.findIndex((item) => item.tempId === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   const addRow = () => {
     setRows([...rows, { tempId: crypto.randomUUID(), question: "", answer: "" }]);
@@ -93,58 +201,38 @@ export function BatchCreateFAQDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <ScrollArea className="flex-1 px-6 max-h-[60vh]">
-            <div className="space-y-6 py-4">
-              {rows.map((row, index) => (
-                <div
-                  key={row.tempId}
-                  className="space-y-3 pb-6 border-b last:border-0"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <Label className="text-sm font-medium">
-                      FAQ {index + 1}
-                    </Label>
-                    {rows.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => removeRow(row.tempId)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Input
-                      placeholder="What time does the event start?"
-                      value={row.question}
-                      onChange={(e) =>
-                        updateRow(row.tempId, "question", e.target.value)
-                      }
+          <ScrollArea className="h-full px-6">
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={rows.map((r) => r.tempId)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-4 py-4">
+                  {rows.map((row, index) => (
+                    <SortableFAQRow
+                      key={row.tempId}
+                      row={row}
+                      index={index}
+                      onUpdate={updateRow}
+                      onRemove={removeRow}
+                      canRemove={rows.length > 1}
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Textarea
-                      placeholder="The event starts at 7:00 PM. Please arrive 15 minutes early for check-in."
-                      value={row.answer}
-                      onChange={(e) =>
-                        updateRow(row.tempId, "answer", e.target.value)
-                      }
-                      rows={3}
-                    />
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           </ScrollArea>
-          <div className="px-6 pb-6 pt-4 space-y-3 flex-shrink-0 border-t">
+          <div className="px-6 pb-6 pt-4 space-y-2 flex-shrink-0 border-t">
             <Button
               type="button"
               variant="outline"
               onClick={addRow}
-              className="w-full"
+              className="w-full sm:w-auto sm:self-center"
+              size="sm"
             >
               <Plus className="mr-2 h-4 w-4" />
               Add Another FAQ
@@ -155,7 +243,8 @@ export function BatchCreateFAQDialog({
                 isSubmitting ||
                 !rows.some((r) => r.question.trim() && r.answer.trim())
               }
-              className="w-full"
+              className="w-full sm:min-w-[200px]"
+              size="sm"
             >
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save All
