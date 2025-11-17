@@ -89,7 +89,8 @@ const handler = async (req: Request): Promise<Response> => {
     const safeBcc = committeeEmails.filter(e => e.toLowerCase() !== FROM_EMAIL.toLowerCase());
 
     const appUrl = Deno.env.get("VITE_PUBLIC_APP_URL") || "https://oursafebase.com";
-    const viewReportUrl = `${appUrl}/society/${(event.societies as any)?.slug || ''}/reports?reportId=${reportId}&redirect=true`;
+    const reportPath = `/society/${(event.societies as any)?.slug || ''}/reports?reportId=${reportId}&redirect=true`;
+    const viewReportUrl = `${appUrl}/auth?redirectTo=${encodeURIComponent(reportPath)}`;
     const formattedConcernType = concernType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
     // Send a single email with BCC to all committee members (avoids rate limits)

@@ -75,6 +75,7 @@ const Auth = () => {
   } = useAuth();
   const inviteCode = searchParams.get("invite");
   const redirectPath = searchParams.get("redirect");
+  const redirectTo = searchParams.get("redirectTo");
 
   // Check if user is on an in-app browser on mount
   useEffect(() => {
@@ -253,9 +254,12 @@ const Auth = () => {
           const cleaned = new URLSearchParams();
           if (inviteCode) cleaned.set("invite", inviteCode);
           if (redirectPath) cleaned.set("redirect", redirectPath);
+          if (redirectTo) cleaned.set("redirectTo", redirectTo);
           const newUrl = `${window.location.pathname}${cleaned.toString() ? `?${cleaned.toString()}` : ""}`;
           window.history.replaceState({}, document.title, newUrl);
-          if (inviteCode && societyInfo?.role === "committee") {
+          if (redirectTo) {
+            navigate(redirectTo);
+          } else if (inviteCode && societyInfo?.role === "committee") {
             navigate(`/onboarding?invite=${inviteCode}`);
           } else if (inviteCode) {
             navigate(`/invite/${inviteCode}`);
@@ -275,9 +279,12 @@ const Auth = () => {
         const cleaned = new URLSearchParams();
         if (inviteCode) cleaned.set("invite", inviteCode);
         if (redirectPath) cleaned.set("redirect", redirectPath);
+        if (redirectTo) cleaned.set("redirectTo", redirectTo);
         const newUrl = `${window.location.pathname}${cleaned.toString() ? `?${cleaned.toString()}` : ""}`;
         window.history.replaceState({}, document.title, newUrl);
-        if (inviteCode && societyInfo?.role === "committee") {
+        if (redirectTo) {
+          navigate(redirectTo);
+        } else if (inviteCode && societyInfo?.role === "committee") {
           navigate(`/onboarding?invite=${inviteCode}`);
         } else if (inviteCode) {
           navigate(`/invite/${inviteCode}`);
@@ -465,8 +472,10 @@ const Auth = () => {
       setShowConsentScreen(false);
       setRecordingConsent(false);
 
-      // Redirect based on invite code and role
-      if (inviteCode) {
+      // Redirect based on redirectTo, invite code and role
+      if (redirectTo) {
+        navigate(redirectTo);
+      } else if (inviteCode) {
         if (societyInfo?.role === 'committee') {
           navigate(`/onboarding?invite=${inviteCode}`);
         } else {
@@ -680,13 +689,23 @@ const Auth = () => {
                 </div>
                 <CardTitle className="text-2xl">Welcome to OurSafeBase</CardTitle>
                 <CardDescription className="space-y-2">
-                  {inviteCode && societyInfo ? <div className="text-center">
+                  {redirectTo?.includes("/feedback") ? (
+                    <div className="text-center p-3 bg-primary/10 rounded-md border border-primary/20">
+                      <p className="text-sm font-medium text-primary">Please log in to submit your feedback for this event.</p>
+                    </div>
+                  ) : inviteCode && societyInfo ? (
+                    <div className="text-center">
                       <p className="mb-2">You have been invited to join</p>
                       <p className="font-bold text-lg text-foreground">{societyInfo.name}</p>
                       {societyInfo.role === "committee" && (
                         <p className="text-sm mt-1">as a committee member</p>
                       )}
-                    </div> : inviteCode ? "You're joining a society. Sign in or create an account to continue." : "Create safer events for your student society"}
+                    </div>
+                  ) : inviteCode ? (
+                    "You're joining a society. Sign in or create an account to continue."
+                  ) : (
+                    "Create safer events for your student society"
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>
