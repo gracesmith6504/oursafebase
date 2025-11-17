@@ -44,6 +44,7 @@ interface EventMetrics {
     sent: number;
     pending: number;
   };
+  feedbackEnabled?: boolean;
 }
 
 const SocietyEvents = () => {
@@ -122,7 +123,7 @@ const SocietyEvents = () => {
     }
 
     // Batch all queries together instead of sequential queries
-    const [reports, feedback, pageViews, codeAcceptances, feedbackRequests] = await Promise.all([
+    const [reports, feedback, pageViews, codeAcceptances, feedbackRequests, feedbackConfigs] = await Promise.all([
       supabase.from("reports").select("event_id", { count: "exact" }).in("event_id", eventIds),
       supabase.from("event_feedback").select("event_id", { count: "exact" }).in("event_id", eventIds),
       supabase.from("safety_page_views").select("event_id", { count: "exact" }).in("event_id", eventIds),
@@ -130,6 +131,10 @@ const SocietyEvents = () => {
       supabase
         .from("code_acceptances")
         .select("event_id, feedback_request_sent_at")
+        .in("event_id", eventIds),
+      supabase
+        .from("event_feedback_config")
+        .select("event_id, enabled")
         .in("event_id", eventIds),
     ]);
 
@@ -166,6 +171,15 @@ const SocietyEvents = () => {
           sent,
           pending: total - sent,
         };
+      });
+    }
+
+    // Set feedback enabled status per event
+    if (feedbackConfigs.data) {
+      feedbackConfigs.data.forEach((config: any) => {
+        if (metricsData[config.event_id]) {
+          metricsData[config.event_id].feedbackEnabled = config.enabled;
+        }
       });
     }
 
@@ -403,7 +417,7 @@ const SocietyEvents = () => {
                         </Button>
 
                         {/* Send Feedback Request Button */}
-                        {eventMetrics.feedbackRequestStats && eventMetrics.feedbackRequestStats.pending > 0 && (
+                        {eventMetrics.feedbackEnabled && eventMetrics.feedbackRequestStats && eventMetrics.feedbackRequestStats.pending > 0 && (
                           <Button
                             className="w-full"
                             variant="outline"
