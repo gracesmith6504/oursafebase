@@ -193,7 +193,7 @@ export function BatchCreateFAQDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="sm:max-w-[600px] h-[85vh] max-h-[90vh] flex flex-col p-0 min-h-0">
         <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0">
           <DialogTitle>Add FAQs</DialogTitle>
           <DialogDescription>
@@ -201,7 +201,7 @@ export function BatchCreateFAQDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <ScrollArea className="h-full px-6">
+          <ScrollArea className="flex-1 min-h-0 px-6">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
