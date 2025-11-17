@@ -46,7 +46,9 @@ import { CreateCoCDialog } from "@/components/CreateCoCDialog";
 import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
 import { generateUniqueSlug } from "@/lib/eventHelpers";
 import { EventSafetyPreviewDialog } from "@/components/EventSafetyPreviewDialog";
-import { Eye } from "lucide-react";
+import { Eye, HelpCircle, EyeOff } from "lucide-react";
+import { CreateFAQDialog } from "@/components/CreateFAQDialog";
+import { EditFAQDialog } from "@/components/EditFAQDialog";
 
 interface Society {
   id: string;
@@ -83,6 +85,14 @@ interface EmergencyField {
   name: string;
   address: string;
   phone: string;
+}
+
+interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+  displayOrder: number;
+  isVisible: boolean;
 }
 
 // Sortable contact item component
@@ -171,6 +181,74 @@ const SortableContactItem = ({ contact, onUpdateRole, onUpdatePhone, onRemove, p
   );
 };
 
+// Sortable FAQ item component
+const SortableFAQItem = ({ faq, onEdit, onDelete }: {
+  faq: FAQ;
+  onEdit: () => void;
+  onDelete: () => void;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: faq.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-start gap-2 rounded-lg border bg-muted p-3"
+    >
+      <button
+        type="button"
+        className="cursor-grab active:cursor-grabbing mt-1 touch-none"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-4 w-4 text-muted-foreground" />
+      </button>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-sm truncate">{faq.question}</p>
+        <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{faq.answer}</p>
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        {faq.isVisible ? (
+          <Eye className="h-4 w-4 text-muted-foreground" />
+        ) : (
+          <EyeOff className="h-4 w-4 text-muted-foreground" />
+        )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={onEdit}
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={onDelete}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 const CreateEvent = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -237,6 +315,12 @@ const CreateEvent = () => {
   const [externalPhone, setExternalPhone] = useState("");
   const [externalRole, setExternalRole] = useState("");
   const [externalCountryCode, setExternalCountryCode] = useState("+353");
+  
+  // FAQ state
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [createFAQDialogOpen, setCreateFAQDialogOpen] = useState(false);
+  const [editFAQDialogOpen, setEditFAQDialogOpen] = useState(false);
+  const [editingFAQ, setEditingFAQ] = useState<FAQ | null>(null);
 
   const countryCodes = [
     { code: "+353", country: "Ireland", flag: "🇮🇪" },
@@ -268,6 +352,7 @@ const CreateEvent = () => {
           setExternalContacts(draft.externalContacts || []);
           setEmergencyFields(draft.emergencyFields || []);
           setSelectedCoCId(draft.selectedCoCId || "");
+          setFaqs(draft.faqs || []);
         } catch (error) {
           console.error("Error loading draft:", error);
         }
@@ -368,6 +453,7 @@ const CreateEvent = () => {
       externalContacts,
       emergencyFields,
       selectedCoCId,
+      faqs,
     };
     localStorage.setItem(draftKey, JSON.stringify(draft));
   };
@@ -527,6 +613,48 @@ const CreateEvent = () => {
     setEmergencyFields(emergencyFields.filter((ef) => ef.id !== id));
   };
 
+  // FAQ handlers
+  const handleAddFAQ = (question: string, answer: string) => {
+    const newFAQ: FAQ = {
+      id: crypto.randomUUID(),
+      question,
+      answer,
+      displayOrder: faqs.length,
+      isVisible: true,
+    };
+    setFaqs([...faqs, newFAQ]);
+    toast.success("FAQ added");
+  };
+
+  const handleEditFAQ = (id: string, question: string, answer: string, isVisible: boolean) => {
+    setFaqs(faqs.map(faq => faq.id === id ? { ...faq, question, answer, isVisible } : faq));
+    toast.success("FAQ updated");
+  };
+
+  const handleDeleteFAQ = (id: string) => {
+    setFaqs(faqs.filter(faq => faq.id !== id));
+    toast.success("FAQ deleted");
+  };
+
+  const handleFAQDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      setFaqs((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        const reordered = arrayMove(items, oldIndex, newIndex);
+        // Update display order
+        return reordered.map((item, index) => ({ ...item, displayOrder: index }));
+      });
+    }
+  };
+
+  const openEditFAQDialog = (faq: FAQ) => {
+    setEditingFAQ(faq);
+    setEditFAQDialogOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -670,6 +798,21 @@ const CreateEvent = () => {
             throw new Error(cocError.message || "Failed to create event Code of Conduct");
           }
         }
+      }
+
+      // Create FAQs
+      if (faqs.length > 0) {
+        const faqsToInsert = faqs.map((faq) => ({
+          event_id: eventData.id,
+          question: faq.question,
+          answer: faq.answer,
+          display_order: faq.displayOrder,
+          is_visible: faq.isVisible,
+        }));
+
+        const { error: faqError } = await supabase.from("event_faqs").insert(faqsToInsert);
+
+        if (faqError) throw faqError;
       }
 
       // Clear draft after successful creation
@@ -1074,6 +1217,48 @@ const CreateEvent = () => {
               </CardContent>
             </Card>
 
+            {/* Frequently Asked Questions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <HelpCircle className="h-5 w-5" />
+                  Frequently Asked Questions
+                </CardTitle>
+                <CardDescription>Add common questions attendees might have about this event</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {faqs.length > 0 && (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleFAQDragEnd}
+                  >
+                    <SortableContext items={faqs.map(f => f.id)} strategy={verticalListSortingStrategy}>
+                      <div className="space-y-2">
+                        {faqs.map((faq) => (
+                          <SortableFAQItem
+                            key={faq.id}
+                            faq={faq}
+                            onEdit={() => openEditFAQDialog(faq)}
+                            onDelete={() => handleDeleteFAQ(faq.id)}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCreateFAQDialogOpen(true)}
+                  className="w-full"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add FAQ
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Code of Conduct */}
             <Card>
               <CardHeader>
@@ -1224,6 +1409,20 @@ const CreateEvent = () => {
             }}
           />
         )}
+        
+        {/* FAQ Dialogs */}
+        <CreateFAQDialog
+          open={createFAQDialogOpen}
+          onOpenChange={setCreateFAQDialogOpen}
+          onSuccess={handleAddFAQ}
+        />
+        
+        <EditFAQDialog
+          open={editFAQDialogOpen}
+          onOpenChange={setEditFAQDialogOpen}
+          faq={editingFAQ}
+          onSuccess={handleEditFAQ}
+        />
       </div>
     </ProtectedRoute>
   );

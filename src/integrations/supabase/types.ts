@@ -222,6 +222,47 @@ export type Database = {
           },
         ]
       }
+      event_faqs: {
+        Row: {
+          answer: string
+          created_at: string | null
+          display_order: number
+          event_id: string
+          id: string
+          is_visible: boolean
+          question: string
+          updated_at: string | null
+        }
+        Insert: {
+          answer: string
+          created_at?: string | null
+          display_order?: number
+          event_id: string
+          id?: string
+          is_visible?: boolean
+          question: string
+          updated_at?: string | null
+        }
+        Update: {
+          answer?: string
+          created_at?: string | null
+          display_order?: number
+          event_id?: string
+          id?: string
+          is_visible?: boolean
+          question?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_faqs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_feedback: {
         Row: {
           contact_email: string | null
