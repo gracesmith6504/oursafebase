@@ -29,6 +29,17 @@ import {
   getEventCoCAcceptances,
   AttendeeAcceptance
 } from "@/lib/reportAnalytics";
+import {
+  getFeedbackMetrics,
+  getRatingAverages,
+  getTextAnswerThemes,
+  getGroupedResponses,
+  FeedbackMetrics,
+  RatingAverage,
+  TextTheme,
+  GroupedResponse
+} from "@/lib/feedbackAnalytics";
+import { FeedbackAnalyticsSection } from "@/components/FeedbackAnalyticsSection";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { CreateNoteDialog } from "@/components/CreateNoteDialog";
@@ -84,6 +95,10 @@ const EventSummary = () => {
   const [showCreateNote, setShowCreateNote] = useState(false);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [cocAcceptances, setCocAcceptances] = useState<AttendeeAcceptance[]>([]);
+  const [feedbackMetrics, setFeedbackMetrics] = useState<FeedbackMetrics | null>(null);
+  const [ratingAverages, setRatingAverages] = useState<RatingAverage[]>([]);
+  const [textThemes, setTextThemes] = useState<TextTheme[]>([]);
+  const [groupedResponses, setGroupedResponses] = useState<GroupedResponse[]>([]);
   const { isCommittee, loading: roleLoading } = useCommitteeRole(event?.society_id);
 
   useEffect(() => {
@@ -110,15 +125,23 @@ const EventSummary = () => {
       const metricsData = await getEventDetailedMetrics(eventId!);
       setMetrics(metricsData);
 
-      // Fetch chart data and CoC acceptances
-      const [severity, safety, acceptances] = await Promise.all([
+      // Fetch chart data, CoC acceptances, and feedback analytics
+      const [severity, safety, acceptances, fbMetrics, fbRatings, fbThemes, fbResponses] = await Promise.all([
         getReportSeverityBreakdown(eventId!),
         getFeedbackSafetyBreakdown(eventId!),
         getEventCoCAcceptances(eventId!, eventData.society_id),
+        getFeedbackMetrics(eventId!),
+        getRatingAverages(eventId!),
+        getTextAnswerThemes(eventId!),
+        getGroupedResponses(eventId!),
       ]);
       setSeverityData(severity);
       setSafetyData(safety);
       setCocAcceptances(acceptances);
+      setFeedbackMetrics(fbMetrics);
+      setRatingAverages(fbRatings);
+      setTextThemes(fbThemes);
+      setGroupedResponses(fbResponses);
 
       // Fetch notes
       await fetchNotes();
@@ -394,6 +417,19 @@ const EventSummary = () => {
                   </Card>
                 )}
               </div>
+            </section>
+          )}
+
+          {/* Post-Event Feedback Analysis */}
+          {feedbackMetrics && feedbackMetrics.totalResponses > 0 && (
+            <section>
+              <h2 className="text-xl font-semibold mb-4">Post-Event Feedback Analysis</h2>
+              <FeedbackAnalyticsSection
+                metrics={feedbackMetrics}
+                ratingAverages={ratingAverages}
+                textThemes={textThemes}
+                groupedResponses={groupedResponses}
+              />
             </section>
           )}
 
