@@ -2,8 +2,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, LabelList } from "recharts";
 import { MessageSquare, TrendingUp, Star, ChevronDown, Download, FileText, Filter, X } from "lucide-react";
 import { format } from "date-fns";
 import { useState, useMemo } from "react";
@@ -239,7 +237,14 @@ export const FeedbackAnalyticsSection = ({
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.totalResponses}</div>
+            <div className="text-2xl font-bold">
+              {activeFilterCount > 0 ? filteredMetrics.totalResponses : metrics.totalResponses}
+            </div>
+            {activeFilterCount > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                of {metrics.totalResponses} total
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -262,13 +267,17 @@ export const FeedbackAnalyticsSection = ({
             <Star className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.averageRating.toFixed(1)}/5</div>
+            <div className="text-2xl font-bold">
+              {activeFilterCount > 0 
+                ? filteredMetrics.averageRating.toFixed(1)
+                : metrics.averageRating.toFixed(1)}/5
+            </div>
             <div className="flex mt-2">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star
                   key={star}
                   className={`h-3 w-3 ${
-                    star <= Math.round(metrics.averageRating)
+                    star <= Math.round(activeFilterCount > 0 ? filteredMetrics.averageRating : metrics.averageRating)
                       ? "fill-yellow-400 text-yellow-400"
                       : "text-muted-foreground"
                   }`}
@@ -279,44 +288,28 @@ export const FeedbackAnalyticsSection = ({
         </Card>
       </div>
 
-      {/* Rating Averages Chart */}
-      {ratingAverages.length > 0 && (
+      {/* Rating Questions Average Scores - Simple List */}
+      {filteredRatingAverages.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Rating Questions Average Scores</CardTitle>
           </CardHeader>
           <CardContent>
-            <ChartContainer
-              config={{
-                average: {
-                  label: "Average Rating",
-                  color: "hsl(var(--primary))",
-                },
-              }}
-              className="h-[300px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={ratingAverages}
-                  layout="vertical"
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                >
-                  <XAxis type="number" domain={[0, 5]} />
-                  <YAxis
-                    type="category"
-                    dataKey="question"
-                    width={200}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar
-                    dataKey="average"
-                    fill="hsl(var(--primary))"
-                    radius={[0, 4, 4, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+            <div className="space-y-3">
+              {filteredRatingAverages.map((item, index) => (
+                <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3 border-b last:border-b-0 last:pb-0">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{item.question}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {item.count} response{item.count !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {renderStars(Math.round(item.average * 10) / 10)}
+                  </div>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -339,64 +332,132 @@ export const FeedbackAnalyticsSection = ({
         </Card>
       )}
 
+      {/* Filter Controls */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Filter Responses
+            </CardTitle>
+            {activeFilterCount > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="gap-2"
+              >
+                <X className="h-4 w-4" />
+                Clear Filters
+                <Badge variant="secondary" className="ml-1">
+                  {activeFilterCount}
+                </Badge>
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Filter by Rating</label>
+              <Select value={selectedRating} onValueChange={setSelectedRating}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Ratings" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Ratings</SelectItem>
+                  <SelectItem value="5">5 Stars</SelectItem>
+                  <SelectItem value="4">4 Stars</SelectItem>
+                  <SelectItem value="3">3 Stars</SelectItem>
+                  <SelectItem value="2">2 Stars</SelectItem>
+                  <SelectItem value="1">1 Star</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Filter by Question</label>
+              <Select value={selectedQuestion} onValueChange={setSelectedQuestion}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Questions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Questions</SelectItem>
+                  {groupedResponses.map((group) => (
+                    <SelectItem key={group.questionId} value={group.questionId}>
+                      {group.question.substring(0, 50)}
+                      {group.question.length > 50 ? "..." : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Individual Responses */}
       <Card>
         <CardHeader>
           <CardTitle>All Responses by Question</CardTitle>
+          {activeFilterCount > 0 && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Showing {filteredResponses.reduce((sum, group) => sum + group.answers.length, 0)} filtered responses
+            </p>
+          )}
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[500px] pr-4">
-            <div className="space-y-4">
-              {groupedResponses.map((group) => (
+          <ScrollArea className="h-[400px] sm:h-[500px] lg:h-[600px] pr-4">
+            <div className="space-y-4 pb-4">
+              {filteredResponses.map((group) => (
                 <Collapsible
                   key={group.questionId}
                   open={openQuestions.includes(group.questionId)}
                   onOpenChange={() => toggleQuestion(group.questionId)}
                 >
                   <Card>
-                    <CollapsibleTrigger className="w-full">
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                        <div className="flex items-start gap-3 text-left">
-                          <Badge variant="outline" className="mt-1">
+                    <CollapsibleTrigger className="w-full min-h-[48px]">
+                      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0 px-3 py-3 sm:px-4 sm:py-4">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-left w-full">
+                          <Badge variant="outline" className="shrink-0">
                             {group.questionType === "rating" ? "Rating" : "Text"}
                           </Badge>
-                          <div>
-                            <p className="font-medium">{group.question}</p>
-                            <p className="text-sm text-muted-foreground">
+                          <div className="flex-1">
+                            <p className="font-medium text-sm sm:text-base">{group.question}</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                               {group.answers.length} response{group.answers.length !== 1 ? "s" : ""}
                             </p>
                           </div>
+                          <ChevronDown
+                            className={`h-5 w-5 text-muted-foreground transition-transform shrink-0 ${
+                              openQuestions.includes(group.questionId) ? "rotate-180" : ""
+                            }`}
+                          />
                         </div>
-                        <ChevronDown
-                          className={`h-5 w-5 text-muted-foreground transition-transform ${
-                            openQuestions.includes(group.questionId) ? "rotate-180" : ""
-                          }`}
-                        />
                       </CardHeader>
                     </CollapsibleTrigger>
 
                     <CollapsibleContent>
-                      <CardContent className="pt-0">
+                      <CardContent className="pt-0 px-3 sm:px-4">
                         <div className="space-y-3">
                           {group.answers.map((answer) => (
                             <div
                               key={answer.answerId}
-                              className="border-l-2 border-border pl-4 py-2"
+                              className="border-l-2 border-border pl-3 sm:pl-4 py-2"
                             >
-                              <div className="flex items-start justify-between gap-4">
+                              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
                                 <div className="flex-1">
                                   {answer.answerRating !== undefined ? (
                                     renderStars(answer.answerRating)
                                   ) : (
-                                    <p className="text-sm">{answer.answerText}</p>
+                                    <p className="text-xs sm:text-sm break-words">{answer.answerText}</p>
                                   )}
                                 </div>
-                                <div className="text-right">
-                                  <p className="text-xs text-muted-foreground">
+                                <div className="flex items-center gap-2 sm:flex-col sm:items-end sm:text-right">
+                                  <p className="text-xs text-muted-foreground whitespace-nowrap">
                                     {format(new Date(answer.submittedAt), "MMM d, h:mm a")}
                                   </p>
                                   {answer.isAnonymous && (
-                                    <Badge variant="secondary" className="mt-1 text-xs">
+                                    <Badge variant="secondary" className="text-xs">
                                       Anonymous
                                     </Badge>
                                   )}
