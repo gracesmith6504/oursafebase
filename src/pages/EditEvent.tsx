@@ -248,14 +248,6 @@ const EditEvent = () => {
   const [originalFeedbackQuestionIds, setOriginalFeedbackQuestionIds] = useState<Set<string>>(new Set());
   const [feedbackConfigId, setFeedbackConfigId] = useState<string | null>(null);
   
-  // Feedback request tracking
-  const [feedbackRequestStats, setFeedbackRequestStats] = useState<{
-    total: number;
-    sent: number;
-    pending: number;
-  } | null>(null);
-  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
-  
   const countryCodes = [
     { code: "+353", country: "Ireland", flag: "🇮🇪" },
     { code: "+44", country: "UK", flag: "🇬🇧" },
@@ -410,9 +402,6 @@ const EditEvent = () => {
         setFeedbackQuestions(fetchedQuestions);
         setOriginalFeedbackQuestionIds(new Set(fetchedQuestions.map((q: FeedbackQuestionType) => q.id)));
       }
-
-      // Fetch feedback request stats
-      await fetchFeedbackStats(eventId);
 
       // Fetch available society-level CoCs
       const { data: cocsData } = await supabase
@@ -709,54 +698,6 @@ const EditEvent = () => {
   const openEditFeedbackQuestionDialog = (question: FeedbackQuestionType) => {
     setEditingFeedbackQuestion(question);
     setEditFeedbackDialogOpen(true);
-  };
-
-  const fetchFeedbackStats = async (eventId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("code_acceptances")
-        .select("id, feedback_request_sent_at")
-        .eq("event_id", eventId);
-
-      if (error) {
-        console.error("Error fetching feedback stats:", error);
-        return;
-      }
-
-      const total = data?.length || 0;
-      const sent = data?.filter(a => a.feedback_request_sent_at !== null).length || 0;
-      const pending = total - sent;
-
-      setFeedbackRequestStats({ total, sent, pending });
-    } catch (error) {
-      console.error("Error fetching feedback stats:", error);
-    }
-  };
-
-  const handleSendFeedbackRequest = async () => {
-    if (!eventId) return;
-
-    setIsSendingFeedback(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('send-feedback-request', {
-        body: { eventId }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      toast.success(data.message || `Feedback requests sent to ${data.sent} attendees`);
-      
-      // Refresh stats
-      await fetchFeedbackStats(eventId);
-    } catch (error: any) {
-      console.error("Error sending feedback requests:", error);
-      toast.error(error.message || "Failed to send feedback requests");
-    } finally {
-      setIsSendingFeedback(false);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1412,34 +1353,6 @@ const EditEvent = () => {
                     disabled={feedbackQuestions.length === 0}
                   />
                 </div>
-
-                {/* Send Feedback Request Button / Status */}
-                {feedbackQuestions.length > 0 && feedbackRequestStats && (
-                  <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <Label className="text-base">Feedback Requests</Label>
-                        <p className="text-sm text-muted-foreground">
-                          {feedbackRequestStats.sent} of {feedbackRequestStats.total} attendees sent
-                        </p>
-                      </div>
-                      {feedbackRequestStats.pending > 0 && (
-                        <Button
-                          onClick={handleSendFeedbackRequest}
-                          disabled={isSendingFeedback}
-                          size="sm"
-                        >
-                          {isSendingFeedback ? "Sending..." : `Send to ${feedbackRequestStats.pending} Attendee${feedbackRequestStats.pending !== 1 ? 's' : ''}`}
-                        </Button>
-                      )}
-                    </div>
-                    {feedbackAutoSend && feedbackRequestStats.pending > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Auto-send is enabled. Remaining attendees will receive feedback requests 24 hours after the event ends.
-                      </p>
-                    )}
-                  </div>
-                )}
 
                 <div className="space-y-2">
                   <Label>Feedback Questions</Label>

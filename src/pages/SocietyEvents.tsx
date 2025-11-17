@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { getEventStatus } from "@/lib/eventHelpers";
 import { getAppUrl } from "@/lib/constants";
 import { EventQRCodeDialog } from "@/components/EventQRCodeDialog";
+import { Mail } from "lucide-react";
 
 interface Event {
   id: string;
@@ -38,6 +39,11 @@ interface EventMetrics {
   feedback: number;
   pageViews: number;
   codeAcceptances: number;
+  feedbackRequestStats?: {
+    total: number;
+    sent: number;
+    pending: number;
+  };
 }
 
 const SocietyEvents = () => {
@@ -52,6 +58,7 @@ const SocietyEvents = () => {
   const [loading, setLoading] = useState(true);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [sendingFeedbackForEvent, setSendingFeedbackForEvent] = useState<string | null>(null);
   const { isCommittee, loading: roleLoading } = useCommitteeRole(societyId || undefined);
 
   useEffect(() => {
@@ -115,11 +122,15 @@ const SocietyEvents = () => {
     }
 
     // Batch all queries together instead of sequential queries
-    const [reports, feedback, pageViews, codeAcceptances] = await Promise.all([
+    const [reports, feedback, pageViews, codeAcceptances, feedbackRequests] = await Promise.all([
       supabase.from("reports").select("event_id", { count: "exact" }).in("event_id", eventIds),
       supabase.from("event_feedback").select("event_id", { count: "exact" }).in("event_id", eventIds),
       supabase.from("safety_page_views").select("event_id", { count: "exact" }).in("event_id", eventIds),
       supabase.from("code_acceptances").select("event_id", { count: "exact" }).in("event_id", eventIds),
+      supabase
+        .from("code_acceptances")
+        .select("event_id, feedback_request_sent_at")
+        .in("event_id", eventIds),
     ]);
 
     // Group counts by event_id
@@ -144,7 +155,45 @@ const SocietyEvents = () => {
       if (metricsData[c.event_id]) metricsData[c.event_id].codeAcceptances++;
     });
 
+    // Calculate feedback request stats per event
+    if (feedbackRequests.data) {
+      eventIds.forEach(eventId => {
+        const eventRequests = feedbackRequests.data.filter((r: any) => r.event_id === eventId);
+        const total = eventRequests.length;
+        const sent = eventRequests.filter((r: any) => r.feedback_request_sent_at !== null).length;
+        metricsData[eventId].feedbackRequestStats = {
+          total,
+          sent,
+          pending: total - sent,
+        };
+      });
+    }
+
     setMetrics(metricsData);
+  };
+
+  const handleSendFeedbackRequest = async (eventId: string) => {
+    setSendingFeedbackForEvent(eventId);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('send-feedback-request', {
+        body: { eventId },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success(data.message || `Feedback requests sent to ${data.sent} attendees`);
+      
+      // Refresh metrics for this event
+      await fetchMetrics([eventId]);
+    } catch (error: any) {
+      console.error("Error sending feedback requests:", error);
+      toast.error(error.message || "Failed to send feedback requests");
+    } finally {
+      setSendingFeedbackForEvent(null);
+    }
   };
 
   const getStatusColor = useCallback((status: string) => {
@@ -352,6 +401,22 @@ const SocietyEvents = () => {
                           <BarChart className="mr-2 h-4 w-4" />
                           Event Summary
                         </Button>
+
+                        {/* Send Feedback Request Button */}
+                        {eventMetrics.feedbackRequestStats && eventMetrics.feedbackRequestStats.pending > 0 && (
+                          <Button
+                            className="w-full"
+                            variant="outline"
+                            onClick={() => handleSendFeedbackRequest(event.id)}
+                            disabled={sendingFeedbackForEvent === event.id}
+                          >
+                            <Mail className="mr-2 h-4 w-4" />
+                            {sendingFeedbackForEvent === event.id 
+                              ? "Sending..." 
+                              : `Send Feedback (${eventMetrics.feedbackRequestStats.pending})`
+                            }
+                          </Button>
+                        )}
                         
                         <Button 
                           variant="ghost"
