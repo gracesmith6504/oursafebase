@@ -45,7 +45,10 @@ import { CreateCoCDialog } from "@/components/CreateCoCDialog";
 import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
 import { generateUniqueSlug } from "@/lib/eventHelpers";
 import { EventSafetyPreviewDialog } from "@/components/EventSafetyPreviewDialog";
-import { Eye } from "lucide-react";
+import { Eye, HelpCircle } from "lucide-react";
+import { CreateFAQDialog } from "@/components/CreateFAQDialog";
+import { EditFAQDialog } from "@/components/EditFAQDialog";
+import { FAQSection, FAQ } from "@/components/FAQSection";
 
 interface Society {
   id: string;
@@ -219,6 +222,12 @@ const DuplicateEvent = () => {
   const [externalPhone, setExternalPhone] = useState("");
   const [externalRole, setExternalRole] = useState("");
   const [externalCountryCode, setExternalCountryCode] = useState("+353");
+  
+  // FAQ state
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [createFAQDialogOpen, setCreateFAQDialogOpen] = useState(false);
+  const [editFAQDialogOpen, setEditFAQDialogOpen] = useState(false);
+  const [editingFAQ, setEditingFAQ] = useState<FAQ | null>(null);
 
   const countryCodes = [
     { code: "+353", country: "Ireland", flag: "🇮🇪" },
@@ -375,6 +384,23 @@ const DuplicateEvent = () => {
         );
       }
 
+      // Fetch FAQs from source event
+      const { data: faqsData } = await supabase
+        .from("event_faqs")
+        .select("*")
+        .eq("event_id", eventId)
+        .order("display_order");
+
+      if (faqsData) {
+        setFaqs(faqsData.map((faq: any) => ({
+          id: crypto.randomUUID(), // New ID for duplicated FAQ
+          question: faq.question,
+          answer: faq.answer,
+          displayOrder: faq.display_order,
+          isVisible: faq.is_visible,
+        })));
+      }
+
       // Fetch active CoC for the original event
       const { data: eventCoCData } = await supabase
         .from("code_of_conduct")
@@ -512,6 +538,47 @@ const DuplicateEvent = () => {
 
   const updateEmergencyField = (id: string, field: keyof EmergencyField, value: string) => {
     setEmergencyFields((prev) => prev.map((f) => (f.id === id ? { ...f, [field]: value } : f)));
+  };
+
+  // FAQ handlers
+  const handleAddFAQ = (question: string, answer: string) => {
+    const newFAQ: FAQ = {
+      id: crypto.randomUUID(),
+      question,
+      answer,
+      displayOrder: faqs.length,
+      isVisible: true,
+    };
+    setFaqs([...faqs, newFAQ]);
+    toast.success("FAQ added");
+  };
+
+  const handleEditFAQ = (id: string, question: string, answer: string, isVisible: boolean) => {
+    setFaqs(faqs.map(faq => faq.id === id ? { ...faq, question, answer, isVisible } : faq));
+    toast.success("FAQ updated");
+  };
+
+  const handleDeleteFAQ = (id: string) => {
+    setFaqs(faqs.filter(faq => faq.id !== id));
+    toast.success("FAQ deleted");
+  };
+
+  const handleFAQDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      setFaqs((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        const reordered = arrayMove(items, oldIndex, newIndex);
+        return reordered.map((item, index) => ({ ...item, displayOrder: index }));
+      });
+    }
+  };
+
+  const openEditFAQDialog = (faq: FAQ) => {
+    setEditingFAQ(faq);
+    setEditFAQDialogOpen(true);
   };
 
   const handleSubmit = async () => {
@@ -1043,6 +1110,26 @@ const DuplicateEvent = () => {
                 <Plus className="mr-2 h-4 w-4" />
                 Add Emergency Info
               </Button>
+            </CardContent>
+          </Card>
+
+          {/* FAQs Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <HelpCircle className="h-5 w-5" />
+                Frequently Asked Questions
+              </CardTitle>
+              <CardDescription>Copied from original event - edit as needed</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FAQSection
+                faqs={faqs}
+                onDragEnd={handleFAQDragEnd}
+                onEdit={openEditFAQDialog}
+                onDelete={handleDeleteFAQ}
+                onAdd={() => setCreateFAQDialogOpen(true)}
+              />
             </CardContent>
           </Card>
 
