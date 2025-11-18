@@ -409,6 +409,7 @@ const Auth = () => {
         return;
       }
       setShowEmailConfirmation(true);
+      window.scrollTo(0, 0);
       
       // For email signups, consent will be recorded automatically when they first sign in
       // after email confirmation (via the consent check in useEffect)
