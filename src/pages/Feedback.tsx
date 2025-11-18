@@ -147,11 +147,12 @@ const Feedback = () => {
       if (!user || !event) return;
 
       // Create feedback response
+      // Always store user_id for tracking, use is_anonymous flag for privacy
       const { data: responseData, error: responseError } = await supabase
         .from("feedback_responses")
         .insert({
           event_id: event.id,
-          user_id: isAnonymous ? null : user.id,
+          user_id: user.id, // Always store for tracking
           is_anonymous: isAnonymous,
         })
         .select()

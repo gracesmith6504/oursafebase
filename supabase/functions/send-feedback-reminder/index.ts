@@ -78,18 +78,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Fetch attendees who:
     // 1. Accepted CoC
-    // 2. Have been sent initial request
+    // 2. Have been sent initial request  
     // 3. Haven't been sent reminder yet
-    // 4. Haven't submitted feedback
-    const { data: attendees, error: attendeesError } = await supabaseClient
+    const { data: codeAcceptances, error: attendeesError } = await supabaseClient
       .from("code_acceptances")
-      .select(`
-        id, 
-        user_id,
-        feedback_responses!left (
-          user_id
-        )
-      `)
+      .select("id, user_id")
       .eq("event_id", eventId)
       .not("feedback_request_sent_at", "is", null)
       .is("feedback_reminder_sent_at", null);
@@ -98,12 +91,29 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`Failed to fetch attendees: ${attendeesError.message}`);
     }
 
-    // Filter out attendees who have already submitted feedback
-    const eligibleAttendees = attendees?.filter(attendee => {
-      const responses = attendee.feedback_responses as any[];
-      // Check if user has any feedback responses for this event
-      return !responses || responses.length === 0 || !responses.some(r => r.user_id === attendee.user_id);
-    }) || [];
+    // Fetch all feedback responses for this specific event
+    const { data: feedbackResponses, error: responsesError } = await supabaseClient
+      .from("feedback_responses")
+      .select("user_id")
+      .eq("event_id", eventId);
+
+    if (responsesError) {
+      throw new Error(`Failed to fetch feedback responses: ${responsesError.message}`);
+    }
+
+    // Create a Set of user IDs who have submitted feedback
+    const submittedUserIds = new Set(
+      feedbackResponses?.map(r => r.user_id).filter(Boolean) || []
+    );
+
+    // Filter out users who have already submitted feedback
+    const eligibleAttendees = codeAcceptances?.filter(
+      attendee => attendee.user_id && !submittedUserIds.has(attendee.user_id)
+    ) || [];
+
+    console.log(`Total code acceptances with initial request: ${codeAcceptances?.length || 0}`);
+    console.log(`Already submitted feedback: ${submittedUserIds.size}`);
+    console.log(`Eligible for reminder: ${eligibleAttendees.length}`);
 
     if (eligibleAttendees.length === 0) {
       return new Response(
@@ -120,8 +130,6 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
-
-    console.log(`Found ${eligibleAttendees.length} attendees to send reminder to`);
 
     // Create admin client to access auth.users
     const supabaseAdmin = createClient(

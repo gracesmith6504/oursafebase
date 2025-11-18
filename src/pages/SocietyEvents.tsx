@@ -183,6 +183,7 @@ const SocietyEvents = () => {
         const reminderPending = eventRequests.filter((r: any) => 
           r.feedback_request_sent_at !== null && 
           r.feedback_reminder_sent_at === null &&
+          r.user_id !== null && // Ensure user_id exists
           !responseUserIds.has(r.user_id)
         ).length;
         
