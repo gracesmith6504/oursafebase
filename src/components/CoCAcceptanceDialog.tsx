@@ -45,15 +45,23 @@ const CoCAcceptanceDialog = ({
   const [pdfError, setPdfError] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Get the actual scrollable viewport element from ScrollArea
+  const getViewport = useCallback(() => {
+    if (!scrollRef.current) return null;
+    // ScrollArea uses Radix which has a viewport child element
+    return scrollRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+  }, []);
+
   // Debounce scroll handler for better performance
   const handleScroll = useCallback(() => {
-    if (scrollRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    const viewport = getViewport();
+    if (viewport) {
+      const { scrollTop, scrollHeight, clientHeight } = viewport;
       // Consider "scrolled to bottom" when within 20px of bottom
       const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
       setScrolledToBottom(isBottom);
     }
-  }, []);
+  }, [getViewport]);
 
   // Debounced scroll handler
   useEffect(() => {
@@ -63,15 +71,15 @@ const CoCAcceptanceDialog = ({
       timeoutId = setTimeout(handleScroll, 100);
     };
     
-    const element = scrollRef.current;
-    if (element) {
-      element.addEventListener('scroll', debouncedScroll, { passive: true });
+    const viewport = getViewport();
+    if (viewport) {
+      viewport.addEventListener('scroll', debouncedScroll, { passive: true });
       return () => {
-        element.removeEventListener('scroll', debouncedScroll);
+        viewport.removeEventListener('scroll', debouncedScroll);
         clearTimeout(timeoutId);
       };
     }
-  }, [handleScroll]);
+  }, [handleScroll, getViewport]);
 
   // Simplified scroll detection: allow immediate acceptance for all file-based CoCs
   useEffect(() => {
@@ -82,11 +90,14 @@ const CoCAcceptanceDialog = ({
       return;
     }
     
-    // For text content, check if it fits on screen
-    if (!cocFileUrl && scrollRef.current) {
-      const { scrollHeight, clientHeight } = scrollRef.current;
-      if (scrollHeight <= clientHeight) {
-        setScrolledToBottom(true);
+    // For text content, check if it fits on screen using the viewport
+    if (!cocFileUrl) {
+      const viewport = getViewport();
+      if (viewport) {
+        const { scrollHeight, clientHeight } = viewport;
+        if (scrollHeight <= clientHeight) {
+          setScrolledToBottom(true);
+        }
       }
     }
     
@@ -94,22 +105,23 @@ const CoCAcceptanceDialog = ({
     if (!cocContent && !cocFileUrl) {
       setScrolledToBottom(true);
     }
-  }, [cocContent, cocFileUrl]);
+  }, [cocContent, cocFileUrl, getViewport]);
 
   // Secondary check: Re-evaluate scroll state after DOM updates (fixes race condition)
   useEffect(() => {
-    if (!cocFileUrl && scrollRef.current) {
+    if (!cocFileUrl) {
       // Use RAF to ensure DOM is fully painted
       requestAnimationFrame(() => {
-        if (scrollRef.current) {
-          const { scrollHeight, clientHeight } = scrollRef.current;
+        const viewport = getViewport();
+        if (viewport) {
+          const { scrollHeight, clientHeight } = viewport;
           if (scrollHeight <= clientHeight + 20) { // +20px buffer
             setScrolledToBottom(true);
           }
         }
       });
     }
-  }, [cocFileUrl, cocContent]);
+  }, [cocFileUrl, cocContent, getViewport]);
 
   const renderFileViewer = useCallback(() => {
     if (!cocFileUrl) return null;
