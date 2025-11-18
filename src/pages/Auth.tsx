@@ -442,7 +442,7 @@ const Auth = () => {
         );
         
         if (checkData?.exists) {
-          toast.error("Invalid password. If you signed up with Google, please use 'Continue with Google' or reset your password to create one.", {
+          toast.error("If you signed up with Google, please use 'Continue with Google' or reset your password to create one.", {
             duration: 6000
           });
         } else {
