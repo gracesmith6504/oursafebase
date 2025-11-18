@@ -46,23 +46,6 @@ const CoCAcceptanceDialog = ({
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Debug logging
-  console.log('CoCAcceptanceDialog Props:', {
-    eventId,
-    eventTitle,
-    cocId,
-    cocVersion,
-    cocContent: cocContent ? 'Present' : 'Missing',
-    cocFileUrl: cocFileUrl || 'Missing',
-    hasContent: !!cocContent,
-    hasFile: !!cocFileUrl
-  });
-
-  // Debug state changes
-  useEffect(() => {
-    console.log('State Update:', { agreed, scrolledToBottom, canAccept: agreed && scrolledToBottom });
-  }, [agreed, scrolledToBottom]);
-
   // Debounce scroll handler for better performance
   const handleScroll = useCallback(() => {
     if (scrollRef.current) {
@@ -92,47 +75,35 @@ const CoCAcceptanceDialog = ({
   }, [handleScroll]);
 
   useEffect(() => {
-    console.log('Scroll Detection useEffect:', { cocFileUrl, cocContent: !!cocContent });
-    
     // For file-based CoCs (non-PDF), allow immediate acceptance
     if (cocFileUrl) {
       const fileExt = getFileExtension(cocFileUrl);
-      console.log('File detected:', { fileExt, cocFileUrl });
       
       // For images and other non-PDF files, allow immediate acceptance
       if (fileExt !== 'pdf') {
-        console.log('Non-PDF file, allowing immediate acceptance');
         setScrolledToBottom(true);
-        return; // Early return
+        return;
       }
     }
     
     // For text content, check actual scroll position
     if (!cocFileUrl && scrollRef.current) {
       const { scrollHeight, clientHeight } = scrollRef.current;
-      console.log('Text content scroll check:', { scrollHeight, clientHeight });
       if (scrollHeight <= clientHeight) {
-        console.log('Content fits on screen, allowing immediate acceptance');
         setScrolledToBottom(true);
       }
     }
     
     // If no content and no file, allow immediate acceptance (fallback)
     if (!cocContent && !cocFileUrl) {
-      console.log('No content or file, allowing immediate acceptance (fallback)');
       setScrolledToBottom(true);
     }
   }, [cocContent, cocFileUrl]);
 
   const renderFileViewer = useCallback(() => {
-    console.log('renderFileViewer called:', { cocFileUrl });
-    if (!cocFileUrl) {
-      console.log('No cocFileUrl, returning null');
-      return null;
-    }
+    if (!cocFileUrl) return null;
     
     const fileExt = getFileExtension(cocFileUrl);
-    console.log('File extension:', fileExt);
     
     if (fileExt === 'pdf') {
       return (
@@ -237,13 +208,6 @@ const CoCAcceptanceDialog = ({
     }
   }, [agreed, scrolledToBottom, cocId, cocVersion, eventId, user, onAccepted]);
 
-  console.log('Rendering dialog with:', {
-    hasCocFileUrl: !!cocFileUrl,
-    hasCocContent: !!cocContent,
-    willRenderFileViewer: !!cocFileUrl,
-    willRenderTextContent: !cocFileUrl && !!cocContent
-  });
-
   return (
     <Dialog open={true} onOpenChange={() => {}}>
       <DialogContent hideClose className="max-w-6xl w-[95vw] h-[85vh] sm:max-h-[95vh] flex flex-col p-0 gap-0">
@@ -275,10 +239,7 @@ const CoCAcceptanceDialog = ({
             <Checkbox
               id="agree"
               checked={agreed}
-              onCheckedChange={(checked) => {
-                console.log('Checkbox changed:', checked);
-                setAgreed(checked as boolean);
-              }}
+              onCheckedChange={(checked) => setAgreed(checked as boolean)}
               className="h-4 w-4 sm:h-5 sm:w-5"
             />
             <Label htmlFor="agree" className="cursor-pointer text-xs sm:text-sm leading-tight">
