@@ -20,6 +20,7 @@ export type Database = {
           accepted_version: number | null
           code_of_conduct_id: string | null
           event_id: string
+          feedback_reminder_sent_at: string | null
           feedback_request_sent_at: string | null
           id: string
           ip_address: string | null
@@ -31,6 +32,7 @@ export type Database = {
           accepted_version?: number | null
           code_of_conduct_id?: string | null
           event_id: string
+          feedback_reminder_sent_at?: string | null
           feedback_request_sent_at?: string | null
           id?: string
           ip_address?: string | null
@@ -42,6 +44,7 @@ export type Database = {
           accepted_version?: number | null
           code_of_conduct_id?: string | null
           event_id?: string
+          feedback_reminder_sent_at?: string | null
           feedback_request_sent_at?: string | null
           id?: string
           ip_address?: string | null
