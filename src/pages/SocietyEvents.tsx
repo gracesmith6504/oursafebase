@@ -454,7 +454,7 @@ const SocietyEvents = () => {
                           className="flex-1 gap-2 h-9"
                         >
                           <Copy className="h-4 w-4" />
-                          <span className="font-medium">Duplicate</span>
+                          <span className="font-medium hidden sm:inline">Duplicate</span>
                         </Button>
                       </div>
 

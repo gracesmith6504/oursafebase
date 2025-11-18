@@ -76,9 +76,34 @@ const PrivacyPolicy = () => {
               <h3 className="text-lg font-semibold mt-4 mb-2">Reports & Feedback</h3>
               <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
                 <li>Incident reports (anonymous or identified, your choice)</li>
-                <li>Event feedback submissions</li>
+                <li>
+                  <strong>Event feedback submissions:</strong> When you submit post-event feedback, we store:
+                  <ul className="list-disc pl-6 mt-1 space-y-1">
+                    <li>Your responses to feedback questions (text answers, ratings)</li>
+                    <li>Your internal user ID (for system purposes only - see below)</li>
+                    <li>Submission timestamp</li>
+                    <li>Anonymity preference (anonymous or identified)</li>
+                  </ul>
+                </li>
                 <li>Contact information (only if you choose to provide it)</li>
               </ul>
+
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg mt-4">
+                <p className="text-sm font-semibold mb-2 text-blue-900 dark:text-blue-100">
+                  📋 Feedback Anonymity Protection
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  <strong>Important:</strong> Even if you submit anonymous feedback, we store your internal user ID for technical purposes only:
+                </p>
+                <ul className="list-disc pl-6 mt-2 space-y-1 text-sm text-muted-foreground">
+                  <li><strong>Preventing duplicate submissions:</strong> Ensures you can only submit feedback once per event</li>
+                  <li><strong>Managing email reminders:</strong> Prevents sending feedback requests to users who already responded</li>
+                  <li><strong>Account deletion:</strong> Allows us to properly delete or anonymize your feedback if you request account deletion</li>
+                </ul>
+                <p className="text-sm text-muted-foreground mt-2">
+                  <strong>Your identity is never revealed:</strong> Committee members and society organizers cannot see who submitted anonymous feedback. The user ID is never displayed in the user interface and is used purely for system integrity.
+                </p>
+              </div>
 
               <h3 className="text-lg font-semibold mt-4 mb-2">Analytics Data</h3>
               <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
@@ -94,13 +119,36 @@ const PrivacyPolicy = () => {
               <p className="text-muted-foreground mb-3">We use your information to:</p>
               <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
                 <li><strong>Provide Safety Services:</strong> Enable access to welfare contacts, emergency information, and reporting tools during events</li>
-                <li><strong>Process Reports:</strong> Handle incident reports and welfare concerns submitted through the platform</li>
+                <li><strong>Process Reports & Feedback:</strong> Handle incident reports and post-event feedback submitted through the platform. For anonymous feedback, we maintain strict separation between your identity and your responses - committee members see only aggregated statistics and anonymized content.</li>
                 <li><strong>Send Notifications:</strong> Email committee members about new reports, concerns, or platform updates</li>
                 <li><strong>Manage Memberships:</strong> Track society memberships and roles for access control</li>
                 <li><strong>Improve Platform:</strong> Analyze usage patterns to enhance safety features and user experience</li>
                 <li><strong>Ensure Security:</strong> Protect against fraud, abuse, and security threats</li>
                 <li><strong>Comply with Legal Obligations:</strong> Meet legal requirements and respond to lawful requests</li>
               </ul>
+            </section>
+
+            {/* What We DON'T Do With Your Data */}
+            <section>
+              <h2 className="text-xl font-semibold mb-3">3A. What We Do NOT Do With Your Data</h2>
+              <p className="text-muted-foreground mb-3">
+                To protect your privacy and comply with GDPR, we explicitly commit to NOT using your data for:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                <li><strong>User Profiling:</strong> We do not create behavioral profiles, rank users, or track individual participation patterns</li>
+                <li><strong>Identity Linking:</strong> We do not link anonymous feedback to your personal identity in any user-facing reports or dashboards</li>
+                <li><strong>Targeted Advertising:</strong> We do not use your data for advertising purposes or sell it to third parties</li>
+                <li><strong>Automated Decision-Making:</strong> We do not use your data for automated decisions that significantly affect you (GDPR Article 22)</li>
+              </ul>
+              
+              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-4 rounded-lg mt-4">
+                <p className="text-sm font-semibold mb-2 text-amber-900 dark:text-amber-100">
+                  🔒 Technical vs. Visible Data
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  While we store a technical user ID with anonymous feedback for system integrity (preventing duplicates, managing reminders), this ID is <strong>never</strong> displayed to committee members or used to identify you. Row-Level Security (RLS) policies in our database ensure your anonymity is programmatically enforced.
+                </p>
+              </div>
             </section>
 
             {/* Legal Basis for Processing (GDPR) */}
@@ -173,7 +221,14 @@ const PrivacyPolicy = () => {
               <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
                 <li><strong>Right to Access (Article 15):</strong> Request a copy of your personal data</li>
                 <li><strong>Right to Rectification (Article 16):</strong> Correct inaccurate or incomplete data</li>
-                <li><strong>Right to Erasure (Article 17):</strong> Request deletion of your data ("right to be forgotten")</li>
+                <li>
+                  <strong>Right to Erasure (Article 17):</strong> Request deletion of your data ("right to be forgotten"). 
+                  <ul className="list-disc pl-6 mt-1 space-y-1 text-sm">
+                    <li><strong>Account deletion:</strong> Deletes your profile, account credentials, and personally identifiable information</li>
+                    <li><strong>Feedback responses:</strong> Your feedback submissions will be permanently anonymized (user ID set to null) so they cannot be traced back to you, while preserving aggregate statistics for safety records</li>
+                    <li><strong>Reports:</strong> Anonymous reports are retained for safety accountability but cannot be linked to your identity after account deletion</li>
+                  </ul>
+                </li>
                 <li><strong>Right to Data Portability (Article 20):</strong> Receive your data in a structured, machine-readable format</li>
                 <li><strong>Right to Restrict Processing (Article 18):</strong> Limit how we use your data</li>
                 <li><strong>Right to Object (Article 21):</strong> Object to processing based on legitimate interests</li>
@@ -229,6 +284,20 @@ const PrivacyPolicy = () => {
                 <p className="text-sm text-muted-foreground">Include: Your registered email address</p>
                 <p className="text-sm text-muted-foreground mt-2">
                   <strong>Response Time:</strong> We will respond within 30 days as required by GDPR
+                </p>
+              </div>
+
+              <div className="bg-muted/50 p-4 rounded-lg mt-4">
+                <p className="text-sm font-semibold mb-2">Deleting Feedback Responses</p>
+                <p className="text-sm text-muted-foreground">
+                  If you wish to delete your feedback responses, you can:
+                </p>
+                <ul className="list-disc pl-6 mt-2 space-y-1 text-sm text-muted-foreground">
+                  <li><strong>Delete your account:</strong> All your feedback will be permanently anonymized</li>
+                  <li><strong>Request specific deletion:</strong> Contact us at oursafebase@gmail.com with the event name and approximate submission date, and we will anonymize those specific responses</li>
+                </ul>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Note: Once anonymized, feedback responses cannot be recovered or re-linked to your account.
                 </p>
               </div>
             </section>
