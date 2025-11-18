@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { ArrowLeft, Upload, Bell, LogOut, Download } from "lucide-react";
 import { toast } from "sonner";
+import { LazyImage } from "@/components/LazyImage";
+import { LazyAvatar } from "@/components/LazyAvatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -389,7 +390,7 @@ const Profile = () => {
               <span className="hidden md:inline">Dashboard</span>
             </Button>
             <div className="flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => navigate("/")}>
-              <img src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
+              <LazyImage src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
               <h1 className="text-lg md:text-xl font-bold">OurSafeBase</h1>
             </div>
             <Button variant="ghost" size="sm" onClick={() => setLogoutDialogOpen(true)}>
@@ -415,10 +416,12 @@ const Profile = () => {
               <CardContent className="space-y-6">
                 {/* Avatar */}
                 <div className="flex items-center gap-6">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src={avatarPreview || undefined} />
-                    <AvatarFallback className="text-2xl">{getInitials(profile.display_name)}</AvatarFallback>
-                  </Avatar>
+                  <LazyAvatar
+                    src={avatarPreview}
+                    alt={profile.display_name}
+                    fallback={getInitials(profile.display_name)}
+                    className="h-24 w-24"
+                  />
                   <div className="flex-1">
                     <Label htmlFor="avatar" className="cursor-pointer">
                       <div className="space-y-1">

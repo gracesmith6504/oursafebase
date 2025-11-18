@@ -2,7 +2,6 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy, Loader2, ArrowLeft, Share2, ChevronRight, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
@@ -17,6 +16,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { EventShareCard } from "@/components/EventShareCard";
 import { EventSafetyPageSkeleton } from "@/components/EventSafetyPageSkeleton";
 import { Footer } from "@/components/Footer";
+import { LazyImage } from "@/components/LazyImage";
+import { LazyAvatar } from "@/components/LazyAvatar";
 
 // Lazy load heavy dialog components to reduce initial bundle size
 const ReportConcernDialog = lazy(() => import("@/components/ReportConcernDialog").then(module => ({ default: module.ReportConcernDialog })));
@@ -298,7 +299,7 @@ const EventSafetyPage = () => {
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               )}
-              <img 
+              <LazyImage 
                 src={logo} 
                 alt="OurSafeBase" 
                 className="h-10 cursor-pointer" 
@@ -352,12 +353,12 @@ const EventSafetyPage = () => {
                     key={contact.id}
                     className="flex gap-3 rounded-lg border bg-muted/50 p-4"
                   >
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={contact.avatar || undefined} alt={contact.name || "Contact"} />
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {(contact.name || "?").charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <LazyAvatar 
+                      src={contact.avatar}
+                      alt={contact.name || "Contact"}
+                      fallback={(contact.name || "?").charAt(0).toUpperCase()}
+                      className="h-12 w-12"
+                    />
                     <div className="flex-1">
                       <p className="font-semibold">{contact.name || "Anonymous"}</p>
                       {contact.role && (

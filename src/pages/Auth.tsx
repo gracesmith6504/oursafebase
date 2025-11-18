@@ -16,6 +16,7 @@ import { useAuth } from "@/lib/auth";
 import logo from "@/assets/logo.png";
 import { Footer } from "@/components/Footer";
 import { getAppUrl } from "@/lib/constants";
+import { LazyImage } from "@/components/LazyImage";
 
 // Detect if user is using an in-app browser (WebView)
 const detectInAppBrowser = () => {
@@ -587,7 +588,7 @@ const Auth = () => {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center space-y-3">
             <div className="flex justify-center mb-2">
-              <img src={logo} alt="OurSafeBase" className="h-12" />
+              <LazyImage src={logo} alt="OurSafeBase" className="h-12" />
             </div>
             <CardTitle className="text-2xl">Welcome to OurSafeBase!</CardTitle>
             <CardDescription className="text-base">
@@ -749,7 +750,7 @@ const Auth = () => {
             </Card> : <Card className="w-full max-w-md">
               <CardHeader className="text-center">
                 <div className="mb-4 flex justify-center">
-                  <img src={logo} alt="OurSafeBase" className="h-16" />
+                  <LazyImage src={logo} alt="OurSafeBase" className="h-16" />
                 </div>
                 <CardTitle className="text-2xl">Welcome to OurSafeBase</CardTitle>
                 <CardDescription className="space-y-2">
