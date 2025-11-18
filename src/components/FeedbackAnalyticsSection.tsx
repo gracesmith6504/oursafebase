@@ -456,10 +456,14 @@ export const FeedbackAnalyticsSection = ({
                                   <p className="text-xs text-muted-foreground whitespace-nowrap">
                                     {format(new Date(answer.submittedAt), "MMM d, h:mm a")}
                                   </p>
-                                  {answer.isAnonymous && (
+                                  {answer.isAnonymous ? (
                                     <Badge variant="secondary" className="text-xs">
                                       Anonymous
                                     </Badge>
+                                  ) : answer.userEmail && (
+                                    <p className="text-xs text-muted-foreground">
+                                      {answer.userEmail}
+                                    </p>
                                   )}
                                 </div>
                               </div>
