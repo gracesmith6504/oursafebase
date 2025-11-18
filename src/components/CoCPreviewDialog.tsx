@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { PDFViewer } from "@/components/PDFViewer";
 import { Shield } from "lucide-react";
+import DOMPurify from "dompurify";
 
 interface CoCPreviewDialogProps {
   open: boolean;
@@ -55,7 +56,12 @@ export const CoCPreviewDialog = ({
                   </h3>
                   <div
                     className="prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: cocContent }}
+                    dangerouslySetInnerHTML={{ 
+                      __html: DOMPurify.sanitize(cocContent, {
+                        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'blockquote', 'code', 'pre'],
+                        ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+                      }) 
+                    }}
                   />
                 </div>
               ) : (
