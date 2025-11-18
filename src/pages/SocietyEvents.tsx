@@ -187,13 +187,22 @@ const SocietyEvents = () => {
           !responseUserIds.has(r.user_id)
         ).length;
         
+        console.log('[SocietyEvents] Metrics calculated for event:', eventId, {
+          initialPending,
+          reminderPending,
+          initialSent,
+          reminderSent,
+          totalAttendees,
+        });
+
         metricsData[eventId].feedbackRequestStats = {
           initialPending,
           reminderPending,
           initialSent,
           reminderSent,
           totalAttendees,
-        };
+          _timestamp: Date.now(), // Force new reference for React re-render
+        } as any;
       });
     }
 

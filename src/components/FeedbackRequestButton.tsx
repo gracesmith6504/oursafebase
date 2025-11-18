@@ -35,6 +35,13 @@ export const FeedbackRequestButton = ({
 
   // Sync button state with database state via props
   useEffect(() => {
+    console.log('[FeedbackRequestButton] useEffect triggered', {
+      feedbackEnabled,
+      initialPending: stats.initialPending,
+      reminderPending: stats.reminderPending,
+      currentButtonState: buttonState
+    });
+
     // Calculate the correct state based on database stats
     if (!feedbackEnabled) {
       setButtonState('all-complete');
@@ -61,8 +68,11 @@ export const FeedbackRequestButton = ({
       setButtonState('initial-sent');
       toast.success(`Feedback requests sent to ${data.sent} attendees`);
       
-      // After 2 seconds, refresh metrics and let parent update stats
+      // After 2 seconds, wait extra time for database replication, then refresh metrics
       setTimeout(async () => {
+        console.log('[FeedbackRequestButton] Waiting for database replication...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('[FeedbackRequestButton] Refreshing metrics...');
         await onSuccess();
       }, 2000);
       
@@ -87,8 +97,11 @@ export const FeedbackRequestButton = ({
       setButtonState('reminder-sent');
       toast.success(`Reminders sent to ${data.sent} attendees`);
       
-      // After 2 seconds, refresh metrics
+      // After 2 seconds, wait extra time for database replication, then refresh metrics
       setTimeout(async () => {
+        console.log('[FeedbackRequestButton] Waiting for database replication...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('[FeedbackRequestButton] Refreshing metrics...');
         await onSuccess();
       }, 2000);
       
