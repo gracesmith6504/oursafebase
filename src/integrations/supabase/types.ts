@@ -541,6 +541,7 @@ export type Database = {
           id: string
           is_anonymous: boolean
           submitted_at: string
+          submitter_email: string | null
           user_id: string | null
         }
         Insert: {
@@ -548,6 +549,7 @@ export type Database = {
           id?: string
           is_anonymous?: boolean
           submitted_at?: string
+          submitter_email?: string | null
           user_id?: string | null
         }
         Update: {
@@ -555,6 +557,7 @@ export type Database = {
           id?: string
           is_anonymous?: boolean
           submitted_at?: string
+          submitter_email?: string | null
           user_id?: string | null
         }
         Relationships: [

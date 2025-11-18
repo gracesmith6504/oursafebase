@@ -211,10 +211,10 @@ export async function getGroupedResponses(eventId: string): Promise<GroupedRespo
 
   if (!questions || questions.length === 0) return [];
 
-  // Get all responses
+  // Get all responses with email
   const { data: responses } = await supabase
     .from("feedback_responses")
-    .select("id, submitted_at, is_anonymous")
+    .select("id, submitted_at, is_anonymous, submitter_email")
     .eq("event_id", eventId)
     .order("submitted_at", { ascending: false });
 
@@ -244,7 +244,7 @@ export async function getGroupedResponses(eventId: string): Promise<GroupedRespo
           answerRating: answer.answer_rating || undefined,
           submittedAt: response?.submitted_at || "",
           isAnonymous: response?.is_anonymous || false,
-          userEmail: undefined, // TODO: Requires database column to store email
+          userEmail: response?.submitter_email || undefined,
         };
       }),
     };

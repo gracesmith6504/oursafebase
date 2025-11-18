@@ -154,6 +154,7 @@ const Feedback = () => {
           event_id: event.id,
           user_id: user.id, // Always store for tracking
           is_anonymous: isAnonymous,
+          submitter_email: isAnonymous ? null : user.email,
         })
         .select()
         .single();
