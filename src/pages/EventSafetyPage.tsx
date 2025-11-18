@@ -120,13 +120,11 @@ const EventSafetyPage = () => {
     user?.id
   );
 
-  const isEventCreator = event?.created_by === user?.id;
   const { data: cocAcceptanceData } = useCoCAcceptance(
     event?.id,
     user?.id,
     cocData?.codeOfConduct?.id,
-    cocData?.codeOfConduct?.version,
-    isEventCreator
+    cocData?.codeOfConduct?.version
   );
 
   const trackPageViewMutation = useTrackPageView();
