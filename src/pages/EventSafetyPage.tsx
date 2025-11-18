@@ -159,7 +159,21 @@ const EventSafetyPage = () => {
 
   // Show CoC dialog if acceptance is required
   useEffect(() => {
+    console.log('CoC Required Check:', { 
+      cocRequired, 
+      codeOfConduct,
+      hasCodeOfConduct: !!codeOfConduct,
+      codeOfConductDetails: codeOfConduct ? {
+        id: codeOfConduct.id,
+        hasContent: !!codeOfConduct.content,
+        hasFileUrl: !!codeOfConduct.file_url,
+        file_url: codeOfConduct.file_url,
+        content_type: codeOfConduct.content_type
+      } : null
+    });
+    
     if (cocRequired && codeOfConduct) {
+      console.log('Setting showCoCDialog to true');
       setShowCoCDialog(true);
     }
   }, [cocRequired, codeOfConduct]);
