@@ -433,7 +433,24 @@ const Auth = () => {
       password
     });
     if (error) {
-      toast.error(error.message);
+      // Check if the error is about invalid credentials or if they used Google to sign up
+      if (error.message.includes('Invalid login credentials')) {
+        // Check if this email has a Google account
+        const { data: checkData } = await supabase.functions.invoke(
+          'check-email-exists',
+          { body: { email } }
+        );
+        
+        if (checkData?.exists) {
+          toast.error("Invalid password. If you signed up with Google, please use 'Continue with Google' or reset your password to create one.", {
+            duration: 6000
+          });
+        } else {
+          toast.error("Invalid email or password");
+        }
+      } else {
+        toast.error(error.message);
+      }
       setLoading(false);
     } else if (data.session) {
       // Don't set loading false - let redirect happen
@@ -499,11 +516,25 @@ const Auth = () => {
     } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: redirectUrl
+        redirectTo: redirectUrl,
+        // Skip nonce check for better reliability
+        skipBrowserRedirect: false,
+        // Query params to help with account linking on callback
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
       }
     });
     if (error) {
-      toast.error(error.message);
+      // Handle specific error cases
+      if (error.message.includes('already registered') || error.message.includes('User already registered')) {
+        toast.error("An account with this email already exists. Please sign in with email/password or reset your password.", {
+          duration: 6000
+        });
+      } else {
+        toast.error(error.message);
+      }
       setLoading(false);
     }
     // Don't set loading to false on success - user will be redirected
