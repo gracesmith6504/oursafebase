@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { Plus, User, Calendar } from "lucide-react";
 import { toast } from "sonner";
@@ -12,6 +11,8 @@ import CreateSocietyDialog from "@/components/CreateSocietyDialog";
 import JoinSocietyDialog from "@/components/JoinSocietyDialog";
 import logo from "@/assets/logo.png";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { LazyImage } from "@/components/LazyImage";
+import { LazyAvatar } from "@/components/LazyAvatar";
 
 interface SocietyMembership {
   role: "committee" | "attendee";
@@ -79,7 +80,7 @@ const Dashboard = () => {
         <header className="bg-card/80 backdrop-blur-sm shadow-md border-b border-border/50 rounded-b-3xl sticky top-0 z-50">
           <div className="container mx-auto flex items-center justify-between px-4 py-5">
             <div className="flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => navigate("/")}>
-              <img src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
+              <LazyImage src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
               <h1 className="text-lg md:text-xl font-heading font-bold text-foreground">OurSafeBase</h1>
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
@@ -154,12 +155,12 @@ const Dashboard = () => {
                       <div className="flex items-start justify-between gap-3 min-w-0">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           {membership.society.logo_url && (
-                            <Avatar className="h-12 w-12 shrink-0">
-                              <AvatarImage src={membership.society.logo_url} alt={membership.society.name} />
-                              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                                {membership.society.name.substring(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
+                            <LazyAvatar 
+                              src={membership.society.logo_url}
+                              alt={membership.society.name}
+                              fallback={membership.society.name.substring(0, 2).toUpperCase()}
+                              className="h-12 w-12 shrink-0"
+                            />
                           )}
                           <CardTitle className="break-words min-w-0 flex-1 font-heading flex items-center gap-2">
                             {membership.society.name}
