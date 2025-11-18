@@ -195,14 +195,13 @@ export const useCoCAcceptance = (
   eventId?: string,
   userId?: string,
   cocId?: string,
-  cocVersion?: number,
-  isEventCreator?: boolean
+  cocVersion?: number
 ) => {
   return useQuery({
     queryKey: eventSafetyKeys.cocAcceptance(eventId || "", userId || ""),
     queryFn: async () => {
-      // Skip check if user is event creator or no CoC exists
-      if (isEventCreator || !cocId) {
+      // Skip check if no CoC exists
+      if (!cocId) {
         return { required: false, data: null };
       }
 
@@ -222,7 +221,7 @@ export const useCoCAcceptance = (
         data: data,
       };
     },
-    enabled: !!eventId && !!userId && !!cocId && !isEventCreator,
+    enabled: !!eventId && !!userId && !!cocId,
     staleTime: 1 * 60 * 1000, // 1 minute - acceptance status may change more frequently
     gcTime: 5 * 60 * 1000,
   });
