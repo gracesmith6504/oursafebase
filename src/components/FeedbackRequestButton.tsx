@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Mail, Bell, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,12 +31,27 @@ export const FeedbackRequestButton = ({
   stats, 
   onSuccess 
 }: FeedbackRequestButtonProps) => {
-  const [buttonState, setButtonState] = useState<ButtonState>(() => {
-    if (!feedbackEnabled) return 'all-complete';
-    if (stats.initialPending > 0) return 'initial';
-    if (stats.reminderPending > 0) return 'reminder';
-    return 'all-complete';
-  });
+  const [buttonState, setButtonState] = useState<ButtonState>('initial');
+
+  // Sync button state with database state via props
+  useEffect(() => {
+    // Don't update state during temporary success animations
+    if (buttonState === 'initial-sent' || buttonState === 'sending-initial' ||
+        buttonState === 'reminder-sent' || buttonState === 'sending-reminder') {
+      return;
+    }
+
+    // Calculate the correct state based on database stats
+    if (!feedbackEnabled) {
+      setButtonState('all-complete');
+    } else if (stats.initialPending > 0) {
+      setButtonState('initial');
+    } else if (stats.reminderPending > 0) {
+      setButtonState('reminder');
+    } else {
+      setButtonState('all-complete');
+    }
+  }, [feedbackEnabled, stats.initialPending, stats.reminderPending]);
 
   const handleSendInitial = async () => {
     setButtonState('sending-initial');
