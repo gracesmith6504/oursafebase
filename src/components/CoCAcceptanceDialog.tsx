@@ -182,8 +182,13 @@ const CoCAcceptanceDialog = ({
   }, [cocContent]);
 
   const handleAccept = useCallback(async () => {
-    if (!agreed || !scrolledToBottom) {
-      toast.error("Please scroll to the bottom and agree to the Code of Conduct");
+    if (!agreed) {
+      toast.error("Please agree to the Code of Conduct");
+      return;
+    }
+
+    if (!scrolledToBottom) {
+      toast.error("Please review the full Code of Conduct");
       return;
     }
 
