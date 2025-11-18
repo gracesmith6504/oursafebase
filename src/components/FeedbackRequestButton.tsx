@@ -4,14 +4,16 @@ import { Mail, Bell, Check, Loader2, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getAppUrl } from "@/lib/constants";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-type ButtonState = 'initial' | 'sending-initial' | 'initial-sent' | 'reminder' | 'sending-reminder' | 'reminder-sent' | 'all-complete';
+type ButtonState =
+  | "initial"
+  | "sending-initial"
+  | "initial-sent"
+  | "reminder"
+  | "sending-reminder"
+  | "reminder-sent"
+  | "all-complete";
 
 interface FeedbackRequestButtonProps {
   eventId: string;
@@ -28,98 +30,96 @@ interface FeedbackRequestButtonProps {
   onSuccess: () => void;
 }
 
-export const FeedbackRequestButton = ({ 
+export const FeedbackRequestButton = ({
   eventId,
   societySlug,
   eventSlug,
-  feedbackEnabled, 
-  stats, 
-  onSuccess 
+  feedbackEnabled,
+  stats,
+  onSuccess,
 }: FeedbackRequestButtonProps) => {
-  const [buttonState, setButtonState] = useState<ButtonState>('initial');
+  const [buttonState, setButtonState] = useState<ButtonState>("initial");
 
   const handleCopyFeedbackUrl = () => {
-    const feedbackUrl = `${getAppUrl()}/society/${societySlug}/events/${eventSlug}/safety/feedback`;
+    const feedbackUrl = `${getAppUrl()}/${societySlug}/${eventSlug}/feedback`;
     navigator.clipboard.writeText(feedbackUrl);
     toast.success("Feedback URL copied to clipboard!");
   };
 
   // Sync button state with database state via props
   useEffect(() => {
-    console.log('[FeedbackRequestButton] useEffect triggered', {
+    console.log("[FeedbackRequestButton] useEffect triggered", {
       feedbackEnabled,
       initialPending: stats.initialPending,
       reminderPending: stats.reminderPending,
-      currentButtonState: buttonState
+      currentButtonState: buttonState,
     });
 
     // Calculate the correct state based on database stats
     if (!feedbackEnabled) {
-      setButtonState('all-complete');
+      setButtonState("all-complete");
     } else if (stats.initialPending > 0) {
-      setButtonState('initial');
+      setButtonState("initial");
     } else if (stats.reminderPending > 0) {
-      setButtonState('reminder');
+      setButtonState("reminder");
     } else {
-      setButtonState('all-complete');
+      setButtonState("all-complete");
     }
   }, [feedbackEnabled, stats.initialPending, stats.reminderPending]);
 
   const handleSendInitial = async () => {
-    setButtonState('sending-initial');
-    
+    setButtonState("sending-initial");
+
     try {
-      const { data, error } = await supabase.functions.invoke('send-feedback-request', {
-        body: { eventId }
+      const { data, error } = await supabase.functions.invoke("send-feedback-request", {
+        body: { eventId },
       });
-      
+
       if (error) throw error;
-      
+
       // Show success state
-      setButtonState('initial-sent');
+      setButtonState("initial-sent");
       toast.success(`Feedback requests sent to ${data.sent} attendees`);
-      
+
       // After 2 seconds, wait extra time for database replication, then refresh metrics
       setTimeout(async () => {
-        console.log('[FeedbackRequestButton] Waiting for database replication...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('[FeedbackRequestButton] Refreshing metrics...');
+        console.log("[FeedbackRequestButton] Waiting for database replication...");
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log("[FeedbackRequestButton] Refreshing metrics...");
         await onSuccess();
       }, 2000);
-      
     } catch (error: any) {
-      console.error('Failed to send feedback requests:', error);
-      setButtonState('initial');
-      toast.error(error.message || 'Failed to send feedback requests');
+      console.error("Failed to send feedback requests:", error);
+      setButtonState("initial");
+      toast.error(error.message || "Failed to send feedback requests");
     }
   };
 
   const handleSendReminder = async () => {
-    setButtonState('sending-reminder');
-    
+    setButtonState("sending-reminder");
+
     try {
-      const { data, error } = await supabase.functions.invoke('send-feedback-reminder', {
-        body: { eventId }
+      const { data, error } = await supabase.functions.invoke("send-feedback-reminder", {
+        body: { eventId },
       });
-      
+
       if (error) throw error;
-      
+
       // Show success state
-      setButtonState('reminder-sent');
+      setButtonState("reminder-sent");
       toast.success(`Reminders sent to ${data.sent} attendees`);
-      
+
       // After 2 seconds, wait extra time for database replication, then refresh metrics
       setTimeout(async () => {
-        console.log('[FeedbackRequestButton] Waiting for database replication...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('[FeedbackRequestButton] Refreshing metrics...');
+        console.log("[FeedbackRequestButton] Waiting for database replication...");
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        console.log("[FeedbackRequestButton] Refreshing metrics...");
         await onSuccess();
       }, 2000);
-      
     } catch (error: any) {
-      console.error('Failed to send reminders:', error);
-      setButtonState('reminder');
-      toast.error(error.message || 'Failed to send reminders');
+      console.error("Failed to send reminders:", error);
+      setButtonState("reminder");
+      toast.error(error.message || "Failed to send reminders");
     }
   };
 
@@ -128,36 +128,34 @@ export const FeedbackRequestButton = ({
   }
 
   // Initial request button
-  if (buttonState === 'initial' || buttonState === 'sending-initial' || buttonState === 'initial-sent') {
+  if (buttonState === "initial" || buttonState === "sending-initial" || buttonState === "initial-sent") {
     return (
       <div className="flex gap-2">
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={buttonState === 'initial-sent' ? 'default' : 'default'}
+                variant={buttonState === "initial-sent" ? "default" : "default"}
                 size="sm"
                 onClick={handleSendInitial}
-                disabled={buttonState !== 'initial'}
+                disabled={buttonState !== "initial"}
                 className={`flex-1 h-11 gap-2 font-medium shadow-sm ${
-                  buttonState === 'initial-sent' 
-                    ? 'bg-green-600 hover:bg-green-600' 
-                    : ''
+                  buttonState === "initial-sent" ? "bg-green-600 hover:bg-green-600" : ""
                 }`}
               >
-                {buttonState === 'sending-initial' && (
+                {buttonState === "sending-initial" && (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
                     <span>Sending...</span>
                   </>
                 )}
-                {buttonState === 'initial-sent' && (
+                {buttonState === "initial-sent" && (
                   <>
                     <Check className="h-5 w-5" />
                     <span>Feedback Sent ✓</span>
                   </>
                 )}
-                {buttonState === 'initial' && (
+                {buttonState === "initial" && (
                   <>
                     <Mail className="h-5 w-5" />
                     <span>Send Feedback ({stats.initialPending})</span>
@@ -167,21 +165,17 @@ export const FeedbackRequestButton = ({
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-[280px]">
               <p className="text-sm">
-                Send post-event feedback requests to all attendees who accepted this event's code of conduct ({stats.initialPending} {stats.initialPending === 1 ? 'person' : 'people'})
+                Send post-event feedback requests to all attendees who accepted this event's code of conduct (
+                {stats.initialPending} {stats.initialPending === 1 ? "person" : "people"})
               </p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        
+
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopyFeedbackUrl}
-                className="h-11 px-3"
-              >
+              <Button variant="outline" size="sm" onClick={handleCopyFeedbackUrl} className="h-11 px-3">
                 <Copy className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
@@ -195,36 +189,36 @@ export const FeedbackRequestButton = ({
   }
 
   // Reminder button
-  if (buttonState === 'reminder' || buttonState === 'sending-reminder' || buttonState === 'reminder-sent') {
+  if (buttonState === "reminder" || buttonState === "sending-reminder" || buttonState === "reminder-sent") {
     return (
       <div className="flex gap-2">
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={buttonState === 'reminder-sent' ? 'default' : 'default'}
+                variant={buttonState === "reminder-sent" ? "default" : "default"}
                 size="sm"
                 onClick={handleSendReminder}
-                disabled={buttonState !== 'reminder'}
+                disabled={buttonState !== "reminder"}
                 className={`flex-1 h-11 gap-2 font-medium shadow-sm ${
-                  buttonState === 'reminder-sent'
-                    ? 'bg-green-600 hover:bg-green-600'
-                    : 'bg-amber-600 hover:bg-amber-700'
+                  buttonState === "reminder-sent"
+                    ? "bg-green-600 hover:bg-green-600"
+                    : "bg-amber-600 hover:bg-amber-700"
                 }`}
               >
-                {buttonState === 'sending-reminder' && (
+                {buttonState === "sending-reminder" && (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
                     <span>Sending Reminder...</span>
                   </>
                 )}
-                {buttonState === 'reminder-sent' && (
+                {buttonState === "reminder-sent" && (
                   <>
                     <Check className="h-5 w-5" />
                     <span>Reminder Sent ✓</span>
                   </>
                 )}
-                {buttonState === 'reminder' && (
+                {buttonState === "reminder" && (
                   <>
                     <Bell className="h-5 w-5" />
                     <span>Send Reminder ({stats.reminderPending})</span>
@@ -240,22 +234,17 @@ export const FeedbackRequestButton = ({
                   <li>Have not yet submitted feedback</li>
                 </ul>
                 <p className="text-xs text-muted-foreground pt-1">
-                  ({stats.reminderPending} {stats.reminderPending === 1 ? 'person' : 'people'} will receive this email)
+                  ({stats.reminderPending} {stats.reminderPending === 1 ? "person" : "people"} will receive this email)
                 </p>
               </div>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        
+
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopyFeedbackUrl}
-                className="h-11 px-3"
-              >
+              <Button variant="outline" size="sm" onClick={handleCopyFeedbackUrl} className="h-11 px-3">
                 <Copy className="h-5 w-5" />
               </Button>
             </TooltipTrigger>
