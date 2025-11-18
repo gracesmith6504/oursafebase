@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,6 +31,18 @@ import {
 import { Link } from "react-router-dom";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HelpCircle } from "lucide-react";
+import {
+  useEvent,
+  useSociety,
+  useEventContacts,
+  useEmergencyInfo,
+  useCodeOfConduct,
+  useFAQs,
+  useMembership,
+  useCoCAcceptance,
+  useTrackPageView,
+  useInvalidateCoCQueries,
+} from "@/hooks/useEventSafetyQueries";
 
 interface Event {
   id: string;
@@ -86,31 +97,48 @@ const EventSafetyPage = () => {
   const { eventId, societySlug, eventSlug } = useParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const [event, setEvent] = useState<Event | null>(null);
-  const [society, setSociety] = useState<Society | null>(null);
-  const [welfareContacts, setWelfareContacts] = useState<WelfareContact[]>([]);
-  const [emergencyInfo, setEmergencyInfo] = useState<EmergencyInfo | null>(null);
-  const [codeOfConduct, setCodeOfConduct] = useState<CodeOfConduct | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [showMembershipAlert, setShowMembershipAlert] = useState(false);
-  const [cocRequired, setCoCRequired] = useState(false);
-  const [cocData, setCoCData] = useState<any>(null);
   const [showCoCDialog, setShowCoCDialog] = useState(false);
-  const [hasEventLevelCoC, setHasEventLevelCoC] = useState(false);
-  const [isSocietyMember, setIsSocietyMember] = useState(false);
-  const [membershipLoading, setMembershipLoading] = useState(true);
   const [showViewCoCDialog, setShowViewCoCDialog] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
-  const [faqs, setFaqs] = useState<FAQ[]>([]);
-  
+
+  // React Query hooks
+  const { data: event, isLoading: eventLoading, error: eventError } = useEvent(eventId, societySlug, eventSlug);
+  const { data: society } = useSociety(event?.society_id);
+  const { data: welfareContacts = [] } = useEventContacts(event?.id);
+  const { data: emergencyInfo } = useEmergencyInfo(event?.id);
+  const { data: cocData } = useCodeOfConduct(event?.id, event?.society_id);
+  const { data: faqs = [] } = useFAQs(event?.id);
+  const { data: isSocietyMember = false, isLoading: membershipLoading } = useMembership(
+    event?.society_id,
+    user?.id
+  );
+
+  const isEventCreator = event?.created_by === user?.id;
+  const { data: cocAcceptanceData } = useCoCAcceptance(
+    event?.id,
+    user?.id,
+    cocData?.codeOfConduct?.id,
+    cocData?.codeOfConduct?.version,
+    isEventCreator
+  );
+
+  const trackPageViewMutation = useTrackPageView();
+  const invalidateCoCQueries = useInvalidateCoCQueries();
+
   const { isCommittee, loading: roleLoading } = useCommitteeRole(event?.society_id);
 
+  const codeOfConduct = cocData?.codeOfConduct;
+  const hasEventLevelCoC = cocData?.hasEventLevelCoC;
+  const cocRequired = cocAcceptanceData?.required || false;
+  const loading = eventLoading || authLoading;
+  const error = eventError ? (eventError as Error).message : null;
+
+  // Redirect to auth if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
-      // Redirect to auth with event info for redirect after login
       const redirectPath = societySlug && eventSlug 
         ? `/${societySlug}/${eventSlug}`
         : `/event/${eventId}`;
@@ -118,241 +146,31 @@ const EventSafetyPage = () => {
     }
   }, [user, authLoading, navigate, eventId, societySlug, eventSlug, event?.title]);
 
+  // Track page view when event is loaded
   useEffect(() => {
-    if ((eventId || (societySlug && eventSlug)) && user && !authLoading) {
-      fetchEventData();
+    if (event?.id && !eventLoading) {
+      trackPageViewMutation.mutate(event.id);
     }
-  }, [eventId, societySlug, eventSlug, user, authLoading]);
+  }, [event?.id, eventLoading]);
 
+  // Show CoC dialog if acceptance is required
   useEffect(() => {
-    if (event) {
-      trackPageView();
+    if (cocRequired && codeOfConduct) {
+      setShowCoCDialog(true);
     }
-  }, [event]);
+  }, [cocRequired, codeOfConduct]);
 
-  const fetchEventData = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Fetch event - try slug-based query first, fall back to UUID
-      let eventData;
-      let eventError;
-      
-      if (societySlug && eventSlug) {
-        // Query by slugs (new pretty URL format)
-        const { data, error } = await supabase
-          .from("events")
-          .select("*, societies!inner(slug)")
-          .eq("slug", eventSlug)
-          .eq("societies.slug", societySlug)
-          .single();
-        eventData = data;
-        eventError = error;
-      } else if (eventId) {
-        // Query by UUID (backwards compatibility)
-        const { data, error } = await supabase
-          .from("events")
-          .select("*, societies!inner(slug)")
-          .eq("id", eventId)
-          .single();
-        eventData = data;
-        eventError = error;
-      }
-
-      if (eventError) throw eventError;
-      if (!eventData) throw new Error("Event not found");
-      setEvent(eventData);
-
-      // Fetch all data in parallel for faster loading - using allSettled for graceful failure handling
-      const results = await Promise.allSettled([
-        // Fetch society slug
-        supabase
-          .from("societies")
-          .select("slug")
-          .eq("id", eventData.society_id)
-          .single(),
-        
-        // Fetch event contacts
-        supabase
-          .from("event_contacts")
-          .select("id, role, contact_name, contact_phone, contact_avatar_url, display_order")
-          .eq("event_id", eventData.id)
-          .order("display_order"),
-        
-        // Fetch emergency info
-        supabase
-          .from("emergency_info")
-          .select("*")
-          .eq("event_id", eventData.id)
-          .maybeSingle(),
-        
-        // Fetch event-specific CoC
-        supabase
-          .from("code_of_conduct")
-          .select("id, name, content, file_url, version")
-          .eq("event_id", eventData.id)
-          .eq("is_active", true)
-          .maybeSingle(),
-        
-        // Fetch template CoC (in parallel, we'll use it if needed)
-        supabase
-          .from("code_of_conduct")
-          .select("id, name, content, file_url, version")
-          .eq("society_id", eventData.society_id)
-          .is("event_id", null)
-          .eq("is_active", true)
-          .maybeSingle(),
-        
-        // Fetch visible FAQs
-        supabase
-          .from("event_faqs")
-          .select("*")
-          .eq("event_id", eventData.id)
-          .eq("is_visible", true)
-          .order("display_order")
-      ]);
-
-      // Process society data
-      if (results[0].status === 'fulfilled' && results[0].value.data) {
-        setSociety(results[0].value.data);
-      } else if (results[0].status === 'rejected') {
-        console.error("Failed to fetch society data:", results[0].reason);
-      }
-
-      // Process contacts
-      if (results[1].status === 'fulfilled' && results[1].value.data) {
-        const processedContacts = results[1].value.data.map((contact: any) => ({
-          id: contact.id,
-          name: contact.contact_name || "Anonymous",
-          phone: contact.contact_phone,
-          avatar: contact.contact_avatar_url,
-          role: contact.role,
-        }));
-        setWelfareContacts(processedContacts);
-      } else if (results[1].status === 'rejected') {
-        console.error("Failed to fetch contacts:", results[1].reason);
-      }
-
-      // Process emergency info
-      if (results[2].status === 'fulfilled' && results[2].value.data) {
-        setEmergencyInfo(results[2].value.data);
-      } else if (results[2].status === 'rejected') {
-        console.error("Failed to fetch emergency info:", results[2].reason);
-      }
-
-      // Process Code of Conduct (prefer event-specific, fall back to template)
-      let cocData = null;
-      if (results[3].status === 'fulfilled' && results[3].value.data) {
-        cocData = results[3].value.data;
-        setHasEventLevelCoC(true);
-      } else if (results[4].status === 'fulfilled' && results[4].value.data) {
-        cocData = results[4].value.data;
-        setHasEventLevelCoC(false);
-      }
-      
-      if (cocData) {
-        setCodeOfConduct(cocData);
-      }
-
-      // Process FAQs
-      if (results[5].status === 'fulfilled' && results[5].value.data) {
-        console.log('FAQs loaded:', results[5].value.data);
-        setFaqs(results[5].value.data);
-      } else if (results[5].status === 'rejected') {
-        console.error("Failed to fetch FAQs:", results[5].reason);
-      }
-
-      // Check CoC acceptance and membership after fetching event
-      if (eventData && user) {
-        await checkCoCAcceptance(eventData);
-        await checkMembership(eventData.society_id);
-      }
-      
-      setError(null); // Clear any previous errors on successful load
-    } catch (error) {
-      console.error("Error fetching event data:", error);
-      setError(error instanceof Error ? error.message : "Failed to load event safety information");
-      // Ensure we still have event data to show something to the user
-    } finally {
-      setLoading(false);
+  // Handle CoC acceptance completion
+  const handleCoCAccepted = () => {
+    if (event?.id && user?.id) {
+      invalidateCoCQueries(event.id, user.id);
     }
-  };
-
-  const checkMembership = async (societyId: string) => {
-    if (!user || !societyId) {
-      setIsSocietyMember(false);
-      setMembershipLoading(false);
-      return;
-    }
-
-    const { data } = await supabase
-      .from("society_members")
-      .select("id")
-      .eq("society_id", societyId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    setIsSocietyMember(!!data);
-    setMembershipLoading(false);
-  };
-
-  const checkCoCAcceptance = async (eventData: Event) => {
-    if (!user) return;
-
-    // Skip CoC check if user is the event creator (committee member)
-    if (eventData.created_by === user.id) {
-      setCoCRequired(false);
-      return;
-    }
-
-    // Only check for event-level CoC (no society fallback for acceptance)
-    const { data: coc } = await supabase
-      .from("code_of_conduct")
-      .select("*")
-      .eq("event_id", eventData.id)
-      .eq("is_active", true)
-      .maybeSingle();
-
-    if (!coc) {
-      // No event-level CoC means no acceptance required
-      setCoCRequired(false);
-      return;
-    }
-
-      // Check if user has accepted current version
-      const { data: acceptance } = await supabase
-        .from("code_acceptances")
-        .select("accepted_version")
-        .eq("user_id", user.id)
-        .eq("event_id", eventData.id)
-        .eq("code_of_conduct_id", coc.id)
-        .gte("accepted_version", coc.version)
-        .maybeSingle();
-
-      if (!acceptance) {
-        setCoCRequired(true);
-        setCoCData(coc);
-        setShowCoCDialog(true);
-      }
+    setShowCoCDialog(false);
   };
 
   const copyPhoneNumber = (phone: string) => {
     navigator.clipboard.writeText(phone);
     toast.success("Phone number copied!");
-  };
-
-  const trackPageView = async () => {
-    if (!event?.id) return;
-    try {
-      await supabase.from("safety_page_views").insert({
-        event_id: event.id,
-        ip_address: null,
-        user_agent: navigator.userAgent,
-      });
-    } catch (error) {
-      console.error("Error tracking page view:", error);
-    }
   };
 
   if (authLoading) {
@@ -368,7 +186,7 @@ const EventSafetyPage = () => {
     return <EventSafetyPageSkeleton />;
   }
 
-  // Show error state with retry option
+  // Show error state with reload option
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
@@ -382,14 +200,10 @@ const EventSafetyPage = () => {
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">{error}</p>
             <Button 
-              onClick={() => {
-                setError(null);
-                setLoading(true);
-                fetchEventData();
-              }}
+              onClick={() => window.location.reload()}
               className="w-full"
             >
-              Try Again
+              Reload Page
             </Button>
           </CardContent>
         </Card>
@@ -397,27 +211,7 @@ const EventSafetyPage = () => {
     );
   }
 
-  // Show CoC dialog if required
-  if (cocRequired && showCoCDialog && cocData) {
-    return (
-      <div className="min-h-screen bg-background">
-        <CoCAcceptanceDialog
-          eventId={event?.id || eventId!}
-          eventTitle={event?.title || "Event"}
-          cocId={cocData.id}
-          cocVersion={cocData.version}
-          cocContent={cocData.content}
-          cocFileUrl={cocData.file_url}
-          cocContentType={cocData.content_type || "text"}
-          onAccepted={() => {
-            setShowCoCDialog(false);
-            setCoCRequired(false);
-          }}
-        />
-      </div>
-    );
-  }
-
+  // Show CoC dialog if required (handled separately at bottom of component)
   if (!event) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
@@ -433,7 +227,9 @@ const EventSafetyPage = () => {
     );
   }
 
-  const customEmergencyFields = emergencyInfo?.custom_emergency_info || [];
+  const customEmergencyFields = Array.isArray(emergencyInfo?.custom_emergency_info) 
+    ? emergencyInfo.custom_emergency_info 
+    : [];
   
   // Check if there's any emergency information to display
   const hasEmergencyInfo = emergencyInfo && (
