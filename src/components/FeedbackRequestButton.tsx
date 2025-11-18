@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Mail, Bell, Check, Loader2 } from "lucide-react";
+import { Mail, Bell, Check, Loader2, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { getAppUrl } from "@/lib/constants";
 import {
   Tooltip,
   TooltipContent,
@@ -14,6 +15,8 @@ type ButtonState = 'initial' | 'sending-initial' | 'initial-sent' | 'reminder' |
 
 interface FeedbackRequestButtonProps {
   eventId: string;
+  societySlug: string;
+  eventSlug: string;
   feedbackEnabled: boolean;
   stats: {
     initialPending: number;
@@ -26,12 +29,20 @@ interface FeedbackRequestButtonProps {
 }
 
 export const FeedbackRequestButton = ({ 
-  eventId, 
+  eventId,
+  societySlug,
+  eventSlug,
   feedbackEnabled, 
   stats, 
   onSuccess 
 }: FeedbackRequestButtonProps) => {
   const [buttonState, setButtonState] = useState<ButtonState>('initial');
+
+  const handleCopyFeedbackUrl = () => {
+    const feedbackUrl = `${getAppUrl()}/society/${societySlug}/events/${eventSlug}/safety/feedback`;
+    navigator.clipboard.writeText(feedbackUrl);
+    toast.success("Feedback URL copied to clipboard!");
+  };
 
   // Sync button state with database state via props
   useEffect(() => {
@@ -119,101 +130,141 @@ export const FeedbackRequestButton = ({
   // Initial request button
   if (buttonState === 'initial' || buttonState === 'sending-initial' || buttonState === 'initial-sent') {
     return (
-      <TooltipProvider delayDuration={200}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={buttonState === 'initial-sent' ? 'default' : 'default'}
-              size="sm"
-              onClick={handleSendInitial}
-              disabled={buttonState !== 'initial'}
-              className={`w-full h-11 gap-2 font-medium shadow-sm ${
-                buttonState === 'initial-sent' 
-                  ? 'bg-green-600 hover:bg-green-600' 
-                  : ''
-              }`}
-            >
-              {buttonState === 'sending-initial' && (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Sending...</span>
-                </>
-              )}
-              {buttonState === 'initial-sent' && (
-                <>
-                  <Check className="h-5 w-5" />
-                  <span>Feedback Sent ✓</span>
-                </>
-              )}
-              {buttonState === 'initial' && (
-                <>
-                  <Mail className="h-5 w-5" />
-                  <span>Send Feedback ({stats.initialPending})</span>
-                </>
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-[280px]">
-            <p className="text-sm">
-              Send post-event feedback requests to all attendees who accepted this event's code of conduct ({stats.initialPending} {stats.initialPending === 1 ? 'person' : 'people'})
-            </p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <div className="flex gap-2">
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={buttonState === 'initial-sent' ? 'default' : 'default'}
+                size="sm"
+                onClick={handleSendInitial}
+                disabled={buttonState !== 'initial'}
+                className={`flex-1 h-11 gap-2 font-medium shadow-sm ${
+                  buttonState === 'initial-sent' 
+                    ? 'bg-green-600 hover:bg-green-600' 
+                    : ''
+                }`}
+              >
+                {buttonState === 'sending-initial' && (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Sending...</span>
+                  </>
+                )}
+                {buttonState === 'initial-sent' && (
+                  <>
+                    <Check className="h-5 w-5" />
+                    <span>Feedback Sent ✓</span>
+                  </>
+                )}
+                {buttonState === 'initial' && (
+                  <>
+                    <Mail className="h-5 w-5" />
+                    <span>Send Feedback ({stats.initialPending})</span>
+                  </>
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[280px]">
+              <p className="text-sm">
+                Send post-event feedback requests to all attendees who accepted this event's code of conduct ({stats.initialPending} {stats.initialPending === 1 ? 'person' : 'people'})
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyFeedbackUrl}
+                className="h-11 px-3"
+              >
+                <Copy className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <p className="text-sm">Copy feedback page URL</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
     );
   }
 
   // Reminder button
   if (buttonState === 'reminder' || buttonState === 'sending-reminder' || buttonState === 'reminder-sent') {
     return (
-      <TooltipProvider delayDuration={200}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={buttonState === 'reminder-sent' ? 'default' : 'default'}
-              size="sm"
-              onClick={handleSendReminder}
-              disabled={buttonState !== 'reminder'}
-              className={`w-full h-11 gap-2 font-medium shadow-sm ${
-                buttonState === 'reminder-sent'
-                  ? 'bg-green-600 hover:bg-green-600'
-                  : 'bg-amber-600 hover:bg-amber-700'
-              }`}
-            >
-              {buttonState === 'sending-reminder' && (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>Sending Reminder...</span>
-                </>
-              )}
-              {buttonState === 'reminder-sent' && (
-                <>
-                  <Check className="h-5 w-5" />
-                  <span>Reminder Sent ✓</span>
-                </>
-              )}
-              {buttonState === 'reminder' && (
-                <>
-                  <Bell className="h-5 w-5" />
-                  <span>Send Reminder ({stats.reminderPending})</span>
-                </>
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-[280px]">
-            <div className="space-y-1 text-sm">
-              <p className="font-medium">Send reminder to:</p>
-              <ul className="list-disc list-inside space-y-0.5 text-xs">
-                <li>Accepted this event's code of conduct</li>
-                <li>Have not yet submitted feedback</li>
-              </ul>
-              <p className="text-xs text-muted-foreground pt-1">
-                ({stats.reminderPending} {stats.reminderPending === 1 ? 'person' : 'people'} will receive this email)
-              </p>
-            </div>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <div className="flex gap-2">
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={buttonState === 'reminder-sent' ? 'default' : 'default'}
+                size="sm"
+                onClick={handleSendReminder}
+                disabled={buttonState !== 'reminder'}
+                className={`flex-1 h-11 gap-2 font-medium shadow-sm ${
+                  buttonState === 'reminder-sent'
+                    ? 'bg-green-600 hover:bg-green-600'
+                    : 'bg-amber-600 hover:bg-amber-700'
+                }`}
+              >
+                {buttonState === 'sending-reminder' && (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Sending Reminder...</span>
+                  </>
+                )}
+                {buttonState === 'reminder-sent' && (
+                  <>
+                    <Check className="h-5 w-5" />
+                    <span>Reminder Sent ✓</span>
+                  </>
+                )}
+                {buttonState === 'reminder' && (
+                  <>
+                    <Bell className="h-5 w-5" />
+                    <span>Send Reminder ({stats.reminderPending})</span>
+                  </>
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[280px]">
+              <div className="space-y-1 text-sm">
+                <p className="font-medium">Send reminder to:</p>
+                <ul className="list-disc list-inside space-y-0.5 text-xs">
+                  <li>Accepted this event's code of conduct</li>
+                  <li>Have not yet submitted feedback</li>
+                </ul>
+                <p className="text-xs text-muted-foreground pt-1">
+                  ({stats.reminderPending} {stats.reminderPending === 1 ? 'person' : 'people'} will receive this email)
+                </p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyFeedbackUrl}
+                className="h-11 px-3"
+              >
+                <Copy className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <p className="text-sm">Copy feedback page URL</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
     );
   }
 

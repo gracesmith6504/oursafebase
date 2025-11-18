@@ -476,6 +476,8 @@ const SocietyEvents = () => {
                         {eventMetrics.feedbackEnabled && eventMetrics.feedbackRequestStats && (
                           <FeedbackRequestButton
                             eventId={event.id}
+                            societySlug={slug}
+                            eventSlug={event.slug}
                             feedbackEnabled={eventMetrics.feedbackEnabled}
                             stats={eventMetrics.feedbackRequestStats}
                             onSuccess={() => fetchMetrics([event.id])}
