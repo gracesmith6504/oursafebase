@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
-import { ArrowLeft, Plus, Calendar, FileText, MessageSquare, Eye, Shield, Share2, Edit, BarChart, QrCode, ChevronRight, Copy } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, FileText, MessageSquare, Eye, Shield, Share2, Edit, BarChart, QrCode, ChevronRight, Copy, Mail, CheckCircle2 } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,7 +21,12 @@ import { format } from "date-fns";
 import { getEventStatus } from "@/lib/eventHelpers";
 import { getAppUrl } from "@/lib/constants";
 import { EventQRCodeDialog } from "@/components/EventQRCodeDialog";
-import { Mail } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Event {
   id: string;
@@ -60,6 +65,7 @@ const SocietyEvents = () => {
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [sendingFeedbackForEvent, setSendingFeedbackForEvent] = useState<string | null>(null);
+  const [recentlySentEvents, setRecentlySentEvents] = useState<Set<string>>(new Set());
   const { isCommittee, loading: roleLoading } = useCommitteeRole(societyId || undefined);
 
   useEffect(() => {
@@ -186,19 +192,32 @@ const SocietyEvents = () => {
     setMetrics(metricsData);
   };
 
-  const handleSendFeedbackRequest = async (eventId: string) => {
+  const handleSendFeedbackRequest = async (eventId: string, reminderMode: boolean = false) => {
     setSendingFeedbackForEvent(eventId);
 
     try {
       const { data, error } = await supabase.functions.invoke('send-feedback-request', {
-        body: { eventId },
+        body: { eventId, reminderMode },
       });
 
       if (error) {
         throw error;
       }
 
-      toast.success(data.message || `Feedback requests sent to ${data.sent} attendees`);
+      toast.success(data.message || `${reminderMode ? 'Reminders' : 'Feedback requests'} sent to ${data.sent} attendees`);
+      
+      // Mark as recently sent for visual feedback
+      if (!reminderMode) {
+        setRecentlySentEvents(prev => new Set(prev).add(eventId));
+        // Clear the visual state after 5 seconds
+        setTimeout(() => {
+          setRecentlySentEvents(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(eventId);
+            return newSet;
+          });
+        }, 5000);
+      }
       
       // Refresh metrics for this event
       await fetchMetrics([eventId]);
@@ -417,19 +436,68 @@ const SocietyEvents = () => {
                         </Button>
 
                         {/* Send Feedback Request Button */}
-                        {eventMetrics.feedbackEnabled && eventMetrics.feedbackRequestStats && eventMetrics.feedbackRequestStats.pending > 0 && (
-                          <Button
-                            className="w-full"
-                            variant="outline"
-                            onClick={() => handleSendFeedbackRequest(event.id)}
-                            disabled={sendingFeedbackForEvent === event.id}
-                          >
-                            <Mail className="mr-2 h-4 w-4" />
-                            {sendingFeedbackForEvent === event.id 
-                              ? "Sending..." 
-                              : `Send Feedback (${eventMetrics.feedbackRequestStats.pending})`
-                            }
-                          </Button>
+                        {eventMetrics.feedbackEnabled && eventMetrics.feedbackRequestStats && (
+                          <TooltipProvider>
+                            {eventMetrics.feedbackRequestStats.pending > 0 && !recentlySentEvents.has(event.id) ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    className="w-full"
+                                    variant="outline"
+                                    onClick={() => handleSendFeedbackRequest(event.id, false)}
+                                    disabled={sendingFeedbackForEvent === event.id}
+                                  >
+                                    <Mail className="mr-2 h-4 w-4" />
+                                    {sendingFeedbackForEvent === event.id 
+                                      ? "Sending..." 
+                                      : `Send Feedback (${eventMetrics.feedbackRequestStats.pending})`
+                                    }
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p className="font-medium mb-1">Send Initial Feedback Request</p>
+                                  <p className="text-xs">Sends email to {eventMetrics.feedbackRequestStats.pending} attendees who accepted the Code of Conduct but haven't received a feedback request yet.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : recentlySentEvents.has(event.id) ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    className="w-full"
+                                    variant="outline"
+                                    disabled
+                                  >
+                                    <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
+                                    Feedback Requests Sent!
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p className="text-xs">Feedback requests have been sent. You can send reminders to non-respondents in a moment.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : eventMetrics.feedbackRequestStats.sent > 0 && (eventMetrics.feedbackRequestStats.sent - eventMetrics.feedback) > 0 ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    className="w-full"
+                                    variant="outline"
+                                    onClick={() => handleSendFeedbackRequest(event.id, true)}
+                                    disabled={sendingFeedbackForEvent === event.id}
+                                  >
+                                    <Mail className="mr-2 h-4 w-4" />
+                                    {sendingFeedbackForEvent === event.id 
+                                      ? "Sending..." 
+                                      : `Send Reminder (${eventMetrics.feedbackRequestStats.sent - eventMetrics.feedback})`
+                                    }
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs">
+                                  <p className="font-medium mb-1">Send Feedback Reminder</p>
+                                  <p className="text-xs">Sends reminder email to {eventMetrics.feedbackRequestStats.sent - eventMetrics.feedback} attendees who received the initial request but haven't submitted feedback yet. Does not email those who already responded.</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : null}
+                          </TooltipProvider>
                         )}
                         
                         <Button 
