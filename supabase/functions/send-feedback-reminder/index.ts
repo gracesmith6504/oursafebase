@@ -159,7 +159,8 @@ const handler = async (req: Request): Promise<Response> => {
     for (const attendee of eligibleAttendees) {
       try {
         // CRITICAL: Update database FIRST to claim this attendee (prevents duplicates)
-        const { error: updateError } = await supabaseClient
+        // Use admin client to bypass RLS policies
+        const { error: updateError } = await supabaseAdmin
           .from("code_acceptances")
           .update({ feedback_reminder_sent_at: new Date().toISOString() })
           .eq("id", attendee.id)
@@ -171,14 +172,16 @@ const handler = async (req: Request): Promise<Response> => {
           continue; // Skip this attendee if we couldn't claim them
         }
 
+        console.log(`✓ Successfully marked attendee ${attendee.id} as reminder sent`);
+
         // Get user email from auth.users
         const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(attendee.user_id);
         
         if (userError || !userData?.user?.email) {
           console.error(`Failed to get email for user ${attendee.user_id}:`, userError);
           errors.push(`User ${attendee.user_id}: ${userError?.message || 'No email found'}`);
-          // Rollback the update since we can't send email
-          await supabaseClient
+          // Rollback the update since we can't send email - use admin client
+          await supabaseAdmin
             .from("code_acceptances")
             .update({ feedback_reminder_sent_at: null })
             .eq("id", attendee.id);
@@ -225,8 +228,8 @@ const handler = async (req: Request): Promise<Response> => {
         if (emailResult.error) {
           console.error(`Failed to send email to ${userEmail}:`, emailResult.error);
           errors.push(`${userEmail}: ${emailResult.error.message}`);
-          // Rollback the update since email failed
-          await supabaseClient
+          // Rollback the update since email failed - use admin client
+          await supabaseAdmin
             .from("code_acceptances")
             .update({ feedback_reminder_sent_at: null })
             .eq("id", attendee.id);

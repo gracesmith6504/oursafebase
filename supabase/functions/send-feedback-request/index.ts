@@ -160,7 +160,8 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         // CRITICAL: Update database FIRST to claim this attendee (prevents duplicates)
-        const { error: updateError } = await supabaseClient
+        // Use admin client to bypass RLS policies
+        const { error: updateError } = await supabaseAdmin
           .from("code_acceptances")
           .update({ feedback_request_sent_at: new Date().toISOString() })
           .eq("id", attendee.id)
@@ -172,14 +173,16 @@ const handler = async (req: Request): Promise<Response> => {
           continue; // Skip this attendee if we couldn't claim them
         }
 
+        console.log(`✓ Successfully marked attendee ${attendee.id} as email sent`);
+
         // Get user email using admin client
         const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(attendee.user_id);
         
         if (authError || !authUser.user?.email) {
           errors.push(`Failed to get email for user ${attendee.user_id}`);
           console.error(`Error fetching user ${attendee.user_id}:`, authError);
-          // Rollback the update since we can't send email
-          await supabaseClient
+          // Rollback the update since we can't send email - use admin client
+          await supabaseAdmin
             .from("code_acceptances")
             .update({ feedback_request_sent_at: null })
             .eq("id", attendee.id);
@@ -214,8 +217,8 @@ const handler = async (req: Request): Promise<Response> => {
         if (emailResponse.error) {
           errors.push(`Failed to send email to ${email}: ${emailResponse.error}`);
           console.error(`Email error for ${email}:`, emailResponse.error);
-          // Rollback the update since email failed
-          await supabaseClient
+          // Rollback the update since email failed - use admin client
+          await supabaseAdmin
             .from("code_acceptances")
             .update({ feedback_request_sent_at: null })
             .eq("id", attendee.id);
