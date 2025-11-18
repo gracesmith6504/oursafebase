@@ -127,7 +127,7 @@ export const FeedbackRequestButton = ({
               size="sm"
               onClick={handleSendInitial}
               disabled={buttonState !== 'initial'}
-              className={`w-full sm:w-auto min-h-[44px] ${
+              className={`w-full h-11 gap-2 font-medium shadow-sm ${
                 buttonState === 'initial-sent' 
                   ? 'bg-green-600 hover:bg-green-600' 
                   : ''
@@ -135,23 +135,20 @@ export const FeedbackRequestButton = ({
             >
               {buttonState === 'sending-initial' && (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  <span className="hidden sm:inline">Sending...</span>
-                  <span className="sm:hidden">Sending...</span>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Sending...</span>
                 </>
               )}
               {buttonState === 'initial-sent' && (
                 <>
-                  <Check className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Feedback Sent ✓</span>
-                  <span className="sm:hidden">Sent ✓</span>
+                  <Check className="h-5 w-5" />
+                  <span>Feedback Sent ✓</span>
                 </>
               )}
               {buttonState === 'initial' && (
                 <>
-                  <Mail className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Send Feedback ({stats.initialPending})</span>
-                  <span className="sm:hidden">Send ({stats.initialPending})</span>
+                  <Mail className="h-5 w-5" />
+                  <span>Send Feedback ({stats.initialPending})</span>
                 </>
               )}
             </Button>
@@ -177,7 +174,7 @@ export const FeedbackRequestButton = ({
               size="sm"
               onClick={handleSendReminder}
               disabled={buttonState !== 'reminder'}
-              className={`w-full sm:w-auto min-h-[44px] ${
+              className={`w-full h-11 gap-2 font-medium shadow-sm ${
                 buttonState === 'reminder-sent'
                   ? 'bg-green-600 hover:bg-green-600'
                   : 'bg-amber-600 hover:bg-amber-700'
@@ -185,23 +182,20 @@ export const FeedbackRequestButton = ({
             >
               {buttonState === 'sending-reminder' && (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  <span className="hidden sm:inline">Sending Reminder...</span>
-                  <span className="sm:hidden">Sending...</span>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Sending Reminder...</span>
                 </>
               )}
               {buttonState === 'reminder-sent' && (
                 <>
-                  <Check className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Reminder Sent ✓</span>
-                  <span className="sm:hidden">Sent ✓</span>
+                  <Check className="h-5 w-5" />
+                  <span>Reminder Sent ✓</span>
                 </>
               )}
               {buttonState === 'reminder' && (
                 <>
-                  <Bell className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Send Reminder ({stats.reminderPending})</span>
-                  <span className="sm:hidden">Remind ({stats.reminderPending})</span>
+                  <Bell className="h-5 w-5" />
+                  <span>Send Reminder ({stats.reminderPending})</span>
                 </>
               )}
             </Button>
@@ -229,11 +223,10 @@ export const FeedbackRequestButton = ({
       variant="outline"
       size="sm"
       disabled
-      className="w-full sm:w-auto min-h-[44px] bg-muted text-muted-foreground"
+      className="w-full h-11 gap-2 font-medium bg-muted text-muted-foreground shadow-sm"
     >
-      <Check className="mr-2 h-4 w-4" />
-      <span className="hidden sm:inline">All Sent ✓</span>
-      <span className="sm:hidden">Complete ✓</span>
+      <Check className="h-5 w-5" />
+      <span>All Sent ✓</span>
     </Button>
   );
 };
