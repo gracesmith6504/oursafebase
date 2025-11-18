@@ -211,40 +211,14 @@ export async function getGroupedResponses(eventId: string): Promise<GroupedRespo
 
   if (!questions || questions.length === 0) return [];
 
-  // Get all responses with user info
+  // Get all responses
   const { data: responses } = await supabase
     .from("feedback_responses")
-    .select("id, submitted_at, is_anonymous, user_id")
+    .select("id, submitted_at, is_anonymous")
     .eq("event_id", eventId)
     .order("submitted_at", { ascending: false });
 
   if (!responses || responses.length === 0) return [];
-
-  // Get user emails for non-anonymous responses
-  const userIds = responses
-    .filter(r => !r.is_anonymous && r.user_id)
-    .map(r => r.user_id) as string[];
-
-  let userEmails: Record<string, string> = {};
-  if (userIds.length > 0) {
-    const { data: users } = await supabase
-      .from("profiles")
-      .select("id")
-      .in("id", userIds);
-
-    if (users) {
-      // Get emails from auth.users via RPC or direct query
-      const { data: authUsers } = await supabase.auth.admin.listUsers();
-      const emailMap = new Map(authUsers.users.map(u => [u.id, u.email || '']));
-      
-      users.forEach(user => {
-        const email = emailMap.get(user.id);
-        if (email) {
-          userEmails[user.id] = email;
-        }
-      });
-    }
-  }
 
   const responseIds = responses.map(r => r.id);
 
@@ -264,17 +238,13 @@ export async function getGroupedResponses(eventId: string): Promise<GroupedRespo
       questionType: question.question_type,
       answers: questionAnswers.map(answer => {
         const response = responses.find(r => r.id === answer.response_id);
-        const userEmail = response?.user_id && !response.is_anonymous 
-          ? userEmails[response.user_id] 
-          : undefined;
-        
         return {
           answerId: answer.id,
           answerText: answer.answer_text || undefined,
           answerRating: answer.answer_rating || undefined,
           submittedAt: response?.submitted_at || "",
           isAnonymous: response?.is_anonymous || false,
-          userEmail,
+          userEmail: undefined, // TODO: Requires database column to store email
         };
       }),
     };
