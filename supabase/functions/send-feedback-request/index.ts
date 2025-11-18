@@ -12,6 +12,7 @@ const corsHeaders = {
 
 interface SendFeedbackRequestBody {
   eventId: string;
+  reminderMode?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -38,13 +39,13 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
 
-    const { eventId }: SendFeedbackRequestBody = await req.json();
+    const { eventId, reminderMode = false }: SendFeedbackRequestBody = await req.json();
 
     if (!eventId) {
       throw new Error("Event ID is required");
     }
 
-    console.log(`Processing feedback request for event: ${eventId}`);
+    console.log(`Processing ${reminderMode ? 'reminder' : 'initial'} feedback request for event: ${eventId}`);
 
     // Fetch event details
     const { data: event, error: eventError } = await supabaseClient
@@ -76,12 +77,35 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Feedback is not enabled for this event");
     }
 
-    // Fetch all attendees who accepted CoC and haven't been sent feedback request
-    const { data: attendees, error: attendeesError } = await supabaseClient
+    // Fetch attendees based on mode
+    let query = supabaseClient
       .from("code_acceptances")
       .select("id, user_id")
-      .eq("event_id", eventId)
-      .is("feedback_request_sent_at", null);
+      .eq("event_id", eventId);
+    
+    if (reminderMode) {
+      // For reminders: get attendees who received the request but haven't submitted feedback
+      // First, get all user IDs who have submitted feedback for this event
+      const { data: respondents } = await supabaseClient
+        .from("feedback_responses")
+        .select("user_id")
+        .eq("event_id", eventId);
+      
+      const respondentIds = respondents?.map(r => r.user_id).filter(Boolean) || [];
+      
+      // Get attendees who have been sent the request but haven't responded
+      query = query
+        .not("feedback_request_sent_at", "is", null);
+      
+      if (respondentIds.length > 0) {
+        query = query.not("user_id", "in", `(${respondentIds.join(',')})`);
+      }
+    } else {
+      // For initial send: get attendees who haven't been sent feedback request
+      query = query.is("feedback_request_sent_at", null);
+    }
+    
+    const { data: attendees, error: attendeesError } = await query;
 
     if (attendeesError) {
       throw new Error(`Failed to fetch attendees: ${attendeesError.message}`);
@@ -90,7 +114,9 @@ const handler = async (req: Request): Promise<Response> => {
     if (!attendees || attendees.length === 0) {
       return new Response(
         JSON.stringify({ 
-          message: "No attendees to send feedback requests to",
+          message: reminderMode 
+            ? "No attendees to send reminders to - everyone has responded!" 
+            : "No attendees to send feedback requests to",
           sent: 0 
         }),
         {
@@ -103,7 +129,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`Found ${attendees.length} attendees to send feedback requests to`);
+    console.log(`Found ${attendees.length} attendees to send ${reminderMode ? 'reminders' : 'feedback requests'} to`);
 
     // Create admin client to access auth.users
     const supabaseAdmin = createClient(
@@ -152,34 +178,52 @@ const handler = async (req: Request): Promise<Response> => {
         const emailResponse = await resend.emails.send({
           from: `${Deno.env.get("RESEND_FROM_NAME") || "Event Feedback"} <${Deno.env.get("RESEND_FROM_EMAIL") || "onboarding@resend.dev"}>`,
           to: [email],
-          subject: `Share your feedback for ${event.title}`,
-          html: `
-            <h2>Hi ${displayName},</h2>
-            <p>Thank you for attending <strong>${event.title}</strong>!</p>
-            <p>We'd love to hear about your experience. Your feedback helps us improve future events.</p>
-            <p>
-              <a href="${feedbackUrl}" style="display: inline-block; padding: 12px 24px; background-color: #0066cc; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                Submit Feedback
-              </a>
-            </p>
-            <p>Or copy and paste this link into your browser:<br>
-            <a href="${feedbackUrl}">${feedbackUrl}</a></p>
-            <p>Thank you for helping us create better events!</p>
-          `,
+          subject: reminderMode 
+            ? `Reminder: Share your feedback for ${event.title}`
+            : `Share your feedback for ${event.title}`,
+          html: reminderMode 
+            ? `
+              <h2>Hi ${displayName},</h2>
+              <p>This is a friendly reminder to share your feedback about <strong>${event.title}</strong>.</p>
+              <p>We haven't heard from you yet and would really appreciate your thoughts. Your feedback helps us create better events for everyone.</p>
+              <p>
+                <a href="${feedbackUrl}" style="display: inline-block; padding: 12px 24px; background-color: #0066cc; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                  Submit Feedback
+                </a>
+              </p>
+              <p>Or copy and paste this link into your browser:<br>
+              <a href="${feedbackUrl}">${feedbackUrl}</a></p>
+              <p>Thank you for your time!</p>
+            `
+            : `
+              <h2>Hi ${displayName},</h2>
+              <p>Thank you for attending <strong>${event.title}</strong>!</p>
+              <p>We'd love to hear about your experience. Your feedback helps us improve future events.</p>
+              <p>
+                <a href="${feedbackUrl}" style="display: inline-block; padding: 12px 24px; background-color: #0066cc; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                  Submit Feedback
+                </a>
+              </p>
+              <p>Or copy and paste this link into your browser:<br>
+              <a href="${feedbackUrl}">${feedbackUrl}</a></p>
+              <p>Thank you for helping us create better events!</p>
+            `,
         });
 
         if (emailResponse.error) {
           errors.push(`Failed to send email to ${email}: ${emailResponse.error}`);
           console.error(`Email error for ${email}:`, emailResponse.error);
         } else {
-          // Mark feedback request as sent
-          await supabaseClient
-            .from("code_acceptances")
-            .update({ feedback_request_sent_at: new Date().toISOString() })
-            .eq("id", attendee.id);
+          // Mark feedback request as sent (update timestamp for initial sends)
+          if (!reminderMode) {
+            await supabaseClient
+              .from("code_acceptances")
+              .update({ feedback_request_sent_at: new Date().toISOString() })
+              .eq("id", attendee.id);
+          }
           
           sentCount++;
-          console.log(`Email sent successfully to ${email}`);
+          console.log(`${reminderMode ? 'Reminder' : 'Email'} sent successfully to ${email}`);
         }
       } catch (error: any) {
         errors.push(`Error processing attendee ${attendee.id}: ${error.message}`);
@@ -187,11 +231,13 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    console.log(`Feedback requests sent: ${sentCount}/${attendees.length}`);
+    console.log(`${reminderMode ? 'Reminders' : 'Feedback requests'} sent: ${sentCount}/${attendees.length}`);
 
     return new Response(
       JSON.stringify({
-        message: `Feedback requests sent to ${sentCount} attendees`,
+        message: reminderMode 
+          ? `Reminders sent to ${sentCount} attendees who haven't responded`
+          : `Feedback requests sent to ${sentCount} attendees`,
         sent: sentCount,
         total: attendees.length,
         errors: errors.length > 0 ? errors : undefined,
