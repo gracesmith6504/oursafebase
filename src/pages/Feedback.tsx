@@ -53,7 +53,7 @@ const Feedback = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Please log in to submit feedback");
-        navigate("/auth");
+        navigate(`/auth?redirectTo=/${societySlug}/${eventSlug}/feedback`);
         return;
       }
 
