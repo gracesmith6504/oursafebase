@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,17 +9,19 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import { getEventStatus } from "@/lib/eventHelpers";
-import { ReportConcernDialog } from "@/components/ReportConcernDialog";
-import { SubmitFeedbackDialog } from "@/components/SubmitFeedbackDialog";
 import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
 import { MembershipRequiredAlert } from "@/components/MembershipRequiredAlert";
 import { useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { EventQRCodeDialog } from "@/components/EventQRCodeDialog";
 import { EventShareCard } from "@/components/EventShareCard";
 import { EventSafetyPageSkeleton } from "@/components/EventSafetyPageSkeleton";
 import { Footer } from "@/components/Footer";
+
+// Lazy load heavy dialog components to reduce initial bundle size
+const ReportConcernDialog = lazy(() => import("@/components/ReportConcernDialog").then(module => ({ default: module.ReportConcernDialog })));
+const SubmitFeedbackDialog = lazy(() => import("@/components/SubmitFeedbackDialog").then(module => ({ default: module.SubmitFeedbackDialog })));
+const EventQRCodeDialog = lazy(() => import("@/components/EventQRCodeDialog").then(module => ({ default: module.EventQRCodeDialog })));
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -604,14 +606,16 @@ const EventSafetyPage = () => {
 
       {/* Share Event Dialog */}
       {event && society && (
-        <EventQRCodeDialog
-          open={qrDialogOpen}
-          onOpenChange={setQrDialogOpen}
-          eventId={event.id}
-          eventTitle={event.title}
-          societySlug={society.slug}
-          eventSlug={eventSlug || event.slug}
-        />
+        <Suspense fallback={null}>
+          <EventQRCodeDialog
+            open={qrDialogOpen}
+            onOpenChange={setQrDialogOpen}
+            eventId={event.id}
+            eventTitle={event.title}
+            societySlug={society.slug}
+            eventSlug={eventSlug || event.slug}
+          />
+        </Suspense>
       )}
     </div>
   );
