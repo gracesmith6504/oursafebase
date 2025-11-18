@@ -4,19 +4,8 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Configure PDF.js worker with fallback
-const WORKER_SRC = '/pdf.worker.min.mjs';
-const CDN_FALLBACK = `https://unpkg.com/pdfjs-dist@5.4.296/build/pdf.worker.min.mjs`;
-
-// Try local worker first, fallback to CDN if it fails
-pdfjs.GlobalWorkerOptions.workerSrc = WORKER_SRC;
-
-// Test if worker loads, fallback to CDN if not
-fetch(WORKER_SRC, { method: 'HEAD' })
-  .catch(() => {
-    console.warn('Local PDF worker not found, using CDN fallback');
-    pdfjs.GlobalWorkerOptions.workerSrc = CDN_FALLBACK;
-  });
+// Use CDN worker directly - simpler and more reliable
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@5.4.296/build/pdf.worker.min.mjs`;
 
 interface PDFViewerProps {
   src: string;

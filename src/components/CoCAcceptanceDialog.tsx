@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,7 @@ import { toast } from "sonner";
 import { FileText, Download, Loader2 } from "lucide-react";
 import { getFileExtension } from "@/lib/fileUtils";
 import DOMPurify from "dompurify";
-
-// Lazy load PDFViewer to reduce initial bundle size
-const PDFViewer = lazy(() => import("@/components/PDFViewer").then(m => ({ default: m.PDFViewer })));
+import { PDFViewer } from "@/components/PDFViewer";
 
 interface CoCAcceptanceDialogProps {
   eventId: string;
@@ -161,23 +159,15 @@ const CoCAcceptanceDialog = ({
               </Button>
             </div>
           )}
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            }
-          >
-            <PDFViewer
-              src={cocFileUrl}
-              onLoadSuccess={() => {
-                setPdfError(false);
-              }}
-              onError={() => {
-                setPdfError(true);
-              }}
-            />
-          </Suspense>
+          <PDFViewer
+            src={cocFileUrl}
+            onLoadSuccess={() => {
+              setPdfError(false);
+            }}
+            onError={() => {
+              setPdfError(true);
+            }}
+          />
         </div>
       );
     }
