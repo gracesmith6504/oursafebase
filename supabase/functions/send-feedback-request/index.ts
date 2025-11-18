@@ -76,7 +76,10 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Feedback is not enabled for this event");
     }
 
-    // Fetch all attendees who accepted CoC and haven't been sent feedback request
+    // Fetch attendees who:
+    // 1. Accepted CoC for this event
+    // 2. Haven't been sent initial request yet
+    // 3. Haven't submitted feedback yet
     const { data: attendees, error: attendeesError } = await supabaseClient
       .from("code_acceptances")
       .select("id, user_id")
@@ -87,7 +90,31 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`Failed to fetch attendees: ${attendeesError.message}`);
     }
 
-    if (!attendees || attendees.length === 0) {
+    // Get all feedback responses for this event to filter out users who already submitted
+    const { data: feedbackResponses, error: responsesError } = await supabaseClient
+      .from("feedback_responses")
+      .select("user_id")
+      .eq("event_id", eventId);
+
+    if (responsesError) {
+      throw new Error(`Failed to fetch feedback responses: ${responsesError.message}`);
+    }
+
+    // Create a Set of user IDs who have submitted feedback
+    const submittedUserIds = new Set(
+      feedbackResponses?.map(r => r.user_id).filter(Boolean) || []
+    );
+
+    // Filter out users who have already submitted feedback
+    const eligibleAttendees = attendees?.filter(
+      attendee => attendee.user_id && !submittedUserIds.has(attendee.user_id)
+    ) || [];
+
+    console.log(`Total code acceptances: ${attendees?.length || 0}`);
+    console.log(`Already submitted feedback: ${submittedUserIds.size}`);
+    console.log(`Eligible for email: ${eligibleAttendees.length}`);
+
+    if (eligibleAttendees.length === 0) {
       return new Response(
         JSON.stringify({ 
           message: "No attendees to send feedback requests to",
@@ -102,8 +129,6 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
-
-    console.log(`Found ${attendees.length} attendees to send feedback requests to`);
 
     // Create admin client to access auth.users
     const supabaseAdmin = createClient(
@@ -127,7 +152,7 @@ const handler = async (req: Request): Promise<Response> => {
     const feedbackPath = `/${societySlug}/${event.slug}/feedback`;
     const feedbackUrl = `${appUrl}/auth?redirectTo=${encodeURIComponent(feedbackPath)}`;
 
-    for (const attendee of attendees) {
+    for (const attendee of eligibleAttendees) {
       try {
         if (!attendee.user_id) {
           console.log(`Skipping attendee ${attendee.id} - no user_id`);
