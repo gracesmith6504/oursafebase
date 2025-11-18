@@ -15,4 +15,51 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    sourcemap: false,
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: mode === 'production',
+        drop_debugger: mode === 'production',
+      },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-avatar',
+            '@radix-ui/react-checkbox',
+            '@radix-ui/react-label',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-scroll-area',
+            '@radix-ui/react-select',
+            '@radix-ui/react-separator',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-toast',
+            '@radix-ui/react-tooltip',
+          ],
+          'pdf-vendor': ['react-pdf', 'pdfjs-dist'],
+          'chart-vendor': ['recharts'],
+          'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'supabase': ['@supabase/supabase-js'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@supabase/supabase-js',
+      'date-fns',
+    ],
+    exclude: ['pdfjs-dist'],
+  },
 }));
