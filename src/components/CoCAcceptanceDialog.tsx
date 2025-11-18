@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, Loader2 } from "lucide-react";
 import { getFileExtension } from "@/lib/fileUtils";
-import { PDFViewer } from "@/components/PDFViewer";
+import DOMPurify from "dompurify";
+
+// Lazy load PDFViewer to reduce initial bundle size
+const PDFViewer = lazy(() => import("@/components/PDFViewer").then(m => ({ default: m.PDFViewer })));
 
 interface CoCAcceptanceDialogProps {
   eventId: string;
@@ -43,14 +46,33 @@ const CoCAcceptanceDialog = ({
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const handleScroll = () => {
+  // Debounce scroll handler for better performance
+  const handleScroll = useCallback(() => {
     if (scrollRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
       // Consider "scrolled to bottom" when within 20px of bottom
       const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
       setScrolledToBottom(isBottom);
     }
-  };
+  }, []);
+
+  // Debounced scroll handler
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    const debouncedScroll = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleScroll, 100);
+    };
+    
+    const element = scrollRef.current;
+    if (element) {
+      element.addEventListener('scroll', debouncedScroll, { passive: true });
+      return () => {
+        element.removeEventListener('scroll', debouncedScroll);
+        clearTimeout(timeoutId);
+      };
+    }
+  }, [handleScroll]);
 
   useEffect(() => {
     // For file-based CoCs (non-PDF), allow immediate acceptance
@@ -70,7 +92,7 @@ const CoCAcceptanceDialog = ({
     }
   }, [cocContent, cocFileUrl]);
 
-  const renderFileViewer = () => {
+  const renderFileViewer = useCallback(() => {
     if (!cocFileUrl) return null;
     
     const fileExt = getFileExtension(cocFileUrl);
@@ -79,7 +101,6 @@ const CoCAcceptanceDialog = ({
       return (
         <div
           ref={scrollRef}
-          onScroll={handleScroll}
           className="flex-1 overflow-y-auto px-2 sm:px-4 py-4"
           style={{
             WebkitOverflowScrolling: 'touch',
@@ -87,12 +108,20 @@ const CoCAcceptanceDialog = ({
             overscrollBehavior: 'contain',
           }}
         >
-          <PDFViewer
-            src={cocFileUrl}
-            onLoadSuccess={(numPages) => {
-              console.log(`Loaded PDF with ${numPages} pages`);
-            }}
-          />
+          <Suspense fallback={
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          }>
+            <PDFViewer
+              src={cocFileUrl}
+              onLoadSuccess={(numPages) => {
+                console.log(`Loaded PDF with ${numPages} pages`);
+                // Auto-scroll check for single-page PDFs
+                setTimeout(handleScroll, 500);
+              }}
+            />
+          </Suspense>
         </div>
       );
     }
@@ -121,39 +150,55 @@ const CoCAcceptanceDialog = ({
         </div>
         <Button 
           onClick={() => window.open(cocFileUrl, '_blank')}
+          variant="outline"
           size="sm"
           className="text-xs sm:text-sm"
         >
           <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-          Download ({fileExt.toUpperCase()})
+          Download Document
         </Button>
       </div>
     );
-  };
+  }, [cocFileUrl, handleScroll]);
 
-  const handleAccept = async () => {
-    if (!user) return;
+  // Memoize sanitized HTML to avoid re-sanitizing on every render
+  const sanitizedContent = useMemo(() => {
+    if (!cocContent) return "";
+    return DOMPurify.sanitize(cocContent);
+  }, [cocContent]);
 
-    setLoading(true);
-
-    const { error } = await supabase.from("code_acceptances").insert({
-      event_id: eventId,
-      code_of_conduct_id: cocId,
-      accepted_version: cocVersion,
-      user_id: user.id,
-    });
-
-    if (error) {
-      console.error("Error accepting CoC:", error);
-      toast.error("Failed to accept Code of Conduct");
-      setLoading(false);
+  const handleAccept = useCallback(async () => {
+    if (!agreed || !scrolledToBottom) {
+      toast.error("Please scroll to the bottom and agree to the Code of Conduct");
       return;
     }
 
-    toast.success("Code of Conduct accepted");
-    setLoading(false);
-    onAccepted();
-  };
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("code_acceptances").insert({
+        event_id: eventId,
+        code_of_conduct_id: cocId,
+        accepted_version: cocVersion,
+        user_id: user.id,
+      });
+
+      if (error) {
+        console.error("Error accepting CoC:", error);
+        toast.error("Failed to accept Code of Conduct");
+        return;
+      }
+
+      toast.success("Code of Conduct accepted");
+      onAccepted();
+    } catch (error) {
+      console.error("Error accepting CoC:", error);
+      toast.error("Failed to accept Code of Conduct");
+    } finally {
+      setLoading(false);
+    }
+  }, [agreed, scrolledToBottom, cocId, cocVersion, eventId, user, onAccepted]);
 
   return (
     <Dialog open={true} onOpenChange={() => {}}>
@@ -169,41 +214,14 @@ const CoCAcceptanceDialog = ({
           {cocFileUrl ? (
             renderFileViewer()
           ) : (
-            <ScrollArea
-              ref={scrollRef}
-              onScroll={handleScroll}
-              className="h-full px-4 sm:px-6 py-3 sm:py-4"
+            <ScrollArea 
+              ref={scrollRef} 
+              className="flex-1 px-2 sm:px-4 py-4"
             >
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                {cocContent?.split("\n").map((line, i) => {
-                  // Basic markdown rendering for headings
-                  if (line.startsWith("## ")) {
-                    return (
-                      <h2 key={i} className="text-lg font-semibold mt-4 mb-2">
-                        {line.replace("## ", "")}
-                      </h2>
-                    );
-                  }
-                  if (line.startsWith("# ")) {
-                    return (
-                      <h1 key={i} className="text-xl font-bold mt-4 mb-2">
-                        {line.replace("# ", "")}
-                      </h1>
-                    );
-                  }
-                  if (line.startsWith("- ")) {
-                    return (
-                      <li key={i} className="ml-4">
-                        {line.replace("- ", "")}
-                      </li>
-                    );
-                  }
-                  if (line.trim() === "") {
-                    return <br key={i} />;
-                  }
-                  return <p key={i}>{line}</p>;
-                })}
-              </div>
+              <div
+                className="prose prose-sm sm:prose max-w-none dark:prose-invert"
+                dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+              />
             </ScrollArea>
           )}
         </div>
@@ -225,7 +243,7 @@ const CoCAcceptanceDialog = ({
           <div className="flex justify-end">
             <Button
               onClick={handleAccept}
-              disabled={!agreed || loading}
+              disabled={!agreed || !scrolledToBottom || loading}
               className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10"
             >
               {loading 

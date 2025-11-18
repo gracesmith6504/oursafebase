@@ -1,41 +1,54 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import ResetPassword from "./pages/ResetPassword";
-import Dashboard from "./pages/Dashboard";
-import Profile from "./pages/Profile";
-import MyEvents from "./pages/MyEvents";
-import SocietyDashboard from "./pages/SocietyDashboard";
-import SocietyAttendee from "./pages/SocietyAttendee";
-import SocietyMembers from "./pages/SocietyMembers";
-import SocietyEvents from "./pages/SocietyEvents";
-import CreateEvent from "./pages/CreateEvent";
-import DuplicateEvent from "./pages/DuplicateEvent";
-import EditEvent from "./pages/EditEvent";
-import EventSafetyPage from "./pages/EventSafetyPage";
-import SocietyReports from "./pages/SocietyReports";
-import SocietyCodesOfConduct from "./pages/SocietyCodesOfConduct";
-import InviteJoin from "./pages/InviteJoin";
-import CommitteeOnboarding from "./pages/CommitteeOnboarding";
-import EventSummary from "./pages/EventSummary";
-import CodeOfConductView from "./pages/CodeOfConductView";
-import NotFound from "./pages/NotFound";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
-import Contact from "./pages/Contact";
-import FAQ from "./pages/FAQ";
-import About from "./pages/About";
-import AdminSocieties from "./pages/AdminSocieties";
-import SocietySettings from "./pages/SocietySettings";
-import SocietyAnalytics from "./pages/SocietyAnalytics";
-import Feedback from "./pages/Feedback";
 import { ScrollToTop } from "./components/ScrollToTop";
+import { RouteLoadingFallback } from "./components/RouteLoadingFallback";
 
-const queryClient = new QueryClient();
+// Lazy load all route components
+const Index = lazy(() => import("./pages/Index"));
+const Auth = lazy(() => import("./pages/Auth"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Profile = lazy(() => import("./pages/Profile"));
+const MyEvents = lazy(() => import("./pages/MyEvents"));
+const SocietyDashboard = lazy(() => import("./pages/SocietyDashboard"));
+const SocietyAttendee = lazy(() => import("./pages/SocietyAttendee"));
+const SocietyMembers = lazy(() => import("./pages/SocietyMembers"));
+const SocietyEvents = lazy(() => import("./pages/SocietyEvents"));
+const CreateEvent = lazy(() => import("./pages/CreateEvent"));
+const DuplicateEvent = lazy(() => import("./pages/DuplicateEvent"));
+const EditEvent = lazy(() => import("./pages/EditEvent"));
+const EventSafetyPage = lazy(() => import("./pages/EventSafetyPage"));
+const SocietyReports = lazy(() => import("./pages/SocietyReports"));
+const SocietyCodesOfConduct = lazy(() => import("./pages/SocietyCodesOfConduct"));
+const InviteJoin = lazy(() => import("./pages/InviteJoin"));
+const CommitteeOnboarding = lazy(() => import("./pages/CommitteeOnboarding"));
+const EventSummary = lazy(() => import("./pages/EventSummary"));
+const CodeOfConductView = lazy(() => import("./pages/CodeOfConductView"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const Contact = lazy(() => import("./pages/Contact"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const About = lazy(() => import("./pages/About"));
+const AdminSocieties = lazy(() => import("./pages/AdminSocieties"));
+const SocietySettings = lazy(() => import("./pages/SocietySettings"));
+const SocietyAnalytics = lazy(() => import("./pages/SocietyAnalytics"));
+const Feedback = lazy(() => import("./pages/Feedback"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -44,7 +57,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ScrollToTop />
-        <Routes>
+        <Suspense fallback={<RouteLoadingFallback />}>
+          <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/reset-password" element={<ResetPassword />} />
@@ -81,6 +95,7 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Configure PDF.js worker - use local worker for better performance
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 interface PDFViewerProps {
   src: string;
@@ -39,8 +39,19 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
     };
 
     updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
+    
+    // Debounce resize listener for better performance
+    let timeoutId: NodeJS.Timeout;
+    const debouncedResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(updateWidth, 150);
+    };
+    
+    window.addEventListener('resize', debouncedResize);
+    return () => {
+      window.removeEventListener('resize', debouncedResize);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const handleLoadSuccess = ({ numPages }: { numPages: number }) => {
