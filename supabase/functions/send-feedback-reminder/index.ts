@@ -158,12 +158,30 @@ const handler = async (req: Request): Promise<Response> => {
 
     for (const attendee of eligibleAttendees) {
       try {
+        // CRITICAL: Update database FIRST to claim this attendee (prevents duplicates)
+        const { error: updateError } = await supabaseClient
+          .from("code_acceptances")
+          .update({ feedback_reminder_sent_at: new Date().toISOString() })
+          .eq("id", attendee.id)
+          .is("feedback_reminder_sent_at", null); // Only update if still null
+
+        if (updateError) {
+          console.error(`Failed to claim attendee ${attendee.id}:`, updateError);
+          errors.push(`Failed to claim attendee ${attendee.id}: ${updateError.message}`);
+          continue; // Skip this attendee if we couldn't claim them
+        }
+
         // Get user email from auth.users
         const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(attendee.user_id);
         
         if (userError || !userData?.user?.email) {
           console.error(`Failed to get email for user ${attendee.user_id}:`, userError);
           errors.push(`User ${attendee.user_id}: ${userError?.message || 'No email found'}`);
+          // Rollback the update since we can't send email
+          await supabaseClient
+            .from("code_acceptances")
+            .update({ feedback_reminder_sent_at: null })
+            .eq("id", attendee.id);
           continue;
         }
 
@@ -207,18 +225,11 @@ const handler = async (req: Request): Promise<Response> => {
         if (emailResult.error) {
           console.error(`Failed to send email to ${userEmail}:`, emailResult.error);
           errors.push(`${userEmail}: ${emailResult.error.message}`);
-          continue;
-        }
-
-        // Update code_acceptance to mark reminder as sent
-        const { error: updateError } = await supabaseClient
-          .from("code_acceptances")
-          .update({ feedback_reminder_sent_at: new Date().toISOString() })
-          .eq("id", attendee.id);
-
-        if (updateError) {
-          console.error(`Failed to update reminder timestamp for attendee ${attendee.id}:`, updateError);
-          errors.push(`Update failed for ${userEmail}: ${updateError.message}`);
+          // Rollback the update since email failed
+          await supabaseClient
+            .from("code_acceptances")
+            .update({ feedback_reminder_sent_at: null })
+            .eq("id", attendee.id);
         } else {
           sentCount++;
           console.log(`Reminder sent successfully to ${userEmail}`);

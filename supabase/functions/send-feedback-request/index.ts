@@ -159,12 +159,30 @@ const handler = async (req: Request): Promise<Response> => {
           continue;
         }
 
+        // CRITICAL: Update database FIRST to claim this attendee (prevents duplicates)
+        const { error: updateError } = await supabaseClient
+          .from("code_acceptances")
+          .update({ feedback_request_sent_at: new Date().toISOString() })
+          .eq("id", attendee.id)
+          .is("feedback_request_sent_at", null); // Only update if still null
+
+        if (updateError) {
+          console.error(`Failed to claim attendee ${attendee.id}:`, updateError);
+          errors.push(`Failed to claim attendee ${attendee.id}: ${updateError.message}`);
+          continue; // Skip this attendee if we couldn't claim them
+        }
+
         // Get user email using admin client
         const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(attendee.user_id);
         
         if (authError || !authUser.user?.email) {
           errors.push(`Failed to get email for user ${attendee.user_id}`);
           console.error(`Error fetching user ${attendee.user_id}:`, authError);
+          // Rollback the update since we can't send email
+          await supabaseClient
+            .from("code_acceptances")
+            .update({ feedback_request_sent_at: null })
+            .eq("id", attendee.id);
           continue;
         }
 
@@ -196,13 +214,12 @@ const handler = async (req: Request): Promise<Response> => {
         if (emailResponse.error) {
           errors.push(`Failed to send email to ${email}: ${emailResponse.error}`);
           console.error(`Email error for ${email}:`, emailResponse.error);
-        } else {
-          // Mark feedback request as sent
+          // Rollback the update since email failed
           await supabaseClient
             .from("code_acceptances")
-            .update({ feedback_request_sent_at: new Date().toISOString() })
+            .update({ feedback_request_sent_at: null })
             .eq("id", attendee.id);
-          
+        } else {
           sentCount++;
           console.log(`Email sent successfully to ${email}`);
         }
