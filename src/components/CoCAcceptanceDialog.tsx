@@ -44,24 +44,8 @@ const CoCAcceptanceDialog = ({
   const [agreed, setAgreed] = useState(false);
   const [scrolledToBottom, setScrolledToBottom] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pdfError, setPdfError] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Debug logging
-  console.log('CoCAcceptanceDialog Props:', {
-    eventId,
-    eventTitle,
-    cocId,
-    cocVersion,
-    cocContent: cocContent ? 'Present' : 'Missing',
-    cocFileUrl: cocFileUrl || 'Missing',
-    hasContent: !!cocContent,
-    hasFile: !!cocFileUrl
-  });
-
-  // Debug state changes
-  useEffect(() => {
-    console.log('State Update:', { agreed, scrolledToBottom, canAccept: agreed && scrolledToBottom });
-  }, [agreed, scrolledToBottom]);
 
   // Debounce scroll handler for better performance
   const handleScroll = useCallback(() => {
@@ -91,71 +75,64 @@ const CoCAcceptanceDialog = ({
     }
   }, [handleScroll]);
 
+  // Simplified scroll detection: allow immediate acceptance for all file-based CoCs
   useEffect(() => {
-    console.log('Scroll Detection useEffect:', { cocFileUrl, cocContent: !!cocContent });
-    
-    // For file-based CoCs (non-PDF), allow immediate acceptance
+    // For file-based CoCs, allow immediate acceptance
+    // Users can open files in new tabs if they want to review in detail
     if (cocFileUrl) {
-      const fileExt = getFileExtension(cocFileUrl);
-      console.log('File detected:', { fileExt, cocFileUrl });
-      
-      // For images and other non-PDF files, allow immediate acceptance
-      if (fileExt !== 'pdf') {
-        console.log('Non-PDF file, allowing immediate acceptance');
-        setScrolledToBottom(true);
-        return; // Early return
-      }
+      setScrolledToBottom(true);
+      return;
     }
     
-    // For text content, check actual scroll position
+    // For text content, check if it fits on screen
     if (!cocFileUrl && scrollRef.current) {
       const { scrollHeight, clientHeight } = scrollRef.current;
-      console.log('Text content scroll check:', { scrollHeight, clientHeight });
       if (scrollHeight <= clientHeight) {
-        console.log('Content fits on screen, allowing immediate acceptance');
         setScrolledToBottom(true);
       }
     }
     
-    // If no content and no file, allow immediate acceptance (fallback)
+    // Fallback: if no content and no file, allow acceptance
     if (!cocContent && !cocFileUrl) {
-      console.log('No content or file, allowing immediate acceptance (fallback)');
       setScrolledToBottom(true);
     }
   }, [cocContent, cocFileUrl]);
 
   const renderFileViewer = useCallback(() => {
-    console.log('renderFileViewer called:', { cocFileUrl });
-    if (!cocFileUrl) {
-      console.log('No cocFileUrl, returning null');
-      return null;
-    }
-    
+    if (!cocFileUrl) return null;
+
     const fileExt = getFileExtension(cocFileUrl);
-    console.log('File extension:', fileExt);
-    
+
+    // PDF files
     if (fileExt === 'pdf') {
       return (
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto px-2 sm:px-4 py-4"
-          style={{
-            WebkitOverflowScrolling: 'touch',
-            touchAction: 'pan-y',
-            overscrollBehavior: 'contain',
-          }}
-        >
-          <Suspense fallback={
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div>
+          {pdfError && (
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md mb-4">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">Unable to display PDF preview</p>
+              <Button
+                onClick={() => window.open(cocFileUrl, '_blank')}
+                size="sm"
+                variant="outline"
+              >
+                Open PDF in New Tab
+              </Button>
             </div>
-          }>
+          )}
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            }
+          >
             <PDFViewer
               src={cocFileUrl}
-              onLoadSuccess={(numPages) => {
-                console.log(`Loaded PDF with ${numPages} pages`);
-                // Auto-scroll check for single-page PDFs
-                setTimeout(handleScroll, 500);
+              onLoadSuccess={() => {
+                setPdfError(false);
+              }}
+              onError={() => {
+                setPdfError(true);
               }}
             />
           </Suspense>
@@ -196,7 +173,7 @@ const CoCAcceptanceDialog = ({
         </Button>
       </div>
     );
-  }, [cocFileUrl, handleScroll]);
+  }, [cocFileUrl, pdfError]);
 
   // Memoize sanitized HTML to avoid re-sanitizing on every render
   const sanitizedContent = useMemo(() => {
@@ -237,12 +214,7 @@ const CoCAcceptanceDialog = ({
     }
   }, [agreed, scrolledToBottom, cocId, cocVersion, eventId, user, onAccepted]);
 
-  console.log('Rendering dialog with:', {
-    hasCocFileUrl: !!cocFileUrl,
-    hasCocContent: !!cocContent,
-    willRenderFileViewer: !!cocFileUrl,
-    willRenderTextContent: !cocFileUrl && !!cocContent
-  });
+  const canAccept = agreed && scrolledToBottom;
 
   return (
     <Dialog open={true} onOpenChange={() => {}}>
@@ -275,10 +247,7 @@ const CoCAcceptanceDialog = ({
             <Checkbox
               id="agree"
               checked={agreed}
-              onCheckedChange={(checked) => {
-                console.log('Checkbox changed:', checked);
-                setAgreed(checked as boolean);
-              }}
+              onCheckedChange={(checked) => setAgreed(checked === true)}
               className="h-4 w-4 sm:h-5 sm:w-5"
             />
             <Label htmlFor="agree" className="cursor-pointer text-xs sm:text-sm leading-tight">
@@ -290,7 +259,7 @@ const CoCAcceptanceDialog = ({
           <div className="flex justify-end">
             <Button
               onClick={handleAccept}
-              disabled={!agreed || !scrolledToBottom || loading}
+              disabled={!canAccept || loading}
               className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10"
             >
               {loading 
