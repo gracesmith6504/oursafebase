@@ -82,13 +82,21 @@ const CoCAcceptanceDialog = ({
       // For images and other non-PDF files, allow immediate acceptance
       if (fileExt !== 'pdf') {
         setScrolledToBottom(true);
+        return; // Early return
       }
-    } else if (scrollRef.current) {
-      // For text content, check actual scroll position
+    }
+    
+    // For text content, check actual scroll position
+    if (!cocFileUrl && scrollRef.current) {
       const { scrollHeight, clientHeight } = scrollRef.current;
       if (scrollHeight <= clientHeight) {
         setScrolledToBottom(true);
       }
+    }
+    
+    // If no content and no file, allow immediate acceptance (fallback)
+    if (!cocContent && !cocFileUrl) {
+      setScrolledToBottom(true);
     }
   }, [cocContent, cocFileUrl]);
 

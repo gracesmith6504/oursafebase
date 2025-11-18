@@ -126,7 +126,7 @@ export const useCodeOfConduct = (eventId?: string, societyId?: string) => {
       // Single optimized query using OR condition
       const { data, error } = await supabase
         .from("code_of_conduct")
-        .select("id, name, content, file_url, version, event_id, society_id")
+        .select("id, name, content, file_url, version, event_id, society_id, content_type")
         .eq("is_active", true)
         .or(`event_id.eq.${eventId},and(society_id.eq.${societyId},event_id.is.null)`)
         .order("event_id", { ascending: false, nullsFirst: false }); // Prefer event-specific CoC
