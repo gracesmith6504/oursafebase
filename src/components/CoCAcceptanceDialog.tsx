@@ -98,8 +98,39 @@ const CoCAcceptanceDialog = ({
     }
   }, [cocContent, cocFileUrl]);
 
+  // Secondary check: Re-evaluate scroll state after DOM updates (fixes race condition)
+  useEffect(() => {
+    if (!cocFileUrl && scrollRef.current) {
+      // Use RAF to ensure DOM is fully painted
+      requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          const { scrollHeight, clientHeight } = scrollRef.current;
+          if (scrollHeight <= clientHeight + 20) { // +20px buffer
+            setScrolledToBottom(true);
+          }
+        }
+      });
+    }
+  }, [cocFileUrl, cocContent]);
+
   const renderFileViewer = useCallback(() => {
     if (!cocFileUrl) return null;
+
+    // Debug: Log the URL
+    console.log('🔗 CoC File URL:', cocFileUrl);
+
+    // Validate URL format
+    try {
+      const url = new URL(cocFileUrl);
+      console.log('✅ Valid URL:', url.href);
+    } catch (e) {
+      console.error('❌ Invalid URL:', cocFileUrl, e);
+      return (
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md m-4">
+          <p className="text-sm text-red-800 dark:text-red-200">Invalid file URL format</p>
+        </div>
+      );
+    }
 
     const fileExt = getFileExtension(cocFileUrl);
 
@@ -107,8 +138,19 @@ const CoCAcceptanceDialog = ({
     if (fileExt === 'pdf') {
       return (
         <div>
+          <div className="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md m-4 mb-2">
+            <p className="text-xs text-blue-800 dark:text-blue-200">
+              PDF Loading... If it doesn't appear,{' '}
+              <button
+                onClick={() => window.open(cocFileUrl, '_blank')}
+                className="underline font-semibold hover:text-blue-900 dark:hover:text-blue-100"
+              >
+                click here to open in new tab
+              </button>
+            </p>
+          </div>
           {pdfError && (
-            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md mb-4">
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md mx-4 mb-4">
               <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">Unable to display PDF preview</p>
               <Button
                 onClick={() => window.open(cocFileUrl, '_blank')}
