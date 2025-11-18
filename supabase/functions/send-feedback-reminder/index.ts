@@ -189,38 +189,30 @@ const handler = async (req: Request): Promise<Response> => {
         }
 
         const userEmail = userData.user.email;
+        
+        // Extract first name from user metadata or email
+        const userMetadata = userData.user.user_metadata || {};
+        const displayName = userMetadata.display_name || userMetadata.full_name || userEmail.split('@')[0];
+        const displayFirstName = displayName.split(' ')[0];
 
         // Send reminder email
         const emailResult = await resend.emails.send({
           from: fromEmail,
           to: [userEmail],
-          subject: `Reminder: Share Your Feedback for ${event.title}`,
+          subject: `Feedback for ${event.title}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #333;">Reminder: We'd Love Your Feedback!</h2>
+              <h2>Hi ${displayFirstName},</h2>
+              <p>Thanks again for coming to <strong>${event.title}</strong>!</p>
+              <p>We wanted to check in because you experienced the event firsthand, and hearing from people who were actually there really helps us improve things going forward.</p>
+              <p>If you have a moment, we'd love to hear how it went for you.</p>
               
-              <p>Hi there,</p>
-              
-              <p>This is a friendly reminder that we're still waiting to hear from you about your experience at <strong>${event.title}</strong>.</p>
-              
-              <p>Your feedback is incredibly valuable to us and helps improve future events for everyone. It will only take a few minutes to complete.</p>
-              
-              <div style="margin: 30px 0;">
-                <a href="${feedbackUrl}" 
-                   style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                  Submit Your Feedback Now
+              <p>
+                <a href="${feedbackUrl}" style="display: inline-block; padding: 12px 24px; background-color: #0066cc; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                  Share Your Feedback
                 </a>
-              </div>
-              
-              <p style="color: #666; font-size: 14px;">
-                If you've already submitted your feedback, please disregard this reminder.
               </p>
-              
-              <p>Thank you for your time!</p>
-              
-              <p style="color: #999; font-size: 12px; margin-top: 30px;">
-                This is an automated reminder from ${fromName}. If you have any questions, please contact your society organizers.
-              </p>
+              <p>Thanks for being part of it, we really appreciate it.</p>
             </div>
           `,
         });
