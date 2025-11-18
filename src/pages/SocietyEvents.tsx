@@ -347,80 +347,128 @@ const SocietyEvents = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
               {events.map((event) => {
                 const eventMetrics = metrics[event.id] || { reports: 0, feedback: 0, pageViews: 0, codeAcceptances: 0 };
+                const eventStatus = getEventStatus(event.event_date);
                 
                 return (
-                  <Card key={event.id} className="transition-all hover:shadow-lg">
-                    <CardHeader>
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <CardTitle className="mb-2">{event.title}</CardTitle>
-                          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar className="h-4 w-4" />
-                            <span>
+                  <Card key={event.id} className="overflow-hidden transition-all duration-300 hover:shadow-xl border-border/50 bg-card">
+                    {/* Top Section: Event Overview */}
+                    <CardHeader className="pb-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-xl font-semibold leading-tight mb-2 line-clamp-2">
+                            {event.title}
+                          </CardTitle>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar className="h-4 w-4 flex-shrink-0" />
+                            <span className="font-medium">
                               {event.event_end_date 
                                 ? `${format(new Date(event.event_date), "MMM d")} - ${format(new Date(event.event_end_date), "MMM d, yyyy")}`
-                                : format(new Date(event.event_date), "PPP")
+                                : format(new Date(event.event_date), "MMM d, yyyy")
                               }
                             </span>
                           </div>
                           {event.location && (
-                            <p className="mt-1 text-sm text-muted-foreground">{event.location}</p>
+                            <p className="mt-1.5 text-sm text-muted-foreground line-clamp-1">{event.location}</p>
                           )}
                         </div>
-                        <Badge className={getStatusColor(getEventStatus(event.event_date))}>
-                          {getEventStatus(event.event_date)}
+                        <Badge 
+                          className={`${getStatusColor(eventStatus)} shrink-0 font-medium px-2.5 py-1`}
+                          variant={eventStatus === 'past' ? 'secondary' : 'default'}
+                        >
+                          {eventStatus}
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex items-center gap-2 text-sm">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{eventMetrics.reports}</span>
-                          <span className="text-muted-foreground">Reports</span>
+
+                    <CardContent className="space-y-5 pt-0">
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-2 gap-3 p-4 bg-muted/30 rounded-lg border border-border/40">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-background rounded-md border border-border/50">
+                            <FileText className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-lg font-semibold leading-none">{eventMetrics.reports}</span>
+                            <span className="text-xs text-muted-foreground mt-0.5">Reports</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{eventMetrics.feedback}</span>
-                          <span className="text-muted-foreground">Feedback</span>
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-background rounded-md border border-border/50">
+                            <MessageSquare className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-lg font-semibold leading-none">{eventMetrics.feedback}</span>
+                            <span className="text-xs text-muted-foreground mt-0.5">Feedback</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{eventMetrics.pageViews}</span>
-                          <span className="text-muted-foreground">Views</span>
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-background rounded-md border border-border/50">
+                            <Eye className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-lg font-semibold leading-none">{eventMetrics.pageViews}</span>
+                            <span className="text-xs text-muted-foreground mt-0.5">Views</span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Shield className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{eventMetrics.codeAcceptances}</span>
-                          <span className="text-muted-foreground">Accepted</span>
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-background rounded-md border border-border/50">
+                            <Shield className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-lg font-semibold leading-none">{eventMetrics.codeAcceptances}</span>
+                            <span className="text-xs text-muted-foreground mt-0.5">Accepted</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
+
+                      {/* Divider */}
+                      <div className="border-t border-border/40" />
+
+                      {/* Middle Section: Quick Actions */}
+                      <div className="flex items-center gap-2">
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => navigate(`/${societySlug}/${event.slug}`)}
+                          className="flex-1 gap-2 h-9"
                         >
                           <Eye className="h-4 w-4" />
+                          <span className="font-medium">View</span>
                         </Button>
                         <Button 
                           variant="outline"
                           size="sm"
                           onClick={() => handleOpenQRDialog(event)}
+                          className="flex-1 gap-2 h-9"
                         >
                           <Share2 className="h-4 w-4" />
+                          <span className="font-medium">Share</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/society/${slug}/events/${event.id}/duplicate`)}
+                          className="flex-1 gap-2 h-9"
+                        >
+                          <Copy className="h-4 w-4" />
+                          <span className="font-medium">Duplicate</span>
                         </Button>
                       </div>
-                      <div className="space-y-2">
+
+                      {/* Divider */}
+                      <div className="border-t border-border/40" />
+
+                      {/* Bottom Section: Primary Actions */}
+                      <div className="space-y-2.5">
                         <Button 
-                          className="w-full" 
-                          variant="outline"
+                          className="w-full h-11 gap-2 font-medium text-base shadow-sm" 
+                          variant="default"
                           onClick={() => navigate(`/society/${slug}/events/${event.id}/summary`)}
                         >
-                          <BarChart className="mr-2 h-4 w-4" />
+                          <BarChart className="h-5 w-5" />
                           Event Summary
                         </Button>
 
@@ -434,22 +482,13 @@ const SocietyEvents = () => {
                           />
                         )}
                         
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(`/society/${slug}/events/${event.id}/duplicate`)}
-                          className="mx-auto flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                          Duplicate
-                        </Button>
-                        
-                        {getEventStatus(event.event_date) !== 'past' && (
+                        {eventStatus !== 'past' && (
                           <Button 
-                            className="w-full" 
+                            className="w-full h-11 gap-2 font-medium shadow-sm" 
+                            variant="secondary"
                             onClick={() => navigate(`/society/${slug}/events/${event.id}/edit`)}
                           >
-                            <Edit className="mr-2 h-4 w-4" />
+                            <Edit className="h-5 w-5" />
                             Manage Event
                           </Button>
                         )}
