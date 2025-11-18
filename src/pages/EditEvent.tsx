@@ -240,7 +240,6 @@ const EditEvent = () => {
   const [originalFAQIds, setOriginalFAQIds] = useState<Set<string>>(new Set());
   
   // Feedback state
-  const [feedbackAutoSend, setFeedbackAutoSend] = useState(false);
   const [feedbackQuestions, setFeedbackQuestions] = useState<FeedbackQuestionType[]>([]);
   const [batchFeedbackDialogOpen, setBatchFeedbackDialogOpen] = useState(false);
   const [editFeedbackDialogOpen, setEditFeedbackDialogOpen] = useState(false);
@@ -381,7 +380,6 @@ const EditEvent = () => {
 
       if (feedbackConfigData) {
         setFeedbackConfigId(feedbackConfigData.id);
-        setFeedbackAutoSend(feedbackConfigData.auto_send_enabled);
       }
 
       // Fetch feedback questions
@@ -660,10 +658,6 @@ const EditEvent = () => {
   const handleDeleteFeedbackQuestion = (id: string) => {
     const updated = feedbackQuestions.filter(q => q.id !== id);
     setFeedbackQuestions(updated);
-    // Auto-disable auto-send when no questions remain
-    if (updated.length === 0) {
-      setFeedbackAutoSend(false);
-    }
   };
 
   const handleFeedbackQuestionDragEnd = (event: DragEndEvent) => {
@@ -852,7 +846,7 @@ const EditEvent = () => {
         const feedbackConfigPayload: any = {
           event_id: eventId!,
           enabled: true,
-          auto_send_enabled: feedbackAutoSend,
+          auto_send_enabled: false,
           auto_send_hours: 24,
         };
         
@@ -1345,21 +1339,6 @@ const EditEvent = () => {
                 <CardDescription>Automatically collect feedback from attendees after the event</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                  <div className="space-y-1">
-                    <Label htmlFor="auto-send" className="text-base">Auto-send Feedback Email</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Send feedback email 24 hours after event ends
-                    </p>
-                  </div>
-                  <Switch
-                    id="auto-send"
-                    checked={feedbackAutoSend}
-                    onCheckedChange={setFeedbackAutoSend}
-                    disabled={feedbackQuestions.length === 0}
-                  />
-                </div>
-
                 <div className="space-y-2">
                   <Label>Feedback Questions</Label>
                   <FeedbackSection
