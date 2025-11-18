@@ -1,11 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Button } from '@/components/ui/button';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, AlertCircle } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Configure PDF.js worker - use static public file
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+// Configure PDF.js worker with fallback
+const WORKER_SRC = '/pdf.worker.min.mjs';
+const CDN_FALLBACK = `https://unpkg.com/pdfjs-dist@5.4.296/build/pdf.worker.min.mjs`;
+
+// Try local worker first, fallback to CDN if it fails
+pdfjs.GlobalWorkerOptions.workerSrc = WORKER_SRC;
+
+// Test if worker loads, fallback to CDN if not
+fetch(WORKER_SRC, { method: 'HEAD' })
+  .catch(() => {
+    console.warn('Local PDF worker not found, using CDN fallback');
+    pdfjs.GlobalWorkerOptions.workerSrc = CDN_FALLBACK;
+  });
 
 interface PDFViewerProps {
   src: string;
@@ -17,6 +28,8 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageWidth, setPageWidth] = useState<number>(0);
   const [error, setError] = useState<Error | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadTimeout, setLoadTimeout] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,16 +67,74 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
     };
   }, []);
 
+  // Set a 10-second timeout for PDF loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        setLoadTimeout(true);
+        console.error('PDF loading timed out');
+      }
+    }, 10000);
+    
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
   const handleLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
+    setIsLoading(false);
     onLoadSuccess?.(numPages);
   };
 
   const handleError = (err: Error) => {
-    console.error('PDF loading error:', err);
+    console.error('🚨 PDF Loading Error Details:', {
+      message: err.message,
+      name: err.name,
+      stack: err.stack,
+      pdfUrl: src,
+      workerSrc: pdfjs.GlobalWorkerOptions.workerSrc
+    });
+    
+    // Check if it's a network error
+    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+      console.error('❌ Network Error: PDF file may not be accessible');
+    }
+    
+    // Check if it's a CORS error
+    if (err.message.includes('CORS')) {
+      console.error('❌ CORS Error: PDF server may not allow cross-origin requests');
+    }
+    
     setError(err);
+    setIsLoading(false);
     onError?.(err);
   };
+
+  if (loadTimeout) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 px-4 space-y-4">
+        <AlertCircle className="h-12 w-12 text-yellow-500" />
+        <p className="text-sm text-muted-foreground text-center">
+          PDF is taking longer than expected to load
+        </p>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => window.location.reload()}
+            size="sm"
+            variant="outline"
+          >
+            Reload Page
+          </Button>
+          <Button
+            onClick={() => window.open(src, '_blank')}
+            size="sm"
+            variant="default"
+          >
+            Open PDF in New Tab
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
