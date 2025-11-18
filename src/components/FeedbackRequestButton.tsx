@@ -35,12 +35,6 @@ export const FeedbackRequestButton = ({
 
   // Sync button state with database state via props
   useEffect(() => {
-    // Don't update state during temporary success animations
-    if (buttonState === 'initial-sent' || buttonState === 'sending-initial' ||
-        buttonState === 'reminder-sent' || buttonState === 'sending-reminder') {
-      return;
-    }
-
     // Calculate the correct state based on database stats
     if (!feedbackEnabled) {
       setButtonState('all-complete');
