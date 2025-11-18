@@ -87,6 +87,7 @@ interface CodeOfConduct {
   content?: string;
   file_url?: string;
   version?: number;
+  content_type?: "text" | "markdown";
 }
 
 interface FAQ {
@@ -603,6 +604,20 @@ const EventSafetyPage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* CoC Acceptance Dialog (required acceptance) */}
+      {showCoCDialog && codeOfConduct && event && (
+        <CoCAcceptanceDialog
+          eventId={event.id}
+          eventTitle={event.title}
+          cocId={codeOfConduct.id!}
+          cocVersion={codeOfConduct.version || 1}
+          cocContent={codeOfConduct.content}
+          cocFileUrl={codeOfConduct.file_url}
+          cocContentType={(codeOfConduct.content_type as "text" | "markdown") || "text"}
+          onAccepted={handleCoCAccepted}
+        />
       )}
 
       {/* Share Event Dialog */}

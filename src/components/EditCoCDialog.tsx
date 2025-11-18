@@ -69,6 +69,9 @@ export const EditCoCDialog = ({
 
   const clearFile = () => {
     setSelectedFile(null);
+    // Reset the file input
+    const fileInput = document.getElementById('edit-coc-file-upload') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
   };
 
   const handleUpdate = async () => {
@@ -224,6 +227,7 @@ export const EditCoCDialog = ({
                     <span>{currentFileUrl ? 'Click to upload new file' : 'Click to upload file'} (PDF, DOC, DOCX, TXT, Images)</span>
                   </div>
                   <input 
+                    id="edit-coc-file-upload"
                     type="file" 
                     accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
                     onChange={handleFileChange}
