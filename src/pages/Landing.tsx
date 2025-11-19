@@ -17,6 +17,9 @@ import {
   Sparkles,
   Smartphone,
   Phone,
+  HelpCircle,
+  ChevronDown,
+  Mail,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
@@ -108,11 +111,15 @@ const Landing = () => {
                 </li>
                 <li className="flex gap-3">
                   <span className="text-success">✓</span>
+                  <span>Get answers from event-specific FAQs created by organisers</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-success">✓</span>
                   <span>Report concerns anonymously or with your contact info, safely and privately</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-success">✓</span>
-                  <span>Share feedback to help make future events even better</span>
+                  <span>Share feedback after events to help make future experiences even better</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-success">✓</span>
@@ -147,11 +154,15 @@ const Landing = () => {
                 </li>
                 <li className="flex gap-3">
                   <span className="text-primary">✓</span>
-                  <span>Respond to concerns with care and accountability (instant email notifications)</span>
+                  <span>Create event-specific FAQs to answer common questions</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-primary">✓</span>
-                  <span>Track feedback to continuously improve</span>
+                  <span>Collect post-event feedback via form and/or follow-up emails</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-primary">✓</span>
+                  <span>Respond to concerns with care and accountability (instant email notifications)</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-primary">✓</span>
@@ -225,8 +236,30 @@ const Landing = () => {
                         <p className="text-xs text-muted-foreground">Emergency: 999</p>
                       </div>
 
+                      {/* FAQ Section */}
+                      <div className="bg-muted/50 rounded-lg p-3 border">
+                        <p className="text-xs font-semibold mb-2 flex items-center gap-1">
+                          <HelpCircle className="h-3 w-3" />
+                          Frequently Asked Questions
+                        </p>
+                        <div className="space-y-1.5">
+                          <div className="bg-background rounded p-2 border border-border/50">
+                            <p className="text-xs font-medium flex items-center justify-between">
+                              What time does the trip start?
+                              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                            </p>
+                          </div>
+                          <div className="bg-background rounded p-2 border border-border/50">
+                            <p className="text-xs font-medium flex items-center justify-between">
+                              What should I bring?
+                              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Action Buttons */}
-                      <div className="space-y-2 pt-2">
+                      <div className="space-y-2 pt-1">
                         <div className="bg-primary/10 text-primary rounded-lg py-2 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
                           <MessageSquare className="h-3 w-3" />
                           Report Concern
@@ -234,10 +267,6 @@ const Landing = () => {
                         <div className="bg-success/10 text-success rounded-lg py-2 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
                           <Heart className="h-3 w-3" />
                           Give Feedback
-                        </div>
-                        <div className="bg-muted rounded-lg py-2 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
-                          <Shield className="h-3 w-3" />
-                          Code of Conduct
                         </div>
                       </div>
                     </div>
@@ -250,8 +279,8 @@ const Landing = () => {
             <div className="md:col-span-3 space-y-6">
               <h3 className="text-3xl md:text-4xl font-heading font-bold">Every Event Gets Its Own Safety Page</h3>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Attendees scan a QR code or click a link to instantly access welfare contacts, emergency info, and
-                reporting options.
+                Attendees scan a QR code or click a link to instantly access welfare contacts, emergency info,
+                FAQs, and reporting options.
               </p>
               <ul className="space-y-3">
                 <li className="flex gap-3 items-start">
@@ -260,11 +289,11 @@ const Landing = () => {
                 </li>
                 <li className="flex gap-3 items-start">
                   <span className="text-primary font-bold">✓</span>
-                  <span className="text-muted-foreground">Works on any device</span>
+                  <span className="text-muted-foreground">Event-specific FAQs for quick answers</span>
                 </li>
                 <li className="flex gap-3 items-start">
                   <span className="text-primary font-bold">✓</span>
-                  <span className="text-muted-foreground">Always up-to-date information</span>
+                  <span className="text-muted-foreground">Post-event feedback collection</span>
                 </li>
                 <li className="flex gap-3 items-start">
                   <span className="text-primary font-bold">✓</span>
@@ -309,10 +338,10 @@ const Landing = () => {
             <Card className="bg-gradient-card hover:scale-[1.02] transition-all duration-300 border-success/20">
               <CardContent className="pt-6 text-center space-y-4">
                 <div className="h-12 w-12 mx-auto rounded-full bg-success/10 flex items-center justify-center">
-                  <Heart className="h-6 w-6 text-success" />
+                  <HelpCircle className="h-6 w-6 text-success" />
                 </div>
-                <h4 className="text-lg font-heading font-semibold">Feedback That Matters</h4>
-                <p className="text-sm text-muted-foreground">Your input helps create better experiences</p>
+                <h4 className="text-lg font-heading font-semibold">Get Quick Answers</h4>
+                <p className="text-sm text-muted-foreground">Access event-specific FAQs and give feedback after events</p>
               </CardContent>
             </Card>
 
@@ -345,7 +374,7 @@ const Landing = () => {
                   <TrendingUp className="h-6 w-6 text-primary" />
                 </div>
                 <h4 className="text-lg font-heading font-semibold">Insights That Improve</h4>
-                <p className="text-sm text-muted-foreground">See trends and make data-informed decisions</p>
+                <p className="text-sm text-muted-foreground">Collect post-event feedback and analyze trends to make better decisions</p>
               </CardContent>
             </Card>
           </div>
@@ -367,8 +396,8 @@ const Landing = () => {
               </div>
               <h4 className="text-xl font-heading font-semibold">Committees Create Safety Infrastructure</h4>
               <p className="text-muted-foreground">
-                Organisers set up their society, create events, and build comprehensive safety pages with all the
-                information attendees need.
+                Organisers set up their society, create events, and build comprehensive safety pages with contacts,
+                emergency info, FAQs, and feedback collection.
               </p>
             </div>
 
@@ -378,9 +407,8 @@ const Landing = () => {
               </div>
               <h4 className="text-xl font-heading font-semibold">Attendees Access Support Instantly</h4>
               <p className="text-muted-foreground">
-                Every event gets a unique link. Attendees can view contacts and find emergency info. Logged in users can
-                accept the code of conduct, report incidents,give feedback and access all your events from a personal
-                dashboard.
+                Scan a QR code or click a link to view contacts, emergency info, and FAQs. Logged in users can
+                accept the code of conduct, report concerns, and give feedback after events.
               </p>
             </div>
 
@@ -390,8 +418,8 @@ const Landing = () => {
               </div>
               <h4 className="text-xl font-heading font-semibold">Everyone Communicates Openly</h4>
               <p className="text-muted-foreground">
-                Attendees share concerns or feedback. Committees receive, review, and respond. Real dialogue creates
-                real improvement.
+                Attendees get answers from FAQs, share concerns, and provide post-event feedback. Committees respond
+                with care and use insights to improve. Real dialogue creates real progress.
               </p>
             </div>
 
