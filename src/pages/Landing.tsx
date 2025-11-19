@@ -69,7 +69,8 @@ const Landing = () => {
             Student Events & Trips. <span className="text-primary">Made Safer Together.</span>
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed">
-            Bring welfare contacts, emergency info, codes of conduct and reporting together in one place for safer events and trips.
+            Bring welfare contacts, emergency info, codes of conduct and reporting together in one place for safer
+            events and trips.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Button
@@ -188,7 +189,7 @@ const Landing = () => {
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-foreground/10 rounded-b-2xl z-10"></div>
 
                   {/* Screen Content */}
-                  <div className="absolute inset-4 mt-8 bg-background rounded-[2rem] overflow-hidden">
+                  <div className="absolute inset-x-4 top-6 bottom-4 bg-background rounded-[2rem] overflow-hidden">
                     <div className="p-3 space-y-2">
                       {/* Event Header */}
                       <div className="pb-2 border-b">
@@ -275,8 +276,8 @@ const Landing = () => {
             <div className="md:col-span-3 space-y-6">
               <h3 className="text-3xl md:text-4xl font-heading font-bold">Every Event Gets Its Own Safety Page</h3>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Attendees scan a QR code or click a link to instantly access welfare contacts, emergency info,
-                FAQs, and reporting options.
+                Attendees scan a QR code or click a link to instantly access welfare contacts, emergency info, FAQs, and
+                reporting options.
               </p>
               <ul className="space-y-3">
                 <li className="flex gap-3 items-start">
@@ -337,7 +338,9 @@ const Landing = () => {
                   <HelpCircle className="h-6 w-6 text-success" />
                 </div>
                 <h4 className="text-lg font-heading font-semibold">Get Quick Answers</h4>
-                <p className="text-sm text-muted-foreground">Access event-specific FAQs and give feedback after events</p>
+                <p className="text-sm text-muted-foreground">
+                  Access event-specific FAQs and give feedback after events
+                </p>
               </CardContent>
             </Card>
 
@@ -370,7 +373,9 @@ const Landing = () => {
                   <TrendingUp className="h-6 w-6 text-primary" />
                 </div>
                 <h4 className="text-lg font-heading font-semibold">Insights That Improve</h4>
-                <p className="text-sm text-muted-foreground">Collect post-event feedback and analyze trends to make better decisions</p>
+                <p className="text-sm text-muted-foreground">
+                  Collect post-event feedback and analyze trends to make better decisions
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -403,8 +408,8 @@ const Landing = () => {
               </div>
               <h4 className="text-xl font-heading font-semibold">Attendees Access Support Instantly</h4>
               <p className="text-muted-foreground">
-                Scan a QR code or click a link to view contacts, emergency info, and FAQs. Logged in users can
-                accept the code of conduct, report concerns, and give feedback after events.
+                Scan a QR code or click a link to view contacts, emergency info, and FAQs. Logged in users can accept
+                the code of conduct, report concerns, and give feedback after events.
               </p>
             </div>
 
