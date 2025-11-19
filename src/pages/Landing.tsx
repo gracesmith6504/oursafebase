@@ -189,20 +189,20 @@ const Landing = () => {
 
                   {/* Screen Content */}
                   <div className="absolute inset-4 mt-8 bg-background rounded-[2rem] overflow-hidden">
-                    <div className="p-4 space-y-3">
+                    <div className="p-3 space-y-2">
                       {/* Event Header */}
-                      <div className="pb-3 border-b">
+                      <div className="pb-2 border-b">
                         <h3 className="font-bold text-sm">Ski Club</h3>
                         <p className="text-xs text-muted-foreground">January 15, 2025 • Ski Trip 2025</p>
                       </div>
 
                       {/* Welfare Contact Card */}
-                      <div className="bg-muted/50 rounded-lg p-3 border">
+                      <div className="bg-muted/50 rounded-lg p-2.5 border">
                         <p className="text-xs font-semibold mb-2 flex items-center gap-1">
                           <Phone className="h-3 w-3" />
                           Important Contacts
                         </p>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <div className="flex gap-2 items-center">
                             <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
                               <span className="text-xs font-bold text-primary">SM</span>
@@ -227,7 +227,7 @@ const Landing = () => {
                       </div>
 
                       {/* Emergency Info Card */}
-                      <div className="bg-muted/50 rounded-lg p-3 border">
+                      <div className="bg-muted/50 rounded-lg p-2.5 border">
                         <p className="text-xs font-semibold mb-1 flex items-center gap-1">
                           <AlertCircle className="h-3 w-3 text-destructive" />
                           Emergency Info
@@ -237,36 +237,32 @@ const Landing = () => {
                       </div>
 
                       {/* FAQ Section */}
-                      <div className="bg-muted/50 rounded-lg p-3 border">
-                        <p className="text-xs font-semibold mb-2 flex items-center gap-1">
+                      <div className="bg-muted/50 rounded-lg p-2.5 border">
+                        <p className="text-xs font-semibold mb-1.5 flex items-center gap-1">
                           <HelpCircle className="h-3 w-3" />
                           Frequently Asked Questions
                         </p>
-                        <div className="space-y-1.5">
-                          <div className="bg-background rounded p-2 border border-border/50">
-                            <p className="text-xs font-medium flex items-center justify-between">
-                              What time does the trip start?
-                              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                            </p>
-                          </div>
-                          <div className="bg-background rounded p-2 border border-border/50">
-                            <p className="text-xs font-medium flex items-center justify-between">
-                              What should I bring?
-                              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                            </p>
-                          </div>
+                        <div className="bg-background rounded p-2 border border-border/50">
+                          <p className="text-xs font-medium flex items-center justify-between">
+                            What time does the trip start?
+                            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                          </p>
                         </div>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="space-y-2 pt-1">
-                        <div className="bg-primary/10 text-primary rounded-lg py-2 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
+                      <div className="space-y-1.5 pt-0.5">
+                        <div className="bg-primary/10 text-primary rounded-lg py-1.5 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
                           <MessageSquare className="h-3 w-3" />
                           Report Concern
                         </div>
-                        <div className="bg-success/10 text-success rounded-lg py-2 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
+                        <div className="bg-success/10 text-success rounded-lg py-1.5 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
                           <Heart className="h-3 w-3" />
-                          Give Feedback
+                          Submit Feedback
+                        </div>
+                        <div className="bg-blue-500/10 text-blue-600 rounded-lg py-1.5 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
+                          <Shield className="h-3 w-3" />
+                          Code of Conduct
                         </div>
                       </div>
                     </div>
