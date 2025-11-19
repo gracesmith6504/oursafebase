@@ -245,7 +245,7 @@ const Auth = () => {
           if (societyInfo?.role === 'committee') {
             navigate(`/onboarding?invite=${inviteCode}`);
           } else {
-            navigate(`/invite/${inviteCode}`);
+            navigate(`/invite/attendee/${inviteCode}`);
           }
         } else if (redirectPath) {
           navigate(redirectPath);
@@ -290,7 +290,7 @@ const Auth = () => {
             if (societyInfo?.role === 'committee') {
               navigate(`/onboarding?invite=${inviteCode}`);
             } else {
-              navigate(`/invite/${inviteCode}`);
+              navigate(`/invite/attendee/${inviteCode}`);
             }
           } else if (redirectPath) {
             navigate(redirectPath);
@@ -310,7 +310,7 @@ const Auth = () => {
             if (societyInfo?.role === 'committee') {
               navigate(`/onboarding?invite=${inviteCode}`);
             } else {
-              navigate(`/invite/${inviteCode}`);
+              navigate(`/invite/attendee/${inviteCode}`);
             }
           } else if (redirectPath) {
             navigate(redirectPath);
@@ -336,7 +336,7 @@ const Auth = () => {
         } else if (inviteCode && societyInfo?.role === "committee") {
           navigate(`/onboarding?invite=${inviteCode}`);
         } else if (inviteCode) {
-          navigate(`/invite/${inviteCode}`);
+          navigate(`/invite/attendee/${inviteCode}`);
         } else if (redirectPath) {
           navigate(redirectPath);
         } else {
@@ -576,7 +576,7 @@ const Auth = () => {
         if (societyInfo?.role === 'committee') {
           navigate(`/onboarding?invite=${inviteCode}`);
         } else {
-          navigate(`/invite/${inviteCode}`);
+          navigate(`/invite/attendee/${inviteCode}`);
         }
       } else {
         navigate("/dashboard");
