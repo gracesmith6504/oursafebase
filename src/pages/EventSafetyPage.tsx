@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -107,6 +108,7 @@ const EventSafetyPage = () => {
   const [showCoCDialog, setShowCoCDialog] = useState(false);
   const [showViewCoCDialog, setShowViewCoCDialog] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [hasFeedbackQuestions, setHasFeedbackQuestions] = useState(false);
 
   // React Query hooks
   const { data: event, isLoading: eventLoading, error: eventError } = useEvent(eventId, societySlug, eventSlug);
@@ -161,6 +163,27 @@ const EventSafetyPage = () => {
       setShowCoCDialog(true);
     }
   }, [cocRequired, codeOfConduct]);
+
+  // Check if event has feedback questions
+  useEffect(() => {
+    const checkFeedbackQuestions = async () => {
+      if (!event?.id) return;
+      
+      const { data, error } = await supabase
+        .from("event_feedback_questions")
+        .select("id", { count: "exact" })
+        .eq("event_id", event.id)
+        .limit(1);
+
+      if (!error && data && data.length > 0) {
+        setHasFeedbackQuestions(true);
+      } else {
+        setHasFeedbackQuestions(false);
+      }
+    };
+
+    checkFeedbackQuestions();
+  }, [event?.id]);
 
   // Handle CoC acceptance completion
   const handleCoCAccepted = () => {
@@ -449,7 +472,7 @@ const EventSafetyPage = () => {
         </div>
 
         {/* Post-Event Feedback Link */}
-        {getEventStatus(event.event_date) === 'past' && isSocietyMember && (
+        {getEventStatus(event.event_date) === 'past' && isSocietyMember && hasFeedbackQuestions && (
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
