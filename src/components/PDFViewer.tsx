@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { Document, Page, pdfjs } from 'react-pdf';
-import { Button } from '@/components/ui/button';
-import { ExternalLink, AlertCircle } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useState, useEffect, useRef } from "react";
+import { Document, Page, pdfjs } from "react-pdf";
+import { Button } from "@/components/ui/button";
+import { ExternalLink, AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Use CDN worker directly - simpler and more reliable
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@5.4.296/build/pdf.worker.min.mjs`;
@@ -25,33 +25,23 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
     const updateWidth = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.clientWidth;
-        
-        // On mobile (< 640px), use a minimum width for readability
-        // On larger screens, fit to container
-        const minMobileWidth = 520;
-        
-        if (containerWidth < 640) {
-          // Mobile: use larger fixed width, allow horizontal scroll
-          setPageWidth(minMobileWidth);
-        } else {
-          // Desktop/tablet: fit to container
-          setPageWidth(containerWidth);
-        }
+        // Always fit the PDF to the container width
+        setPageWidth(containerWidth);
       }
     };
 
     updateWidth();
-    
+
     // Debounce resize listener for better performance
     let timeoutId: NodeJS.Timeout;
     const debouncedResize = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(updateWidth, 150);
     };
-    
-    window.addEventListener('resize', debouncedResize);
+
+    window.addEventListener("resize", debouncedResize);
     return () => {
-      window.removeEventListener('resize', debouncedResize);
+      window.removeEventListener("resize", debouncedResize);
       clearTimeout(timeoutId);
     };
   }, []);
@@ -61,10 +51,10 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
     const timer = setTimeout(() => {
       if (isLoading) {
         setLoadTimeout(true);
-        console.error('PDF loading timed out');
+        console.error("PDF loading timed out");
       }
     }, 10000);
-    
+
     return () => clearTimeout(timer);
   }, [isLoading]);
 
@@ -75,24 +65,24 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
   };
 
   const handleError = (err: Error) => {
-    console.error('🚨 PDF Loading Error Details:', {
+    console.error("🚨 PDF Loading Error Details:", {
       message: err.message,
       name: err.name,
       stack: err.stack,
       pdfUrl: src,
-      workerSrc: pdfjs.GlobalWorkerOptions.workerSrc
+      workerSrc: pdfjs.GlobalWorkerOptions.workerSrc,
     });
-    
+
     // Check if it's a network error
-    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-      console.error('❌ Network Error: PDF file may not be accessible');
+    if (err.message.includes("Failed to fetch") || err.message.includes("NetworkError")) {
+      console.error("❌ Network Error: PDF file may not be accessible");
     }
-    
+
     // Check if it's a CORS error
-    if (err.message.includes('CORS')) {
-      console.error('❌ CORS Error: PDF server may not allow cross-origin requests');
+    if (err.message.includes("CORS")) {
+      console.error("❌ CORS Error: PDF server may not allow cross-origin requests");
     }
-    
+
     setError(err);
     setIsLoading(false);
     onError?.(err);
@@ -102,22 +92,12 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 space-y-4">
         <AlertCircle className="h-12 w-12 text-yellow-500" />
-        <p className="text-sm text-muted-foreground text-center">
-          PDF is taking longer than expected to load
-        </p>
+        <p className="text-sm text-muted-foreground text-center">PDF is taking longer than expected to load</p>
         <div className="flex gap-2">
-          <Button
-            onClick={() => window.location.reload()}
-            size="sm"
-            variant="outline"
-          >
+          <Button onClick={() => window.location.reload()} size="sm" variant="outline">
             Reload Page
           </Button>
-          <Button
-            onClick={() => window.open(src, '_blank')}
-            size="sm"
-            variant="default"
-          >
+          <Button onClick={() => window.open(src, "_blank")} size="sm" variant="default">
             Open PDF in New Tab
           </Button>
         </div>
@@ -128,14 +108,8 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 space-y-4">
-        <p className="text-sm text-muted-foreground text-center">
-          Unable to display PDF in browser
-        </p>
-        <Button
-          onClick={() => window.open(src, '_blank')}
-          size="sm"
-          variant="outline"
-        >
+        <p className="text-sm text-muted-foreground text-center">Unable to display PDF in browser</p>
+        <Button onClick={() => window.open(src, "_blank")} size="sm" variant="outline">
           <ExternalLink className="mr-2 h-4 w-4" />
           Open in new tab
         </Button>
@@ -163,9 +137,7 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
             className="mx-auto mb-4"
             renderTextLayer={false}
             renderAnnotationLayer={false}
-            loading={
-              <Skeleton className="w-full h-[70vh] mb-4" />
-            }
+            loading={<Skeleton className="w-full h-[70vh] mb-4" />}
           />
         ))}
       </Document>

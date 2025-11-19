@@ -171,15 +171,16 @@ const CoCAcceptanceDialog = ({
               </Button>
             </div>
           )}
-          <PDFViewer
-            src={cocFileUrl}
-            onLoadSuccess={() => {
+          <div className="max-h-[60vh] overflow-y-auto rounded-lg border">
+            <PDFViewer
+              src={cocFileUrl}
+              onLoadSuccess={() => {
               setPdfError(false);
-            }}
-            onError={() => {
+              }}
+              onError={() => {
               setPdfError(true);
-            }}
-          />
+              }}
+            />
         </div>
       );
     }
