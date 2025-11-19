@@ -17,6 +17,7 @@ interface Event {
   event_date: string;
   location: string | null;
   description: string | null;
+  hasFeedbackQuestions?: boolean;
 }
 
 const SocietyAttendee = () => {
@@ -74,7 +75,23 @@ const SocietyAttendee = () => {
       toast.error("Failed to load events");
       console.error(eventsError);
     } else {
-      setEvents(eventsData || []);
+      // Check feedback questions for each event
+      const eventsWithFeedback = await Promise.all(
+        (eventsData || []).map(async (event) => {
+          const { data: questionsData } = await supabase
+            .from("event_feedback_questions")
+            .select("id", { count: "exact" })
+            .eq("event_id", event.id)
+            .limit(1);
+          
+          return {
+            ...event,
+            hasFeedbackQuestions: questionsData && questionsData.length > 0
+          };
+        })
+      );
+      
+      setEvents(eventsWithFeedback);
     }
 
     setLoading(false);
@@ -152,7 +169,7 @@ const SocietyAttendee = () => {
                             >
                               View Safety Page →
                             </Button>
-                            {status === 'past' && (
+                            {status === 'past' && event.hasFeedbackQuestions && (
                               <Button
                                 onClick={() => navigate(`/${society?.slug}/${event.slug}/feedback`)}
                                 className="w-full"
