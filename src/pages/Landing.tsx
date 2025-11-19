@@ -190,7 +190,7 @@ const Landing = () => {
 
                   {/* Screen Content */}
                   <div className="absolute inset-x-4 top-6 bottom-4 bg-background rounded-[2rem] overflow-hidden">
-                    <div className="p-3 space-y-2">
+                    <div className="p-2.5 space-y-1.5">
                       {/* Event Header */}
                       <div className="pb-2 border-b">
                         <h3 className="font-bold text-sm">Ski Club</h3>
