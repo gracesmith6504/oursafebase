@@ -175,12 +175,13 @@ const CoCAcceptanceDialog = ({
             <PDFViewer
               src={cocFileUrl}
               onLoadSuccess={() => {
-              setPdfError(false);
+                setPdfError(false);
               }}
               onError={() => {
-              setPdfError(true);
+                setPdfError(true);
               }}
             />
+          </div>
         </div>
       );
     }
