@@ -245,7 +245,7 @@ const Landing = () => {
                         </p>
                         <div className="bg-background rounded-lg p-2.5 border border-border/40 shadow-sm mt-1">
                           <p className="text-xs font-medium flex items-center justify-between">
-                            What time does the bus leave at?
+                            What time do we meet?
                             <ChevronDown className="h-3 w-3 text-muted-foreground" />
                           </p>
                         </div>
