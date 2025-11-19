@@ -350,7 +350,7 @@ const SocietyEvents = () => {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
               {events.map((event) => {
                 const eventMetrics = metrics[event.id] || { reports: 0, feedback: 0, pageViews: 0, codeAcceptances: 0 };
-                const eventStatus = getEventStatus(event.event_date);
+                const eventStatus = getEventStatus(event.event_date, event.event_end_date);
                 
                 return (
                   <Card key={event.id} className="overflow-hidden transition-all duration-300 hover:shadow-xl border-border/50 bg-card">
