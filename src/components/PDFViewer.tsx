@@ -136,6 +136,7 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
             width={pageWidth}
             className="mx-auto mb-4"
             renderTextLayer={false}
+            renderAnnotationLayer={false}
             loading={<Skeleton className="w-full h-[70vh] mb-4" />}
           />
         ))}
