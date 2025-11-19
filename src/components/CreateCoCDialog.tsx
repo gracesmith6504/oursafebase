@@ -9,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +16,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { FileText, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { validateFile, formatFileSize } from "@/lib/fileUtils";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 interface CreateCoCDialogProps {
   open: boolean;
@@ -183,13 +183,14 @@ export const CreateCoCDialog = ({
               <TabsContent value="text" className="mt-4">
                 <div>
                   <Label htmlFor="content">Code of Conduct Content</Label>
-                  <Textarea
-                    id="content"
+                  <RichTextEditor
                     value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="Enter your code of conduct here..."
-                    className="min-h-[300px]"
+                    onChange={setContent}
+                    placeholder="Enter code of conduct content... Paste from Word to preserve formatting."
                   />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Characters: {content.length} / 50,000
+                  </p>
                 </div>
               </TabsContent>
 
