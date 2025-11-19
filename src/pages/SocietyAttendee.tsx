@@ -8,13 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Calendar, Loader2 } from "lucide-react";
 import { format, startOfDay } from "date-fns";
 import { toast } from "sonner";
-import { getEventStatus } from "@/lib/eventHelpers";
+import { getEventStatus, shouldShowPostEventFeedback } from "@/lib/eventHelpers";
 
 interface Event {
   id: string;
   title: string;
   slug: string;
   event_date: string;
+  event_end_date: string | null;
   location: string | null;
   description: string | null;
   hasFeedbackQuestions?: boolean;
@@ -67,7 +68,7 @@ const SocietyAttendee = () => {
     // Fetch all events (upcoming and past)
     const { data: eventsData, error: eventsError } = await supabase
       .from("events")
-      .select("id, title, slug, event_date, location, description")
+      .select("id, title, slug, event_date, event_end_date, location, description")
       .eq("society_id", societyData.id)
       .order("event_date", { ascending: false });
 
@@ -133,7 +134,8 @@ const SocietyAttendee = () => {
               ) : (
                   <div className="space-y-4">
                     {events.map((event) => {
-                      const status = getEventStatus(event.event_date);
+                      const status = getEventStatus(event.event_date, event.event_end_date);
+                      const showFeedback = shouldShowPostEventFeedback(event.event_date, event.event_end_date);
                       return (
                         <Card key={event.id} className="transition-shadow hover:shadow-md">
                           <CardHeader>
@@ -169,7 +171,7 @@ const SocietyAttendee = () => {
                             >
                               View Safety Page →
                             </Button>
-                            {status === 'past' && event.hasFeedbackQuestions && (
+                            {showFeedback && event.hasFeedbackQuestions && (
                               <Button
                                 onClick={() => navigate(`/${society?.slug}/${event.slug}/feedback`)}
                                 className="w-full"
