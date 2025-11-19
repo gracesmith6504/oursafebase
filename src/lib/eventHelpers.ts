@@ -30,10 +30,23 @@ export const getEventStatus = (eventDate: Date | string, eventEndDate?: Date | s
 // Helper to determine if post-event feedback should be shown
 export const shouldShowPostEventFeedback = (eventDate: Date | string, eventEndDate?: Date | string | null): boolean => {
   const now = new Date();
-  const eventFinalDay = eventEndDate ? new Date(eventEndDate) : new Date(eventDate);
+  const eventStart = new Date(eventDate);
   
-  // Show feedback after the final day has ended
-  return isAfter(now, endOfDay(eventFinalDay));
+  // For multi-day events
+  if (eventEndDate) {
+    const eventEnd = new Date(eventEndDate);
+    const eventEndDayStart = startOfDay(eventEnd);
+    const eventStartDayStart = startOfDay(eventStart);
+    
+    // Check if it's actually a multi-day event (end date is different from start date)
+    if (eventEndDayStart.getTime() !== eventStartDayStart.getTime()) {
+      // Show feedback starting from the final day (beginning of final day)
+      return !isBefore(now, eventEndDayStart);
+    }
+  }
+  
+  // For single-day events, show feedback after the event ends
+  return isAfter(now, endOfDay(eventStart));
 };
 
 export const generateUniqueSlug = async (
