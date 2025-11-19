@@ -169,6 +169,25 @@ export const useFAQs = (eventId?: string, enabled: boolean = true) => {
   });
 };
 
+// Fetch feedback questions count (optimized - only fetches count)
+export const useFeedbackQuestionsCount = (eventId?: string) => {
+  return useQuery({
+    queryKey: [...eventSafetyKeys.all, "feedback-questions-count", eventId] as const,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("event_feedback_questions")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", eventId!);
+
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!eventId,
+    staleTime: 10 * 60 * 1000, // 10 minutes - questions rarely change
+    gcTime: 15 * 60 * 1000,
+  });
+};
+
 // Check membership
 export const useMembership = (societyId?: string, userId?: string) => {
   return useQuery({

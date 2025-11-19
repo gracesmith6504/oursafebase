@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense, memo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import { EventSafetyPageSkeleton } from "@/components/EventSafetyPageSkeleton";
 import { Footer } from "@/components/Footer";
 import { LazyImage } from "@/components/LazyImage";
 import { LazyAvatar } from "@/components/LazyAvatar";
+import { ImportantContactsCard, EmergencyInfoCard, FAQsCard } from "@/components/EventSafetyComponents";
 
 // Lazy load heavy dialog components to reduce initial bundle size
 const ReportConcernDialog = lazy(() => import("@/components/ReportConcernDialog").then(module => ({ default: module.ReportConcernDialog })));
@@ -46,6 +47,7 @@ import {
   useCoCAcceptance,
   useTrackPageView,
   useInvalidateCoCQueries,
+  useFeedbackQuestionsCount,
 } from "@/hooks/useEventSafetyQueries";
 
 interface Event {
@@ -109,7 +111,6 @@ const EventSafetyPage = () => {
   const [showViewCoCDialog, setShowViewCoCDialog] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [cocAcceptedThisSession, setCocAcceptedThisSession] = useState(false);
-  const [hasFeedbackQuestions, setHasFeedbackQuestions] = useState(false);
 
   // React Query hooks
   const { data: event, isLoading: eventLoading, error: eventError } = useEvent(eventId, societySlug, eventSlug);
@@ -118,6 +119,7 @@ const EventSafetyPage = () => {
   const { data: emergencyInfo } = useEmergencyInfo(event?.id);
   const { data: cocData } = useCodeOfConduct(event?.id, event?.society_id);
   const { data: faqs = [] } = useFAQs(event?.id);
+  const { data: feedbackQuestionsCount = 0 } = useFeedbackQuestionsCount(event?.id);
   const { data: isSocietyMember = false, isLoading: membershipLoading } = useMembership(
     event?.society_id,
     user?.id
@@ -135,11 +137,13 @@ const EventSafetyPage = () => {
 
   const { isCommittee, loading: roleLoading } = useCommitteeRole(event?.society_id);
 
-  const codeOfConduct = cocData?.codeOfConduct;
-  const hasEventLevelCoC = cocData?.hasEventLevelCoC;
-  const cocRequired = cocAcceptanceData?.required || false;
-  const loading = eventLoading || authLoading;
-  const error = eventError ? (eventError as Error).message : null;
+  // Memoized derived values to prevent unnecessary re-renders
+  const codeOfConduct = useMemo(() => cocData?.codeOfConduct, [cocData?.codeOfConduct]);
+  const hasEventLevelCoC = useMemo(() => cocData?.hasEventLevelCoC, [cocData?.hasEventLevelCoC]);
+  const cocRequired = useMemo(() => cocAcceptanceData?.required || false, [cocAcceptanceData?.required]);
+  const hasFeedbackQuestions = useMemo(() => feedbackQuestionsCount > 0, [feedbackQuestionsCount]);
+  const loading = useMemo(() => eventLoading || authLoading, [eventLoading, authLoading]);
+  const error = useMemo(() => eventError ? (eventError as Error).message : null, [eventError]);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -167,40 +171,19 @@ const EventSafetyPage = () => {
     }
   }, [cocRequired, codeOfConduct, cocAcceptedThisSession]);
 
-  // Check if event has feedback questions
-  useEffect(() => {
-    const checkFeedbackQuestions = async () => {
-      if (!event?.id) return;
-      
-      const { data, error } = await supabase
-        .from("event_feedback_questions")
-        .select("id", { count: "exact" })
-        .eq("event_id", event.id)
-        .limit(1);
-
-      if (!error && data && data.length > 0) {
-        setHasFeedbackQuestions(true);
-      } else {
-        setHasFeedbackQuestions(false);
-      }
-    };
-
-    checkFeedbackQuestions();
-  }, [event?.id]);
-
-  // Handle CoC acceptance completion
-  const handleCoCAccepted = () => {
+  // Memoized callbacks to prevent unnecessary re-renders
+  const handleCoCAccepted = useCallback(() => {
     setCocAcceptedThisSession(true);
     setShowCoCDialog(false);
     if (event?.id && user?.id) {
       invalidateCoCQueries(event.id, user.id);
     }
-  };
+  }, [event?.id, user?.id, invalidateCoCQueries]);
 
-  const copyPhoneNumber = (phone: string) => {
+  const copyPhoneNumber = useCallback((phone: string) => {
     navigator.clipboard.writeText(phone);
     toast.success("Phone number copied!");
-  };
+  }, []);
 
   if (authLoading) {
     return <EventSafetyPageSkeleton />;
@@ -256,24 +239,43 @@ const EventSafetyPage = () => {
     );
   }
 
-  const customEmergencyFields = Array.isArray(emergencyInfo?.custom_emergency_info) 
-    ? emergencyInfo.custom_emergency_info 
-    : [];
+  // Memoized computed values
+  const customEmergencyFields = useMemo(() => {
+    const fields = emergencyInfo?.custom_emergency_info;
+    return Array.isArray(fields) ? fields as Array<{
+      label: string;
+      name?: string;
+      address?: string;
+      phone?: string;
+    }> : [];
+  }, [emergencyInfo?.custom_emergency_info]);
   
-  // Check if there's any emergency information to display
-  const hasEmergencyInfo = emergencyInfo && (
-    emergencyInfo.nearest_hospital ||
-    emergencyInfo.hospital_address ||
-    emergencyInfo.hospital_phone ||
-    emergencyInfo.nearest_pharmacy ||
-    emergencyInfo.pharmacy_address ||
-    emergencyInfo.pharmacy_phone ||
-    emergencyInfo.on_duty_contact ||
-    emergencyInfo.on_duty_phone ||
-    customEmergencyFields.length > 0
+  const hasEmergencyInfo = useMemo(() => 
+    emergencyInfo && (
+      emergencyInfo.nearest_hospital ||
+      emergencyInfo.hospital_address ||
+      emergencyInfo.hospital_phone ||
+      emergencyInfo.nearest_pharmacy ||
+      emergencyInfo.pharmacy_address ||
+      emergencyInfo.pharmacy_phone ||
+      emergencyInfo.on_duty_contact ||
+      emergencyInfo.on_duty_phone ||
+      customEmergencyFields.length > 0
+    ),
+    [emergencyInfo, customEmergencyFields]
   );
 
-  const handleBackClick = () => {
+  const eventStatus = useMemo(() => 
+    getEventStatus(event.event_date, event.event_end_date),
+    [event.event_date, event.event_end_date]
+  );
+
+  const showPostEventFeedback = useMemo(() =>
+    shouldShowPostEventFeedback(event.event_date, event.event_end_date) && hasFeedbackQuestions,
+    [event.event_date, event.event_end_date, hasFeedbackQuestions]
+  );
+
+  const handleBackClick = useCallback(() => {
     if (!society?.slug) return;
     
     if (isCommittee) {
@@ -281,7 +283,7 @@ const EventSafetyPage = () => {
     } else {
       navigate(`/society/${society.slug}`);
     }
-  };
+  }, [society?.slug, isCommittee, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-x-hidden">
@@ -364,92 +366,10 @@ const EventSafetyPage = () => {
 
       <main className="container mx-auto max-w-4xl px-3 py-4 md:px-4 md:py-8 space-y-6">
         {/* Important Contacts */}
-        {welfareContacts.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Phone className="h-5 w-5 text-primary" />
-                Important Contacts
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {welfareContacts.map((contact) => (
-                  <div
-                    key={contact.id}
-                    className="flex gap-3 rounded-lg border bg-muted/50 p-4"
-                  >
-                    <LazyAvatar 
-                      src={contact.avatar}
-                      alt={contact.name || "Contact"}
-                      fallback={(contact.name || "?").charAt(0).toUpperCase()}
-                      className="h-12 w-12"
-                    />
-                    <div className="flex-1">
-                      <p className="font-semibold">{contact.name || "Anonymous"}</p>
-                      {contact.role && (
-                        <p className="text-sm text-muted-foreground">{contact.role}</p>
-                      )}
-                      {contact.phone && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <a
-                            href={`tel:${contact.phone}`}
-                            className="text-sm text-primary hover:underline flex items-center gap-1 font-medium"
-                          >
-                            <Phone className="h-4 w-4" />
-                            {contact.phone}
-                          </a>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyPhoneNumber(contact.phone!)}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <ImportantContactsCard contacts={welfareContacts} onCopyPhone={copyPhoneNumber} />
 
         {/* Emergency Information */}
-        {hasEmergencyInfo && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-destructive" />
-                Emergency Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {customEmergencyFields.map((field: any, index: number) => (
-                <div key={index} className="space-y-2">
-                  <h3 className="font-semibold text-lg">{field.label}</h3>
-                  <div className="space-y-1">
-                    {field.name && <p className="font-medium">{field.name}</p>}
-                    {field.address && (
-                      <p className="text-sm text-muted-foreground flex items-start gap-2">
-                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                        {field.address}
-                      </p>
-                    )}
-                    {field.phone && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        {field.phone}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+        <EmergencyInfoCard emergencyInfo={emergencyInfo} customFields={customEmergencyFields} />
 
         {/* Action Buttons */}
         <div className="grid gap-4 sm:grid-cols-2">
@@ -476,7 +396,7 @@ const EventSafetyPage = () => {
         </div>
 
         {/* Post-Event Feedback Link */}
-        {shouldShowPostEventFeedback(event.event_date, event.event_end_date) && isSocietyMember && hasFeedbackQuestions && (
+        {showPostEventFeedback && isSocietyMember && (
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -501,30 +421,7 @@ const EventSafetyPage = () => {
         )}
 
         {/* FAQs Section */}
-        {faqs.length > 0 && (
-          <Card className="rounded-2xl hover:scale-[1.02] transition-all duration-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <HelpCircle className="h-5 w-5" />
-                Frequently Asked Questions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible className="w-full">
-                {faqs.map((faq, index) => (
-                  <AccordionItem key={faq.id} value={`faq-${index}`}>
-                    <AccordionTrigger className="text-left">
-                      {faq.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground whitespace-pre-wrap">
-                      {faq.answer}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </CardContent>
-          </Card>
-        )}
+        <FAQsCard faqs={faqs} />
 
         {/* Code of Conduct - Bottom Section */}
         {codeOfConduct && (
