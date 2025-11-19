@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Phone, Copy, MapPin, AlertCircle, HelpCircle } from "lucide-react";
 import { LazyAvatar } from "@/components/LazyAvatar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { normalizePhoneNumber } from "@/lib/phoneUtils";
 
 interface WelfareContact {
   id: string;
@@ -77,16 +78,16 @@ export const ImportantContactsCard = memo(({
                 {contact.phone && (
                   <div className="flex items-center gap-2 mt-2">
                     <a
-                      href={`tel:${contact.phone}`}
+                      href={`tel:${normalizePhoneNumber(contact.phone)}`}
                       className="text-sm text-primary hover:underline flex items-center gap-1 font-medium"
                     >
                       <Phone className="h-4 w-4" />
-                      {contact.phone}
+                      {normalizePhoneNumber(contact.phone)}
                     </a>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onCopyPhone(contact.phone!)}
+                      onClick={() => onCopyPhone(normalizePhoneNumber(contact.phone!))}
                       className="h-6 w-6 p-0"
                     >
                       <Copy className="h-3 w-3" />
@@ -147,10 +148,13 @@ export const EmergencyInfoCard = memo(({
                 </p>
               )}
               {field.phone && (
-                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <a
+                  href={`tel:${normalizePhoneNumber(field.phone)}`}
+                  className="text-sm text-primary hover:underline flex items-center gap-2"
+                >
                   <Phone className="h-4 w-4" />
-                  {field.phone}
-                </p>
+                  {normalizePhoneNumber(field.phone)}
+                </a>
               )}
             </div>
           </div>
@@ -169,11 +173,11 @@ export const EmergencyInfoCard = memo(({
               )}
               {emergencyInfo.hospital_phone && (
                 <a
-                  href={`tel:${emergencyInfo.hospital_phone}`}
+                  href={`tel:${normalizePhoneNumber(emergencyInfo.hospital_phone)}`}
                   className="text-sm text-primary hover:underline flex items-center gap-2"
                 >
                   <Phone className="h-4 w-4" />
-                  {emergencyInfo.hospital_phone}
+                  {normalizePhoneNumber(emergencyInfo.hospital_phone)}
                 </a>
               )}
             </div>
@@ -193,11 +197,11 @@ export const EmergencyInfoCard = memo(({
               )}
               {emergencyInfo.pharmacy_phone && (
                 <a
-                  href={`tel:${emergencyInfo.pharmacy_phone}`}
+                  href={`tel:${normalizePhoneNumber(emergencyInfo.pharmacy_phone)}`}
                   className="text-sm text-primary hover:underline flex items-center gap-2"
                 >
                   <Phone className="h-4 w-4" />
-                  {emergencyInfo.pharmacy_phone}
+                  {normalizePhoneNumber(emergencyInfo.pharmacy_phone)}
                 </a>
               )}
             </div>
@@ -211,11 +215,11 @@ export const EmergencyInfoCard = memo(({
               <p className="font-medium">{emergencyInfo.on_duty_contact}</p>
               {emergencyInfo.on_duty_phone && (
                 <a
-                  href={`tel:${emergencyInfo.on_duty_phone}`}
+                  href={`tel:${normalizePhoneNumber(emergencyInfo.on_duty_phone)}`}
                   className="text-sm text-primary hover:underline flex items-center gap-2"
                 >
                   <Phone className="h-4 w-4" />
-                  {emergencyInfo.on_duty_phone}
+                  {normalizePhoneNumber(emergencyInfo.on_duty_phone)}
                 </a>
               )}
             </div>

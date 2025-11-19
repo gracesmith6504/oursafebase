@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ProtectedRoute, useAuth } from "@/lib/auth";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
+import { normalizePhoneNumber } from "@/lib/phoneUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -157,9 +158,16 @@ const SortableContactItem = ({ contact, onUpdateRole, onUpdatePhone, onRemove, p
               </Label>
               <Input
                 id={`phone-${contact.userId}`}
+                type="tel"
                 value={contact.phone || ""}
                 onChange={(e) => onUpdatePhone(contact.userId, e.target.value)}
-                placeholder="e.g., +353 87 123 4567"
+                onBlur={(e) => {
+                  const normalized = normalizePhoneNumber(e.target.value);
+                  if (normalized && normalized !== e.target.value) {
+                    onUpdatePhone(contact.userId, normalized);
+                  }
+                }}
+                placeholder="Any format, e.g., +353 87 123 4567"
                 className="h-8 text-sm"
               />
             </div>
@@ -245,7 +253,6 @@ const CreateEvent = () => {
   const [externalName, setExternalName] = useState("");
   const [externalPhone, setExternalPhone] = useState("");
   const [externalRole, setExternalRole] = useState("");
-  const [externalCountryCode, setExternalCountryCode] = useState("+353");
   
   // FAQ state
   const [faqs, setFaqs] = useState<FAQ[]>([]);
@@ -258,13 +265,6 @@ const CreateEvent = () => {
   const [batchFeedbackDialogOpen, setBatchFeedbackDialogOpen] = useState(false);
   const [editFeedbackDialogOpen, setEditFeedbackDialogOpen] = useState(false);
   const [editingFeedbackQuestion, setEditingFeedbackQuestion] = useState<FeedbackQuestionType | null>(null);
-
-  const countryCodes = [
-    { code: "+353", country: "Ireland", flag: "🇮🇪" },
-    { code: "+44", country: "UK", flag: "🇬🇧" },
-    { code: "+1", country: "USA/Canada", flag: "🇺🇸" },
-    { code: "+61", country: "Australia", flag: "🇦🇺" },
-  ];
 
   useEffect(() => {
     if (user && slug) {
@@ -510,13 +510,19 @@ const CreateEvent = () => {
     if (externalName.trim().length > 100) {
       return;
     }
+    
+    const normalizedPhone = normalizePhoneNumber(externalPhone);
+    if (!normalizedPhone) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
 
     setExternalContacts([
       ...externalContacts,
       {
         id: crypto.randomUUID(),
         name: externalName.trim(),
-        phone: `${externalCountryCode}${externalPhone}`,
+        phone: normalizedPhone,
         role: externalRole.trim(),
       },
     ]);
@@ -1156,26 +1162,19 @@ const CreateEvent = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="externalPhone">Phone Number *</Label>
-                      <div className="flex gap-2">
-                        <select
-                          value={externalCountryCode}
-                          onChange={(e) => setExternalCountryCode(e.target.value)}
-                          className="w-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        >
-                          {countryCodes.map((c) => (
-                            <option key={c.code} value={c.code}>
-                              {c.flag} {c.code}
-                            </option>
-                          ))}
-                        </select>
-                        <Input
-                          id="externalPhone"
-                          type="tel"
-                          value={externalPhone}
-                          onChange={(e) => setExternalPhone(e.target.value)}
-                          placeholder="87 123 4567"
-                        />
-                      </div>
+                      <Input
+                        id="externalPhone"
+                        type="tel"
+                        value={externalPhone}
+                        onChange={(e) => setExternalPhone(e.target.value)}
+                        onBlur={(e) => {
+                          const normalized = normalizePhoneNumber(e.target.value);
+                          if (normalized && normalized !== e.target.value) {
+                            setExternalPhone(normalized);
+                          }
+                        }}
+                        placeholder="Any format, e.g., +353 87 123 4567"
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="externalRole">Role (optional)</Label>
@@ -1226,9 +1225,16 @@ const CreateEvent = () => {
                       onChange={(e) => updateEmergencyField(field.id, "address", e.target.value)}
                     />
                     <Input
-                      placeholder="Phone (optional)"
+                      type="tel"
+                      placeholder="Phone (any format, e.g. +353 71 984 1203)"
                       value={field.phone}
                       onChange={(e) => updateEmergencyField(field.id, "phone", e.target.value)}
+                      onBlur={(e) => {
+                        const normalized = normalizePhoneNumber(e.target.value);
+                        if (normalized && normalized !== e.target.value) {
+                          updateEmergencyField(field.id, "phone", normalized);
+                        }
+                      }}
                     />
                   </div>
                 ))}
