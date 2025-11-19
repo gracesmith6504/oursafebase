@@ -189,7 +189,7 @@ const Landing = () => {
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-foreground/10 rounded-b-2xl z-10"></div>
 
                   {/* Screen Content */}
-                  <div className="absolute inset-x-4 top-6 bottom-4 bg-background rounded-[2rem] overflow-hidden">
+                  <div className="absolute inset-x-3 top-4 bottom-3 bg-background rounded-[1.75rem] overflow-hidden">
                     <div className="p-2.5 space-y-1.5">
                       {/* Event Header */}
                       <div className="pb-2 border-b">
