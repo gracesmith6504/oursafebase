@@ -189,84 +189,68 @@ const Landing = () => {
 
                   {/* Screen Content */}
                   <div className="absolute inset-4 mt-8 bg-background rounded-[2rem] overflow-hidden">
-                    <div className="p-4 space-y-3">
+                    <div className="p-2 space-y-1.5">
                       {/* Event Header */}
-                      <div className="pb-3 border-b">
+                      <div className="pb-1.5 border-b">
                         <h3 className="font-bold text-sm">Ski Club</h3>
                         <p className="text-xs text-muted-foreground">January 15, 2025 • Ski Trip 2025</p>
                       </div>
 
                       {/* Welfare Contact Card */}
-                      <div className="bg-muted/50 rounded-lg p-3 border">
-                        <p className="text-xs font-semibold mb-2 flex items-center gap-1">
+                      <div className="bg-muted/50 rounded-lg p-2 border">
+                        <p className="text-xs font-semibold mb-1.5 flex items-center gap-1">
                           <Phone className="h-3 w-3" />
                           Important Contacts
                         </p>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <div className="flex gap-2 items-center">
-                            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                              <span className="text-xs font-bold text-primary">SM</span>
+                            <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center">
+                              <span className="text-xs font-bold text-primary">HM</span>
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-medium">Hannah Miller</p>
-                              <p className="text-xs text-muted-foreground truncate">Safety Officer</p>
-                              <p className="text-xs text-muted-foreground">+353 87 234 5678</p>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 items-center">
-                            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center">
-                              <span className="text-xs font-bold text-primary">JO</span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium">James O'Brien</p>
-                              <p className="text-xs text-muted-foreground truncate">Sober Driver</p>
-                              <p className="text-xs text-muted-foreground">+353 86 912 3456</p>
+                              <p className="text-[10px] text-muted-foreground">Safety Officer • +353 87 234 5678</p>
                             </div>
                           </div>
                         </div>
                       </div>
 
                       {/* Emergency Info Card */}
-                      <div className="bg-muted/50 rounded-lg p-3 border">
-                        <p className="text-xs font-semibold mb-1 flex items-center gap-1">
+                      <div className="bg-muted/50 rounded-lg p-2 border">
+                        <p className="text-xs font-semibold mb-0.5 flex items-center gap-1">
                           <AlertCircle className="h-3 w-3 text-destructive" />
                           Emergency Info
                         </p>
-                        <p className="text-xs text-muted-foreground">St. Mary's Hospital</p>
-                        <p className="text-xs text-muted-foreground">Emergency: 999</p>
+                        <p className="text-[10px] text-muted-foreground">St. Mary's Hospital • Emergency: 999</p>
                       </div>
 
                       {/* FAQ Section */}
-                      <div className="bg-muted/50 rounded-lg p-3 border">
-                        <p className="text-xs font-semibold mb-2 flex items-center gap-1">
+                      <div className="bg-muted/50 rounded-lg p-2 border">
+                        <p className="text-xs font-semibold mb-1.5 flex items-center gap-1">
                           <HelpCircle className="h-3 w-3" />
-                          Frequently Asked Questions
+                          FAQs
                         </p>
-                        <div className="space-y-1.5">
-                          <div className="bg-background rounded p-2 border border-border/50">
-                            <p className="text-xs font-medium flex items-center justify-between">
-                              What time does the trip start?
-                              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                            </p>
-                          </div>
-                          <div className="bg-background rounded p-2 border border-border/50">
-                            <p className="text-xs font-medium flex items-center justify-between">
-                              What should I bring?
-                              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                            </p>
-                          </div>
+                        <div className="bg-background rounded p-1.5 border border-border/50">
+                          <p className="text-xs font-medium flex items-center justify-between">
+                            What time does the trip start?
+                            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                          </p>
                         </div>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="space-y-2 pt-1">
-                        <div className="bg-primary/10 text-primary rounded-lg py-2 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
+                      <div className="space-y-1.5">
+                        <div className="bg-primary/10 text-primary rounded-lg py-1.5 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
                           <MessageSquare className="h-3 w-3" />
                           Report Concern
                         </div>
-                        <div className="bg-success/10 text-success rounded-lg py-2 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
-                          <Heart className="h-3 w-3" />
-                          Give Feedback
+                        <div className="bg-success/10 text-success rounded-lg py-1.5 px-3 text-xs font-medium text-center flex items-center justify-center gap-1">
+                          <Mail className="h-3 w-3" />
+                          Submit Feedback
+                        </div>
+                        <div className="bg-muted/50 text-foreground rounded-lg py-1.5 px-3 text-xs font-medium text-center flex items-center justify-center gap-1 border">
+                          <Shield className="h-3 w-3" />
+                          Code of Conduct
                         </div>
                       </div>
                     </div>
