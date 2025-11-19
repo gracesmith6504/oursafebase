@@ -59,7 +59,7 @@ const CommitteeOnboarding = () => {
         .maybeSingle();
 
       if (profile?.phone_number && profile?.display_name) {
-        navigate(`/invite/${inviteCode}`);
+        navigate(`/invite/committee/${inviteCode}`);
       } else {
         // Pre-fill display name from user metadata if available
         setDisplayName(user.user_metadata?.display_name || "");
@@ -133,7 +133,7 @@ const CommitteeOnboarding = () => {
         return;
       }
 
-      navigate(`/invite/${inviteCode}`);
+      navigate(`/invite/committee/${inviteCode}`);
     } catch (error) {
       console.error("Onboarding error:", error);
       toast.error("An error occurred");
