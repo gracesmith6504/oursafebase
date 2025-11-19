@@ -20,6 +20,8 @@ import { Footer } from "@/components/Footer";
 import { LazyImage } from "@/components/LazyImage";
 import { LazyAvatar } from "@/components/LazyAvatar";
 import { ImportantContactsCard, EmergencyInfoCard, FAQsCard } from "@/components/EventSafetyComponents";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SectionErrorFallback } from "@/components/SectionErrorFallback";
 
 // Lazy load heavy dialog components to reduce initial bundle size
 const ReportConcernDialog = lazy(() => import("@/components/ReportConcernDialog").then(module => ({ default: module.ReportConcernDialog })));
@@ -366,143 +368,168 @@ const EventSafetyPage = () => {
 
       <main className="container mx-auto max-w-4xl px-3 py-4 md:px-4 md:py-8 space-y-6">
         {/* Important Contacts */}
-        <ImportantContactsCard contacts={welfareContacts} onCopyPhone={copyPhoneNumber} />
+        <ErrorBoundary fallback={<SectionErrorFallback sectionName="Important Contacts" />}>
+          <ImportantContactsCard contacts={welfareContacts} onCopyPhone={copyPhoneNumber} />
+        </ErrorBoundary>
 
         {/* Emergency Information */}
-        <EmergencyInfoCard emergencyInfo={emergencyInfo} customFields={customEmergencyFields} />
+        <ErrorBoundary fallback={<SectionErrorFallback sectionName="Emergency Information" />}>
+          <EmergencyInfoCard emergencyInfo={emergencyInfo} customFields={customEmergencyFields} />
+        </ErrorBoundary>
 
         {/* Action Buttons */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Button 
-            size="lg" 
-            className="w-full" 
-            variant="destructive"
-            onClick={() => {
-              if (!isSocietyMember) {
-                setShowMembershipAlert(true);
-              } else {
-                setShowReportDialog(true);
-              }
-            }}
-            disabled={membershipLoading}
-          >
-            <FileText className="mr-2 h-5 w-5" />
-            Report a Concern
-          </Button>
-          <Button size="lg" className="w-full" variant="outline" onClick={() => setShowFeedbackDialog(true)}>
-            <MessageSquare className="mr-2 h-5 w-5" />
-            Submit Feedback
-          </Button>
-        </div>
+        <ErrorBoundary fallback={<SectionErrorFallback sectionName="Action Buttons" />}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Button 
+              size="lg" 
+              className="w-full" 
+              variant="destructive"
+              onClick={() => {
+                if (!isSocietyMember) {
+                  setShowMembershipAlert(true);
+                } else {
+                  setShowReportDialog(true);
+                }
+              }}
+              disabled={membershipLoading}
+            >
+              <FileText className="mr-2 h-5 w-5" />
+              Report a Concern
+            </Button>
+            <Button size="lg" className="w-full" variant="outline" onClick={() => setShowFeedbackDialog(true)}>
+              <MessageSquare className="mr-2 h-5 w-5" />
+              Submit Feedback
+            </Button>
+          </div>
+        </ErrorBoundary>
 
         {/* Post-Event Feedback Link */}
         {showPostEventFeedback && isSocietyMember && (
-          <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="pt-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="space-y-1">
-                  <h3 className="font-semibold text-base">Share Your Experience</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Help us improve future events with your feedback
-                  </p>
+          <ErrorBoundary fallback={<SectionErrorFallback sectionName="Post-Event Feedback" />}>
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="pt-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="space-y-1">
+                    <h3 className="font-semibold text-base">Share Your Experience</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Help us improve future events with your feedback
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => navigate(`/${societySlug}/${eventSlug}/feedback`)}
+                    className="w-full sm:w-auto sm:flex-shrink-0"
+                    size="lg"
+                  >
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Submit Feedback
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  onClick={() => navigate(`/${societySlug}/${eventSlug}/feedback`)}
-                  className="w-full sm:w-auto sm:flex-shrink-0"
-                  size="lg"
-                >
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  Submit Feedback
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </ErrorBoundary>
         )}
 
         {/* FAQs Section */}
-        <FAQsCard faqs={faqs} />
+        <ErrorBoundary fallback={<SectionErrorFallback sectionName="FAQs" />}>
+          <FAQsCard faqs={faqs} />
+        </ErrorBoundary>
 
         {/* Code of Conduct - Bottom Section */}
         {codeOfConduct && (
-          <Card 
-            className="border bg-muted/30 mt-8 cursor-pointer hover:bg-muted/40 hover:scale-[1.02] transition-all duration-200"
-            onClick={() => {
-              if (codeOfConduct.file_url && codeOfConduct.id) {
-                window.open(`/code-of-conduct/${codeOfConduct.id}`, '_blank');
-              } else if (codeOfConduct.file_url) {
-                window.open(codeOfConduct.file_url, '_blank');
-              } else {
-                setShowViewCoCDialog(true);
-              }
-            }}
-          >
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                  <div className="p-2 bg-primary/10 rounded-lg shrink-0">
-                    <Shield className="h-4 w-4 text-primary" />
+          <ErrorBoundary fallback={<SectionErrorFallback sectionName="Code of Conduct" />}>
+            <Card 
+              className="border bg-muted/30 mt-8 cursor-pointer hover:bg-muted/40 hover:scale-[1.02] transition-all duration-200"
+              onClick={() => {
+                if (codeOfConduct.file_url && codeOfConduct.id) {
+                  window.open(`/code-of-conduct/${codeOfConduct.id}`, '_blank');
+                } else if (codeOfConduct.file_url) {
+                  window.open(codeOfConduct.file_url, '_blank');
+                } else {
+                  setShowViewCoCDialog(true);
+                }
+              }}
+            >
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                    <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                      <Shield className="h-4 w-4 text-primary" />
+                    </div>
+                    <p className="font-medium text-sm truncate">Code of Conduct</p>
                   </div>
-                  <p className="font-medium text-sm truncate">Code of Conduct</p>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </div>
-                <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-              </div>
-              {!hasEventLevelCoC && isCommittee && (
-                <div className="mt-2 p-2 bg-muted/50 rounded-md" onClick={(e) => e.stopPropagation()}>
-                  <p className="text-xs text-muted-foreground">
-                    No event-specific CoC.{" "}
-                    <Button
-                      variant="link"
-                      className="h-auto p-0 text-xs"
-                      onClick={() => navigate(`/society/${society?.slug}/events/${eventId}/edit`)}
-                    >
-                      Edit Event
-                    </Button>
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                {!hasEventLevelCoC && isCommittee && (
+                  <div className="mt-2 p-2 bg-muted/50 rounded-md" onClick={(e) => e.stopPropagation()}>
+                    <p className="text-xs text-muted-foreground">
+                      No event-specific CoC.{" "}
+                      <Button
+                        variant="link"
+                        className="h-auto p-0 text-xs"
+                        onClick={() => navigate(`/society/${society?.slug}/events/${eventId}/edit`)}
+                      >
+                        Edit Event
+                      </Button>
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </ErrorBoundary>
         )}
       </main>
 
       <Footer />
 
-      <ReportConcernDialog
-        open={showReportDialog}
-        onOpenChange={setShowReportDialog}
-        eventId={event?.id || eventId!}
-      />
+      {/* Dialogs wrapped in error boundaries */}
+      <ErrorBoundary fallback={null}>
+        <Suspense fallback={null}>
+          <ReportConcernDialog
+            open={showReportDialog}
+            onOpenChange={setShowReportDialog}
+            eventId={event?.id || eventId!}
+          />
+        </Suspense>
+      </ErrorBoundary>
 
-      <SubmitFeedbackDialog
-        open={showFeedbackDialog}
-        onOpenChange={setShowFeedbackDialog}
-        eventId={event?.id || eventId!}
-        eventTitle={event?.title || ""}
-        onOpenReportDialog={() => {
-          setShowFeedbackDialog(false);
-          setShowReportDialog(true);
-        }}
-      />
+      <ErrorBoundary fallback={null}>
+        <Suspense fallback={null}>
+          <SubmitFeedbackDialog
+            open={showFeedbackDialog}
+            onOpenChange={setShowFeedbackDialog}
+            eventId={event?.id || eventId!}
+            eventTitle={event?.title || ""}
+            onOpenReportDialog={() => {
+              setShowFeedbackDialog(false);
+              setShowReportDialog(true);
+            }}
+          />
+        </Suspense>
+      </ErrorBoundary>
 
-      <MembershipRequiredAlert
-        open={showMembershipAlert}
-        onOpenChange={setShowMembershipAlert}
-      />
+      <ErrorBoundary fallback={null}>
+        <MembershipRequiredAlert
+          open={showMembershipAlert}
+          onOpenChange={setShowMembershipAlert}
+        />
+      </ErrorBoundary>
 
       {/* Disclaimer */}
-      <div className="mt-12 mb-6">
-        <Card className="bg-muted/30 border-muted-foreground/20">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-start gap-3 text-xs text-muted-foreground leading-relaxed">
-              <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5 text-muted-foreground/70" />
-              <p>
-                <strong className="text-foreground">Important:</strong> OurSafeBase is a support tool and is not a substitute for professional medical, legal, or emergency services. If you're in immediate danger, please contact emergency services (999/112).
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <ErrorBoundary fallback={null}>
+        <div className="mt-12 mb-6">
+          <Card className="bg-muted/30 border-muted-foreground/20">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-start gap-3 text-xs text-muted-foreground leading-relaxed">
+                <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5 text-muted-foreground/70" />
+                <p>
+                  <strong className="text-foreground">Important:</strong> OurSafeBase is a support tool and is not a substitute for professional medical, legal, or emergency services. If you're in immediate danger, please contact emergency services (999/112).
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </ErrorBoundary>
 
       {/* View CoC Dialog (no acceptance required) */}
       {showViewCoCDialog && codeOfConduct && (
@@ -529,32 +556,36 @@ const EventSafetyPage = () => {
       )}
 
       {/* CoC Acceptance Dialog (required acceptance) */}
-      {showCoCDialog && codeOfConduct && event && (
-        <CoCAcceptanceDialog
-          eventId={event.id}
-          eventTitle={event.title}
-          cocId={codeOfConduct.id!}
-          cocVersion={codeOfConduct.version || 1}
-          cocContent={codeOfConduct.content}
-          cocFileUrl={codeOfConduct.file_url}
-          cocContentType={(codeOfConduct.content_type as "text" | "markdown") || "text"}
-          onAccepted={handleCoCAccepted}
-        />
-      )}
-
-      {/* Share Event Dialog */}
-      {event && society && (
-        <Suspense fallback={null}>
-          <EventQRCodeDialog
-            open={qrDialogOpen}
-            onOpenChange={setQrDialogOpen}
+      <ErrorBoundary fallback={null}>
+        {showCoCDialog && codeOfConduct && event && (
+          <CoCAcceptanceDialog
             eventId={event.id}
             eventTitle={event.title}
-            societySlug={society.slug}
-            eventSlug={eventSlug || event.slug}
+            cocId={codeOfConduct.id!}
+            cocVersion={codeOfConduct.version || 1}
+            cocContent={codeOfConduct.content}
+            cocFileUrl={codeOfConduct.file_url}
+            cocContentType={(codeOfConduct.content_type as "text" | "markdown") || "text"}
+            onAccepted={handleCoCAccepted}
           />
-        </Suspense>
-      )}
+        )}
+      </ErrorBoundary>
+
+      {/* Share Event Dialog */}
+      <ErrorBoundary fallback={null}>
+        {event && society && (
+          <Suspense fallback={null}>
+            <EventQRCodeDialog
+              open={qrDialogOpen}
+              onOpenChange={setQrDialogOpen}
+              eventId={event.id}
+              eventTitle={event.title}
+              societySlug={society.slug}
+              eventSlug={eventSlug || event.slug}
+            />
+          </Suspense>
+        )}
+      </ErrorBoundary>
     </div>
   );
 };
