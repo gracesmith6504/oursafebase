@@ -209,7 +209,7 @@ export const useMembership = (societyId?: string, userId?: string) => {
   });
 };
 
-// Check CoC acceptance
+// Check CoC acceptance - simplified to only check once per event
 export const useCoCAcceptance = (
   eventId?: string,
   userId?: string,
@@ -224,25 +224,25 @@ export const useCoCAcceptance = (
         return { required: false, data: null };
       }
 
+      // CRITICAL FIX: Only check if user has accepted ANY CoC for this event
+      // Don't check cocId or version - user should only accept once per event
       const { data, error } = await supabase
         .from("code_acceptances")
-        .select("accepted_version")
+        .select("id, accepted_at, accepted_version")
         .eq("user_id", userId!)
         .eq("event_id", eventId!)
-        .eq("code_of_conduct_id", cocId)
-        .gte("accepted_version", cocVersion || 1)
         .maybeSingle();
 
       if (error) throw error;
 
       return {
-        required: !data,
+        required: !data, // Required only if no acceptance exists for this event
         data: data,
       };
     },
     enabled: !!eventId && !!userId && !!cocId,
-    staleTime: 1 * 60 * 1000, // 1 minute - acceptance status may change more frequently
-    gcTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes - once accepted, rarely changes
+    gcTime: 10 * 60 * 1000,
   });
 };
 
