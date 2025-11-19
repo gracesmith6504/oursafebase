@@ -243,9 +243,9 @@ const Landing = () => {
                           <HelpCircle className="h-3 w-3" />
                           Frequently Asked Questions
                         </p>
-                        <div className="bg-background rounded p-2 border border-border/50">
+                        <div className="bg-background rounded-lg p-2.5 border border-border/40 shadow-sm mt-1">
                           <p className="text-xs font-medium flex items-center justify-between">
-                            What time does the trip start?
+                            What time does the bus leave at?
                             <ChevronDown className="h-3 w-3 text-muted-foreground" />
                           </p>
                         </div>
