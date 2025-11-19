@@ -185,6 +185,52 @@ const EventSafetyPage = () => {
     toast.success("Phone number copied!");
   }, []);
 
+  // Memoized computed values (must be before early returns)
+  const customEmergencyFields = useMemo(() => {
+    const fields = emergencyInfo?.custom_emergency_info;
+    return Array.isArray(fields) ? fields as Array<{
+      label: string;
+      name?: string;
+      address?: string;
+      phone?: string;
+    }> : [];
+  }, [emergencyInfo?.custom_emergency_info]);
+  
+  const hasEmergencyInfo = useMemo(() => 
+    emergencyInfo && (
+      emergencyInfo.nearest_hospital ||
+      emergencyInfo.hospital_address ||
+      emergencyInfo.hospital_phone ||
+      emergencyInfo.nearest_pharmacy ||
+      emergencyInfo.pharmacy_address ||
+      emergencyInfo.pharmacy_phone ||
+      emergencyInfo.on_duty_contact ||
+      emergencyInfo.on_duty_phone ||
+      customEmergencyFields.length > 0
+    ),
+    [emergencyInfo, customEmergencyFields]
+  );
+
+  const eventStatus = useMemo(() => 
+    event ? getEventStatus(event.event_date, event.event_end_date) : null,
+    [event]
+  );
+
+  const showPostEventFeedback = useMemo(() =>
+    event ? shouldShowPostEventFeedback(event.event_date, event.event_end_date) && hasFeedbackQuestions : false,
+    [event, hasFeedbackQuestions]
+  );
+
+  const handleBackClick = useCallback(() => {
+    if (!society?.slug) return;
+    
+    if (isCommittee) {
+      navigate(`/society/${society.slug}/dashboard`);
+    } else {
+      navigate(`/society/${society.slug}`);
+    }
+  }, [society?.slug, isCommittee, navigate]);
+
   if (authLoading) {
     return <EventSafetyPageSkeleton />;
   }
@@ -238,52 +284,6 @@ const EventSafetyPage = () => {
       </div>
     );
   }
-
-  // Memoized computed values
-  const customEmergencyFields = useMemo(() => {
-    const fields = emergencyInfo?.custom_emergency_info;
-    return Array.isArray(fields) ? fields as Array<{
-      label: string;
-      name?: string;
-      address?: string;
-      phone?: string;
-    }> : [];
-  }, [emergencyInfo?.custom_emergency_info]);
-  
-  const hasEmergencyInfo = useMemo(() => 
-    emergencyInfo && (
-      emergencyInfo.nearest_hospital ||
-      emergencyInfo.hospital_address ||
-      emergencyInfo.hospital_phone ||
-      emergencyInfo.nearest_pharmacy ||
-      emergencyInfo.pharmacy_address ||
-      emergencyInfo.pharmacy_phone ||
-      emergencyInfo.on_duty_contact ||
-      emergencyInfo.on_duty_phone ||
-      customEmergencyFields.length > 0
-    ),
-    [emergencyInfo, customEmergencyFields]
-  );
-
-  const eventStatus = useMemo(() => 
-    getEventStatus(event.event_date, event.event_end_date),
-    [event.event_date, event.event_end_date]
-  );
-
-  const showPostEventFeedback = useMemo(() =>
-    shouldShowPostEventFeedback(event.event_date, event.event_end_date) && hasFeedbackQuestions,
-    [event.event_date, event.event_end_date, hasFeedbackQuestions]
-  );
-
-  const handleBackClick = useCallback(() => {
-    if (!society?.slug) return;
-    
-    if (isCommittee) {
-      navigate(`/society/${society.slug}/dashboard`);
-    } else {
-      navigate(`/society/${society.slug}`);
-    }
-  }, [society?.slug, isCommittee, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 overflow-x-hidden">
