@@ -58,8 +58,8 @@ export const CoCPreviewDialog = ({
                     className="prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ 
                       __html: DOMPurify.sanitize(cocContent, {
-                        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'blockquote', 'code', 'pre'],
-                        ALLOWED_ATTR: ['href', 'target', 'rel', 'class']
+                        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'blockquote', 'code', 'pre', 'span', 'div'],
+                        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
                       }) 
                     }}
                   />

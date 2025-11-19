@@ -224,7 +224,10 @@ const CoCAcceptanceDialog = ({
   // Memoize sanitized HTML to avoid re-sanitizing on every render
   const sanitizedContent = useMemo(() => {
     if (!cocContent) return "";
-    return DOMPurify.sanitize(cocContent);
+    return DOMPurify.sanitize(cocContent, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'blockquote', 'code', 'pre', 'span', 'div'],
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
+    });
   }, [cocContent]);
 
   const handleAccept = useCallback(async () => {
