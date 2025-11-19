@@ -108,6 +108,7 @@ const EventSafetyPage = () => {
   const [showCoCDialog, setShowCoCDialog] = useState(false);
   const [showViewCoCDialog, setShowViewCoCDialog] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [cocAcceptedThisSession, setCocAcceptedThisSession] = useState(false);
   const [hasFeedbackQuestions, setHasFeedbackQuestions] = useState(false);
 
   // React Query hooks
@@ -157,12 +158,14 @@ const EventSafetyPage = () => {
     }
   }, [event?.id, eventLoading]);
 
-  // Show CoC dialog if acceptance is required
+  // Show CoC dialog if acceptance is required (only if not already accepted this session)
   useEffect(() => {
-    if (cocRequired && codeOfConduct) {
+    if (cocRequired && codeOfConduct && !cocAcceptedThisSession) {
       setShowCoCDialog(true);
+    } else if (!cocRequired || cocAcceptedThisSession) {
+      setShowCoCDialog(false);
     }
-  }, [cocRequired, codeOfConduct]);
+  }, [cocRequired, codeOfConduct, cocAcceptedThisSession]);
 
   // Check if event has feedback questions
   useEffect(() => {
@@ -187,10 +190,11 @@ const EventSafetyPage = () => {
 
   // Handle CoC acceptance completion
   const handleCoCAccepted = () => {
+    setCocAcceptedThisSession(true);
+    setShowCoCDialog(false);
     if (event?.id && user?.id) {
       invalidateCoCQueries(event.id, user.id);
     }
-    setShowCoCDialog(false);
   };
 
   const copyPhoneNumber = (phone: string) => {
