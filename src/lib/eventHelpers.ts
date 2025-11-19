@@ -3,25 +3,37 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type EventStatus = 'upcoming' | 'ongoing' | 'past';
 
-export const getEventStatus = (eventDate: Date | string): EventStatus => {
+export const getEventStatus = (eventDate: Date | string, eventEndDate?: Date | string | null): EventStatus => {
   const now = new Date();
-  const event = new Date(eventDate);
+  const eventStart = new Date(eventDate);
   
-  const eventStart = startOfDay(event);
-  const eventEnd = endOfDay(event);
+  // For multi-day events, use the end date; otherwise use start date
+  const eventFinalDay = eventEndDate ? new Date(eventEndDate) : eventStart;
+  
+  const eventStartDay = startOfDay(eventStart);
+  const eventEndDay = endOfDay(eventFinalDay);
   
   // If current time is before the event start, it's upcoming
-  if (isBefore(now, eventStart)) {
+  if (isBefore(now, eventStartDay)) {
     return 'upcoming';
   }
   
   // If current time is after the event end, it's past
-  if (isAfter(now, eventEnd)) {
+  if (isAfter(now, eventEndDay)) {
     return 'past';
   }
   
-  // Otherwise, it's happening today (ongoing)
+  // Otherwise, it's happening (ongoing)
   return 'ongoing';
+};
+
+// Helper to determine if post-event feedback should be shown
+export const shouldShowPostEventFeedback = (eventDate: Date | string, eventEndDate?: Date | string | null): boolean => {
+  const now = new Date();
+  const eventFinalDay = eventEndDate ? new Date(eventEndDate) : new Date(eventDate);
+  
+  // Show feedback after the final day has ended
+  return isAfter(now, endOfDay(eventFinalDay));
 };
 
 export const generateUniqueSlug = async (

@@ -8,7 +8,7 @@ import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy
 import { format } from "date-fns";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
-import { getEventStatus } from "@/lib/eventHelpers";
+import { getEventStatus, shouldShowPostEventFeedback } from "@/lib/eventHelpers";
 import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
 import { MembershipRequiredAlert } from "@/components/MembershipRequiredAlert";
 import { useAuth } from "@/lib/auth";
@@ -472,7 +472,7 @@ const EventSafetyPage = () => {
         </div>
 
         {/* Post-Event Feedback Link */}
-        {getEventStatus(event.event_date) === 'past' && isSocietyMember && hasFeedbackQuestions && (
+        {shouldShowPostEventFeedback(event.event_date, event.event_end_date) && isSocietyMember && hasFeedbackQuestions && (
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="pt-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
