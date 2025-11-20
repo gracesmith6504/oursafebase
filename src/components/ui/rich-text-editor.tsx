@@ -19,173 +19,156 @@ export const RichTextEditor = ({
   const editorRef = useRef<HTMLDivElement>(null);
   const isUpdatingRef = useRef(false);
 
-  // Initialize content when value changes externally
+  // Sync external value into editor
   useEffect(() => {
     if (editorRef.current && !isUpdatingRef.current) {
-      editorRef.current.innerHTML = value;
+      editorRef.current.innerHTML = value || "";
     }
   }, [value]);
 
   const handleInput = () => {
-    if (editorRef.current) {
-      isUpdatingRef.current = true;
-      onChange(editorRef.current.innerHTML);
-      setTimeout(() => {
-        isUpdatingRef.current = false;
-      }, 0);
-    }
+    if (!editorRef.current) return;
+    isUpdatingRef.current = true;
+    onChange(editorRef.current.innerHTML);
+    setTimeout(() => {
+      isUpdatingRef.current = false;
+    }, 0);
   };
 
-  const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    
-    // Try to get HTML from clipboard first
-    const html = e.clipboardData.getData('text/html');
-    const text = e.clipboardData.getData('text/plain');
-    
-    // Use HTML if available (preserves Word formatting including links), otherwise use plain text
-    const contentToInsert = html || text.replace(/\n/g, '<br>');
-    
-    // Insert at cursor position
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      range.deleteContents();
-      
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = contentToInsert;
-      const fragment = document.createDocumentFragment();
-      
-      while (tempDiv.firstChild) {
-        fragment.appendChild(tempDiv.firstChild);
-      }
-      
-      range.insertNode(fragment);
-      
-      // Move cursor to end of inserted content
-      range.collapse(false);
-      selection.removeAllRanges();
-      selection.addRange(range);
-      
+  /**
+   * PASTE: preserve HTML (including links) where possible
+   */
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const html = e.clipboardData.getData("text/html");
+    const text = e.clipboardData.getData("text/plain");
+
+    if (html) {
+      e.preventDefault();
+      editorRef.current?.focus();
+      document.execCommand("insertHTML", false, html);
+      handleInput();
+      return;
+    }
+
+    if (text) {
+      e.preventDefault();
+      editorRef.current?.focus();
+      const htmlFromText = text.replace(/\n/g, "<br>");
+      document.execCommand("insertHTML", false, htmlFromText);
       handleInput();
     }
   };
 
   const execCommand = (command: string, value?: string) => {
-    document.execCommand(command, false, value);
-    editorRef.current?.focus();
+    if (!editorRef.current) return;
+    editorRef.current.focus();
+    if (value !== undefined) {
+      document.execCommand(command, false, value);
+    } else {
+      document.execCommand(command, false);
+    }
     handleInput();
   };
 
   const insertLink = () => {
+    if (!editorRef.current) return;
+
     const selection = window.getSelection();
-    const selectedText = selection?.toString() || '';
-    
-    const url = prompt('Enter URL:', 'https://');
+    const hasSelection = selection && !selection.isCollapsed && selection.toString().length > 0;
+
+    const url = window.prompt("Enter URL:", "https://");
     if (!url) return;
-    
-    if (selectedText) {
-      // If text is selected, wrap it in a link
-      execCommand('createLink', url);
+
+    editorRef.current.focus();
+
+    if (hasSelection) {
+      // Wrap selected text
+      document.execCommand("createLink", false, url);
     } else {
-      // If no text selected, insert the URL as both text and link
-      const link = document.createElement('a');
-      link.href = url;
-      link.textContent = url;
-      link.target = '_blank';
-      
-      const range = selection?.getRangeAt(0);
-      if (range) {
-        range.insertNode(link);
-        range.collapse(false);
-      }
-      handleInput();
+      // Insert URL as linked text
+      const linkHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+      document.execCommand("insertHTML", false, linkHtml);
     }
+
+    handleInput();
   };
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap gap-1 p-2 border border-input rounded-md bg-muted/50">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => execCommand('bold')}
-          className="h-8 w-8 p-0"
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => execCommand('italic')}
-          className="h-8 w-8 p-0"
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => execCommand('formatBlock', '<h1>')}
-          className="h-8 w-8 p-0"
-        >
-          <Heading1 className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => execCommand('formatBlock', '<h2>')}
-          className="h-8 w-8 p-0"
-        >
-          <Heading2 className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => execCommand('insertUnorderedList')}
-          className="h-8 w-8 p-0"
-        >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => execCommand('insertOrderedList')}
-          className="h-8 w-8 p-0"
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={insertLink}
-          className="h-8 w-8 p-0"
-        >
-          <LinkIcon className="h-4 w-4" />
-        </Button>
-      </div>
+      {/* Container with border, toolbar + scrollable editor */}
       <div
-        ref={editorRef}
-        contentEditable
-        onInput={handleInput}
-        onPaste={handlePaste}
         className={cn(
-          "min-h-[300px] max-h-[500px] w-full rounded-md border border-input bg-background px-3 py-2",
-          "text-sm ring-offset-background placeholder:text-muted-foreground",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          "disabled:cursor-not-allowed disabled:opacity-50",
-          "overflow-auto",
-          className
+          "w-full rounded-md border border-input bg-background flex flex-col",
+          "max-h-[600px]", // overall editor height
+          className,
         )}
-        data-placeholder={placeholder}
-        suppressContentEditableWarning
-      />
+      >
+        {/* Toolbar – sticky within this container */}
+        <div className="flex flex-wrap gap-1 p-2 border-b border-input bg-muted/60 sticky top-0 z-10">
+          <Button type="button" variant="ghost" size="sm" onClick={() => execCommand("bold")} className="h-8 w-8 p-0">
+            <Bold className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={() => execCommand("italic")} className="h-8 w-8 p-0">
+            <Italic className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => execCommand("formatBlock", "H1")}
+            className="h-8 w-8 p-0"
+          >
+            <Heading1 className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => execCommand("formatBlock", "H2")}
+            className="h-8 w-8 p-0"
+          >
+            <Heading2 className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => execCommand("insertUnorderedList")}
+            className="h-8 w-8 p-0"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => execCommand("insertOrderedList")}
+            className="h-8 w-8 p-0"
+          >
+            <ListOrdered className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={insertLink} className="h-8 w-8 p-0">
+            <LinkIcon className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Scrollable editor area */}
+        <div
+          ref={editorRef}
+          contentEditable
+          onInput={handleInput}
+          onPaste={handlePaste}
+          className={cn(
+            "flex-1 min-h-[320px] max-h-[540px] w-full px-3 py-2",
+            "text-sm ring-offset-background placeholder:text-muted-foreground",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            "overflow-auto",
+          )}
+          data-placeholder={placeholder}
+          suppressContentEditableWarning
+        />
+      </div>
     </div>
   );
 };
