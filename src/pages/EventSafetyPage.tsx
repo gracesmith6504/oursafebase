@@ -22,6 +22,7 @@ import { LazyAvatar } from "@/components/LazyAvatar";
 import { ImportantContactsCard, EmergencyInfoCard, FAQsCard } from "@/components/EventSafetyComponents";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SectionErrorFallback } from "@/components/SectionErrorFallback";
+import DOMPurify from "dompurify";
 
 // Lazy load heavy dialog components to reduce initial bundle size
 const ReportConcernDialog = lazy(() => import("@/components/ReportConcernDialog").then(module => ({ default: module.ReportConcernDialog })));
@@ -542,8 +543,18 @@ const EventSafetyPage = () => {
               )}
             </div>
             <ScrollArea className="flex-1 p-6">
-              <div className="prose prose-sm max-w-none dark:prose-invert">
-                <p className="whitespace-pre-wrap">{codeOfConduct.content}</p>
+              <div className="border rounded-md bg-background px-4 py-4">
+                <div className="ql-snow">
+                  <div
+                    className="ql-editor"
+                    dangerouslySetInnerHTML={{ 
+                      __html: DOMPurify.sanitize(codeOfConduct.content || "", {
+                        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'a', 'blockquote', 'code', 'pre'],
+                        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
+                      }) 
+                    }}
+                  />
+                </div>
               </div>
             </ScrollArea>
             <div className="p-6 border-t flex justify-end">
