@@ -170,6 +170,10 @@ All colors MUST be HSL.
 }
 
 /* RichTextEditor (ReactQuill) styles */
+.rt-wrapper {
+  position: relative;
+}
+
 .rt-wrapper .ql-toolbar {
   position: sticky;
   top: 0;
@@ -188,6 +192,16 @@ All colors MUST be HSL.
   min-height: 300px;
   padding: 1rem;
   font-size: 0.875rem;
+}
+
+/* Fullscreen controls positioning */
+.rt-fullscreen-controls {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.rt-wrapper:hover .rt-fullscreen-controls {
+  opacity: 1;
 }
 
 /* File Upload Area Styles */
