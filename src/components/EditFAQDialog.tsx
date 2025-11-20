@@ -43,6 +43,14 @@ export function EditFAQDialog({
       setAnswer(faq.answer);
     }
   }, [faq]);
+  
+  useEffect(() => {
+    if (!open) {
+      setQuestion("");
+      setAnswer("");
+      setIsSubmitting(false);
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
