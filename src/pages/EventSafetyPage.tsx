@@ -4,7 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Phone, Mail, MapPin, AlertCircle, Shield, MessageSquare, FileText, Copy, Loader2, ArrowLeft, Share2, ChevronRight, ArrowRight } from "lucide-react";
+import {
+  Phone,
+  Mail,
+  MapPin,
+  AlertCircle,
+  Shield,
+  MessageSquare,
+  FileText,
+  Copy,
+  Loader2,
+  ArrowLeft,
+  Share2,
+  ChevronRight,
+  ArrowRight,
+} from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
@@ -25,9 +39,15 @@ import { SectionErrorFallback } from "@/components/SectionErrorFallback";
 import DOMPurify from "dompurify";
 
 // Lazy load heavy dialog components to reduce initial bundle size
-const ReportConcernDialog = lazy(() => import("@/components/ReportConcernDialog").then(module => ({ default: module.ReportConcernDialog })));
-const SubmitFeedbackDialog = lazy(() => import("@/components/SubmitFeedbackDialog").then(module => ({ default: module.SubmitFeedbackDialog })));
-const EventQRCodeDialog = lazy(() => import("@/components/EventQRCodeDialog").then(module => ({ default: module.EventQRCodeDialog })));
+const ReportConcernDialog = lazy(() =>
+  import("@/components/ReportConcernDialog").then((module) => ({ default: module.ReportConcernDialog })),
+);
+const SubmitFeedbackDialog = lazy(() =>
+  import("@/components/SubmitFeedbackDialog").then((module) => ({ default: module.SubmitFeedbackDialog })),
+);
+const EventQRCodeDialog = lazy(() =>
+  import("@/components/EventQRCodeDialog").then((module) => ({ default: module.EventQRCodeDialog })),
+);
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -123,16 +143,13 @@ const EventSafetyPage = () => {
   const { data: cocData } = useCodeOfConduct(event?.id, event?.society_id);
   const { data: faqs = [] } = useFAQs(event?.id);
   const { data: feedbackQuestionsCount = 0 } = useFeedbackQuestionsCount(event?.id);
-  const { data: isSocietyMember = false, isLoading: membershipLoading } = useMembership(
-    event?.society_id,
-    user?.id
-  );
+  const { data: isSocietyMember = false, isLoading: membershipLoading } = useMembership(event?.society_id, user?.id);
 
   const { data: cocAcceptanceData } = useCoCAcceptance(
     event?.id,
     user?.id,
     cocData?.codeOfConduct?.id,
-    cocData?.codeOfConduct?.version
+    cocData?.codeOfConduct?.version,
   );
 
   const trackPageViewMutation = useTrackPageView();
@@ -146,15 +163,13 @@ const EventSafetyPage = () => {
   const cocRequired = useMemo(() => cocAcceptanceData?.required || false, [cocAcceptanceData?.required]);
   const hasFeedbackQuestions = useMemo(() => feedbackQuestionsCount > 0, [feedbackQuestionsCount]);
   const loading = useMemo(() => eventLoading || authLoading, [eventLoading, authLoading]);
-  const error = useMemo(() => eventError ? (eventError as Error).message : null, [eventError]);
+  const error = useMemo(() => (eventError ? (eventError as Error).message : null), [eventError]);
 
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
-      const redirectPath = societySlug && eventSlug 
-        ? `/${societySlug}/${eventSlug}`
-        : `/event/${eventId}`;
-      navigate(`/auth?redirect=${redirectPath}&eventTitle=${event?.title || 'this event'}`);
+      const redirectPath = societySlug && eventSlug ? `/${societySlug}/${eventSlug}` : `/event/${eventId}`;
+      navigate(`/auth?redirect=${redirectPath}&eventTitle=${event?.title || "this event"}`);
     }
   }, [user, authLoading, navigate, eventId, societySlug, eventSlug, event?.title]);
 
@@ -191,42 +206,41 @@ const EventSafetyPage = () => {
   // Memoized computed values (must be before early returns)
   const customEmergencyFields = useMemo(() => {
     const fields = emergencyInfo?.custom_emergency_info;
-    return Array.isArray(fields) ? fields as Array<{
-      label: string;
-      name?: string;
-      address?: string;
-      phone?: string;
-    }> : [];
+    return Array.isArray(fields)
+      ? (fields as Array<{
+          label: string;
+          name?: string;
+          address?: string;
+          phone?: string;
+        }>)
+      : [];
   }, [emergencyInfo?.custom_emergency_info]);
-  
-  const hasEmergencyInfo = useMemo(() => 
-    emergencyInfo && (
-      emergencyInfo.nearest_hospital ||
-      emergencyInfo.hospital_address ||
-      emergencyInfo.hospital_phone ||
-      emergencyInfo.nearest_pharmacy ||
-      emergencyInfo.pharmacy_address ||
-      emergencyInfo.pharmacy_phone ||
-      emergencyInfo.on_duty_contact ||
-      emergencyInfo.on_duty_phone ||
-      customEmergencyFields.length > 0
-    ),
-    [emergencyInfo, customEmergencyFields]
+
+  const hasEmergencyInfo = useMemo(
+    () =>
+      emergencyInfo &&
+      (emergencyInfo.nearest_hospital ||
+        emergencyInfo.hospital_address ||
+        emergencyInfo.hospital_phone ||
+        emergencyInfo.nearest_pharmacy ||
+        emergencyInfo.pharmacy_address ||
+        emergencyInfo.pharmacy_phone ||
+        emergencyInfo.on_duty_contact ||
+        emergencyInfo.on_duty_phone ||
+        customEmergencyFields.length > 0),
+    [emergencyInfo, customEmergencyFields],
   );
 
-  const eventStatus = useMemo(() => 
-    event ? getEventStatus(event.event_date, event.event_end_date) : null,
-    [event]
-  );
+  const eventStatus = useMemo(() => (event ? getEventStatus(event.event_date, event.event_end_date) : null), [event]);
 
-  const showPostEventFeedback = useMemo(() =>
-    event ? shouldShowPostEventFeedback(event.event_date, event.event_end_date) && hasFeedbackQuestions : false,
-    [event, hasFeedbackQuestions]
+  const showPostEventFeedback = useMemo(
+    () => (event ? shouldShowPostEventFeedback(event.event_date, event.event_end_date) && hasFeedbackQuestions : false),
+    [event, hasFeedbackQuestions],
   );
 
   const handleBackClick = useCallback(() => {
     if (!society?.slug) return;
-    
+
     if (isCommittee) {
       navigate(`/society/${society.slug}/dashboard`);
     } else {
@@ -260,10 +274,7 @@ const EventSafetyPage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-muted-foreground">{error}</p>
-            <Button 
-              onClick={() => window.location.reload()}
-              className="w-full"
-            >
+            <Button onClick={() => window.location.reload()} className="w-full">
               Reload Page
             </Button>
           </CardContent>
@@ -302,15 +313,19 @@ const EventSafetyPage = () => {
                     <Link to="/dashboard">Dashboard</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                <BreadcrumbSeparator>
+                  <ChevronRight className="h-4 w-4" />
+                </BreadcrumbSeparator>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
                     <Link to={isCommittee ? `/society/${society.slug}/dashboard` : `/society/${society.slug}`}>
-                      {isCommittee ? 'Society Dashboard' : 'Society'}
+                      {isCommittee ? "Society Dashboard" : "Society"}
                     </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator><ChevronRight className="h-4 w-4" /></BreadcrumbSeparator>
+                <BreadcrumbSeparator>
+                  <ChevronRight className="h-4 w-4" />
+                </BreadcrumbSeparator>
                 <BreadcrumbItem>
                   <BreadcrumbPage>{event.title}</BreadcrumbPage>
                 </BreadcrumbItem>
@@ -321,21 +336,11 @@ const EventSafetyPage = () => {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               {society && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleBackClick}
-                  className="h-8 w-8"
-                >
+                <Button variant="ghost" size="icon" onClick={handleBackClick} className="h-8 w-8">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               )}
-              <LazyImage 
-                src={logo} 
-                alt="OurSafeBase" 
-                className="h-10 cursor-pointer" 
-                onClick={() => navigate("/")}
-              />
+              <LazyImage src={logo} alt="OurSafeBase" className="h-10 cursor-pointer" onClick={() => navigate("/")} />
               <div>
                 <h1 className="text-2xl font-bold">{event.title}</h1>
                 <p className="text-sm text-muted-foreground">
@@ -344,7 +349,7 @@ const EventSafetyPage = () => {
                 </p>
               </div>
             </div>
-            
+
             {/* Share Button */}
             {society && (
               <Popover>
@@ -381,9 +386,9 @@ const EventSafetyPage = () => {
         {/* Action Buttons */}
         <ErrorBoundary fallback={<SectionErrorFallback sectionName="Action Buttons" />}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Button 
-              size="lg" 
-              className="w-full" 
+            <Button
+              size="lg"
+              className="w-full"
               variant="destructive"
               onClick={() => {
                 if (!isSocietyMember) {
@@ -412,9 +417,7 @@ const EventSafetyPage = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="space-y-1">
                     <h3 className="font-semibold text-base">Share Your Experience</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Help us improve future events with your feedback
-                    </p>
+                    <p className="text-sm text-muted-foreground">Help us improve future events with your feedback</p>
                   </div>
                   <Button
                     onClick={() => navigate(`/${societySlug}/${eventSlug}/feedback`)}
@@ -439,13 +442,13 @@ const EventSafetyPage = () => {
         {/* Code of Conduct - Bottom Section */}
         {codeOfConduct && (
           <ErrorBoundary fallback={<SectionErrorFallback sectionName="Code of Conduct" />}>
-            <Card 
+            <Card
               className="border bg-muted/30 mt-8 cursor-pointer hover:bg-muted/40 hover:scale-[1.02] transition-all duration-200"
               onClick={() => {
                 if (codeOfConduct.file_url && codeOfConduct.id) {
-                  window.open(`/code-of-conduct/${codeOfConduct.id}`, '_blank');
+                  window.open(`/code-of-conduct/${codeOfConduct.id}`, "_blank");
                 } else if (codeOfConduct.file_url) {
-                  window.open(codeOfConduct.file_url, '_blank');
+                  window.open(codeOfConduct.file_url, "_blank");
                 } else {
                   setShowViewCoCDialog(true);
                 }
@@ -510,10 +513,7 @@ const EventSafetyPage = () => {
       </ErrorBoundary>
 
       <ErrorBoundary fallback={null}>
-        <MembershipRequiredAlert
-          open={showMembershipAlert}
-          onOpenChange={setShowMembershipAlert}
-        />
+        <MembershipRequiredAlert open={showMembershipAlert} onOpenChange={setShowMembershipAlert} />
       </ErrorBoundary>
 
       {/* Disclaimer */}
@@ -524,7 +524,9 @@ const EventSafetyPage = () => {
               <div className="flex items-start gap-3 text-xs text-muted-foreground leading-relaxed">
                 <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5 text-muted-foreground/70" />
                 <p>
-                  <strong className="text-foreground">Important:</strong> OurSafeBase is a support tool and is not a substitute for professional medical, legal, or emergency services. If you're in immediate danger, please contact emergency services (999/112).
+                  <strong className="text-foreground">Important:</strong> OurSafeBase is a support tool and is not a
+                  substitute for professional medical, legal, or emergency services. If you're in immediate danger,
+                  please contact emergency services (999/112).
                 </p>
               </div>
             </CardContent>
@@ -534,33 +536,55 @@ const EventSafetyPage = () => {
 
       {/* View CoC Dialog (no acceptance required) */}
       {showViewCoCDialog && codeOfConduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowViewCoCDialog(false)}>
-          <div className="bg-background rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowViewCoCDialog(false)}
+        >
+          <div
+            className="bg-background rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6 border-b">
               <h2 className="text-2xl font-semibold">Code of Conduct</h2>
-              {codeOfConduct.name && (
-                <p className="text-sm text-muted-foreground mt-1">{codeOfConduct.name}</p>
-              )}
+              {codeOfConduct.name && <p className="text-sm text-muted-foreground mt-1">{codeOfConduct.name}</p>}
             </div>
-            <ScrollArea className="flex-1 p-6">
+            <ScrollArea className="flex-1 min-h-0 p-6">
               <div className="border rounded-md bg-background px-4 py-4">
                 <div className="ql-snow">
                   <div
                     className="ql-editor !min-h-0"
-                    dangerouslySetInnerHTML={{ 
+                    dangerouslySetInnerHTML={{
                       __html: DOMPurify.sanitize(codeOfConduct.content || "", {
-                        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'a', 'blockquote', 'code', 'pre'],
-                        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
-                      }) 
+                        ALLOWED_TAGS: [
+                          "p",
+                          "br",
+                          "strong",
+                          "em",
+                          "u",
+                          "ul",
+                          "ol",
+                          "li",
+                          "h1",
+                          "h2",
+                          "h3",
+                          "h4",
+                          "h5",
+                          "h6",
+                          "span",
+                          "a",
+                          "blockquote",
+                          "code",
+                          "pre",
+                        ],
+                        ALLOWED_ATTR: ["href", "target", "rel", "class", "style"],
+                      }),
                     }}
                   />
                 </div>
               </div>
             </ScrollArea>
             <div className="p-6 border-t flex justify-end">
-              <Button onClick={() => setShowViewCoCDialog(false)}>
-                Close
-              </Button>
+              <Button onClick={() => setShowViewCoCDialog(false)}>Close</Button>
             </div>
           </div>
         </div>
