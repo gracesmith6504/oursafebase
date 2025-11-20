@@ -54,15 +54,19 @@ export const CoCPreviewDialog = ({
                   <h3 className="text-lg font-semibold mb-4">
                     {cocName || "Code of Conduct"}
                   </h3>
-                  <div
-                    className="prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ 
-                      __html: DOMPurify.sanitize(cocContent, {
-                        ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'blockquote', 'code', 'pre', 'span', 'div'],
-                        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
-                      }) 
-                    }}
-                  />
+                  <div className="border rounded-md bg-background px-4 py-4">
+                    <div className="ql-snow">
+                      <div
+                        className="ql-editor"
+                        dangerouslySetInnerHTML={{ 
+                          __html: DOMPurify.sanitize(cocContent, {
+                            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'a', 'blockquote', 'code', 'pre'],
+                            ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
+                          }) 
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
