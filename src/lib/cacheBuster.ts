@@ -34,12 +34,17 @@ export const runCacheBuster = (): boolean => {
       // Set reload flag to prevent infinite loops
       localStorage.setItem(RELOAD_FLAG_KEY, Date.now().toString());
       
-      // Clear only app-specific storage (preserve OAuth state if present)
-      const keysToPreserve = ['supabase.auth.token', 'sb-kusgjgstdabonfntxwsq-auth-token'];
+      // Clear only app-specific storage (preserve OAuth state and reload guard)
       const allKeys = Object.keys(localStorage);
       
       allKeys.forEach(key => {
-        if (!keysToPreserve.some(preserve => key.includes(preserve))) {
+        // Preserve Supabase auth tokens (generic pattern)
+        const isSupabaseAuth = (key.startsWith("sb-") && key.endsWith("-auth-token")) || 
+                               key.includes("supabase.auth.token");
+        // Preserve reload guard to prevent loops
+        const isReloadFlag = key === RELOAD_FLAG_KEY;
+        
+        if (!isSupabaseAuth && !isReloadFlag) {
           localStorage.removeItem(key);
         }
       });
