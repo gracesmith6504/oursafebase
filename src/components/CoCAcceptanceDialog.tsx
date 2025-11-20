@@ -13,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { FileText, Download, Loader2, X } from "lucide-react";
+import { FileText, Download, Loader2 } from "lucide-react";
 import { getFileExtension } from "@/lib/fileUtils";
 import DOMPurify from "dompurify";
 import { PDFViewer } from "@/components/PDFViewer";
@@ -27,7 +27,6 @@ interface CoCAcceptanceDialogProps {
   cocFileUrl?: string;
   cocContentType: "text" | "markdown";
   onAccepted: () => void;
-  onClose?: () => void;
 }
 
 const CoCAcceptanceDialog = ({
@@ -38,12 +37,10 @@ const CoCAcceptanceDialog = ({
   cocContent,
   cocFileUrl,
   onAccepted,
-  onClose,
 }: CoCAcceptanceDialogProps) => {
   const { user } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [scrolledToBottom, setScrolledToBottom] = useState(false);
-  const [isScrollable, setIsScrollable] = useState(false);
   const [loading, setLoading] = useState(false);
   const [pdfError, setPdfError] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -55,25 +52,14 @@ const CoCAcceptanceDialog = ({
     return scrollRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
   }, []);
 
-  // Detect scrollability and scroll position
+  // Debounce scroll handler for better performance
   const handleScroll = useCallback(() => {
     const viewport = getViewport();
     if (viewport) {
       const { scrollTop, scrollHeight, clientHeight } = viewport;
-      const diff = scrollHeight - clientHeight;
-      const scrollableContent = diff > 24;
-      setIsScrollable(scrollableContent);
-      
-      if (scrollableContent) {
-        // Only check scroll position if content is scrollable
-        const atBottom = scrollTop + clientHeight >= scrollHeight - 20;
-        if (atBottom) {
-          setScrolledToBottom(true);
-        }
-      } else {
-        // Not scrollable, no need to scroll
-        setScrolledToBottom(true);
-      }
+      // Consider "scrolled to bottom" when within 20px of bottom
+      const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
+      setScrolledToBottom(isBottom);
     }
   }, [getViewport]);
 
@@ -129,12 +115,7 @@ const CoCAcceptanceDialog = ({
         const viewport = getViewport();
         if (viewport) {
           const { scrollHeight, clientHeight } = viewport;
-          const diff = scrollHeight - clientHeight;
-          const scrollableContent = diff > 24;
-          setIsScrollable(scrollableContent);
-          
-          if (!scrollableContent) {
-            // Not scrollable, no need to scroll
+          if (scrollHeight <= clientHeight + 20) { // +20px buffer
             setScrolledToBottom(true);
           }
         }
@@ -287,26 +268,16 @@ const CoCAcceptanceDialog = ({
     }
   }, [agreed, scrolledToBottom, cocId, cocVersion, eventId, user, onAccepted]);
 
-  const canAccept = agreed && (!isScrollable || scrolledToBottom);
+  const canAccept = agreed && scrolledToBottom;
 
   return (
     <Dialog open={true} onOpenChange={() => {}}>
-      <DialogContent className="max-w-6xl w-[95vw] h-[85vh] sm:max-h-[95vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 sm:pb-4 border-b shrink-0 relative">
-          <DialogTitle className="text-base sm:text-lg pr-8">Code of Conduct</DialogTitle>
+      <DialogContent hideClose className="max-w-6xl w-[95vw] h-[85vh] sm:max-h-[95vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 sm:pb-4 border-b shrink-0">
+          <DialogTitle className="text-base sm:text-lg">Code of Conduct</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
             Please review and accept to continue
           </DialogDescription>
-          {onClose && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-4 top-4 h-6 w-6"
-              onClick={onClose}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          )}
         </DialogHeader>
 
         <div className="flex-1 min-h-0 overflow-auto">
