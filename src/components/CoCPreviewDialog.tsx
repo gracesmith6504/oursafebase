@@ -57,7 +57,7 @@ export const CoCPreviewDialog = ({
                   <div className="border rounded-md bg-background px-4 py-4">
                     <div className="ql-snow">
                       <div
-                        className="ql-editor"
+                        className="ql-editor !min-h-0"
                         dangerouslySetInnerHTML={{ 
                           __html: DOMPurify.sanitize(cocContent, {
                             ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'a', 'blockquote', 'code', 'pre'],
