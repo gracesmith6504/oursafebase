@@ -225,7 +225,7 @@ const CoCAcceptanceDialog = ({
   const sanitizedContent = useMemo(() => {
     if (!cocContent) return "";
     return DOMPurify.sanitize(cocContent, {
-      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'blockquote', 'code', 'pre', 'span', 'div'],
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'a', 'blockquote', 'code', 'pre'],
       ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'style']
     });
   }, [cocContent]);
@@ -288,10 +288,14 @@ const CoCAcceptanceDialog = ({
               ref={scrollRef} 
               className="flex-1 px-2 sm:px-4 py-4"
             >
-              <div
-                className="prose prose-sm sm:prose max-w-none dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-              />
+              <div className="border rounded-md bg-background px-4 py-4">
+                <div className="ql-snow">
+                  <div
+                    className="ql-editor"
+                    dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+                  />
+                </div>
+              </div>
             </ScrollArea>
           )}
         </div>
