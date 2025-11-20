@@ -638,6 +638,13 @@ const EditEvent = () => {
     setEditingFAQ(faq);
     setEditFAQDialogOpen(true);
   };
+  
+  const handleEditFAQDialogClose = (open: boolean) => {
+    setEditFAQDialogOpen(open);
+    if (!open) {
+      setEditingFAQ(null);
+    }
+  };
 
   // Feedback handlers
   const handleBatchAddFeedbackQuestions = (questions: Omit<FeedbackQuestionType, 'id' | 'display_order'>[]) => {
@@ -824,15 +831,16 @@ const EditEvent = () => {
       // Update FAQs - delete all and reinsert
       await supabase.from('event_faqs').delete().eq('event_id', eventId);
       
-      const faqsToInsert = faqs.map(f => ({
-        event_id: eventId!,
-        question: f.question,
-        answer: f.answer,
-        display_order: f.displayOrder,
-        is_visible: f.isVisible,
-      }));
-      
-      if (faqsToInsert.length > 0) {
+      if (faqs.length > 0) {
+        const faqsToInsert = faqs.map(f => ({
+          id: f.id,
+          event_id: eventId!,
+          question: f.question,
+          answer: f.answer,
+          display_order: f.displayOrder,
+          is_visible: f.isVisible,
+        }));
+        
         const { error: faqError } = await supabase
           .from('event_faqs')
           .insert(faqsToInsert);
@@ -1530,7 +1538,7 @@ const EditEvent = () => {
         
         <EditFAQDialog
           open={editFAQDialogOpen}
-          onOpenChange={setEditFAQDialogOpen}
+          onOpenChange={handleEditFAQDialogClose}
           faq={editingFAQ}
           onSuccess={handleEditFAQ}
         />
