@@ -454,7 +454,8 @@ const Auth = () => {
       }
       setLoading(false);
     } else if (data.session) {
-      // Don't set loading false - let redirect happen
+      // Set loading to false so UI doesn't appear frozen while redirect happens
+      setLoading(false);
       // The useEffect will handle the redirect
     }
   };
