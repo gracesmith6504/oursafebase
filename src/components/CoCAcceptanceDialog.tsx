@@ -27,7 +27,6 @@ interface CoCAcceptanceDialogProps {
   cocFileUrl?: string;
   cocContentType: "text" | "markdown";
   onAccepted: () => void;
-  onClose?: () => void;
 }
 
 const CoCAcceptanceDialog = ({
@@ -38,7 +37,6 @@ const CoCAcceptanceDialog = ({
   cocContent,
   cocFileUrl,
   onAccepted,
-  onClose,
 }: CoCAcceptanceDialogProps) => {
   const { user } = useAuth();
   const [agreed, setAgreed] = useState(false);
@@ -273,8 +271,8 @@ const CoCAcceptanceDialog = ({
   const canAccept = agreed && scrolledToBottom;
 
   return (
-    <Dialog open={true} onOpenChange={(open) => !open && onClose?.()}>
-      <DialogContent className="max-w-6xl w-[95vw] h-[85vh] sm:max-h-[95vh] flex flex-col p-0 gap-0">
+    <Dialog open={true} onOpenChange={() => {}}>
+      <DialogContent hideClose className="max-w-6xl w-[95vw] h-[85vh] sm:max-h-[95vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 sm:pb-4 border-b shrink-0">
           <DialogTitle className="text-base sm:text-lg">Code of Conduct</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
