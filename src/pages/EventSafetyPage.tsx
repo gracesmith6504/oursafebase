@@ -548,7 +548,9 @@ const EventSafetyPage = () => {
               <h2 className="text-2xl font-semibold">Code of Conduct</h2>
               {codeOfConduct.name && <p className="text-sm text-muted-foreground mt-1">{codeOfConduct.name}</p>}
             </div>
-            <ScrollArea className="flex-1 min-h-0 p-6">
+
+            {/* 👇 this is now the scrollable area */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-6">
               <div className="border rounded-md bg-background px-4 py-4">
                 <div className="ql-snow">
                   <div
@@ -582,7 +584,8 @@ const EventSafetyPage = () => {
                   />
                 </div>
               </div>
-            </ScrollArea>
+            </div>
+
             <div className="p-6 border-t flex justify-end">
               <Button onClick={() => setShowViewCoCDialog(false)}>Close</Button>
             </div>
