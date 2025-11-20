@@ -169,6 +169,27 @@ All colors MUST be HSL.
   }
 }
 
+/* RichTextEditor (ReactQuill) styles */
+.rt-wrapper .ql-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: hsl(var(--muted));
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 0.5rem;
+}
+
+.rt-wrapper .ql-container {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.rt-wrapper .ql-editor {
+  min-height: 300px;
+  padding: 1rem;
+  font-size: 0.875rem;
+}
+
 /* File Upload Area Styles */
 .file-upload-area {
   height: 200px;

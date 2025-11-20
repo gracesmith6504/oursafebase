@@ -41,10 +41,7 @@ export const RichTextEditor = ({
   return (
     <div
       className={cn(
-        "border border-input rounded-md bg-background overflow-hidden",
-        "[&_.ql-toolbar]:bg-muted/50 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-input [&_.ql-toolbar]:p-2",
-        "[&_.ql-container]:min-h-[300px] [&_.ql-container]:max-h-[600px]",
-        "[&_.ql-editor]:min-h-[300px] [&_.ql-editor]:max-h-[600px] [&_.ql-editor]:overflow-auto",
+        "rt-wrapper border border-input rounded-md bg-background flex flex-col max-h-[60vh] overflow-hidden",
         "[&_.ql-editor]:text-sm [&_.ql-editor]:text-foreground",
         "[&_.ql-editor.ql-blank::before]:text-muted-foreground",
         "focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
