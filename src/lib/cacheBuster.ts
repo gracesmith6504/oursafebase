@@ -6,10 +6,11 @@ const RELOAD_FLAG_EXPIRY_MS = 5000; // 5 seconds to prevent reload loops
 
 export const runCacheBuster = (): boolean => {
   try {
-    // Skip cache busting on OAuth callback routes to prevent breaking auth flows
+    // Skip cache busting ONLY on actual OAuth/password reset callbacks
+    // Don't skip for email confirmation (type=signup) - those need cache clearing
     const isOAuthCallback = window.location.hash.includes('access_token') || 
                            window.location.hash.includes('refresh_token') ||
-                           window.location.pathname.includes('/auth');
+                           window.location.hash.includes('type=recovery');
     
     if (isOAuthCallback) {
       return true; // Allow app to render normally
