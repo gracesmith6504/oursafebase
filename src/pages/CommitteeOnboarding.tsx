@@ -26,11 +26,20 @@ const CommitteeOnboarding = () => {
   const [loading, setLoading] = useState(false);
   const [checkingProfile, setCheckingProfile] = useState(true);
   const [societyName, setSocietyName] = useState<string>("");
+  const [profileCheckAttempts, setProfileCheckAttempts] = useState(0);
 
   useEffect(() => {
     const checkProfile = async () => {
       // Wait for auth state to resolve to avoid redirecting prematurely
       if (authLoading) return;
+
+      // Fallback after too many failed attempts
+      if (profileCheckAttempts > 3) {
+        console.error('[CommitteeOnboarding] Too many profile check attempts, redirecting to dashboard');
+        toast.error('Unable to complete onboarding. Please try again later.');
+        navigate('/dashboard');
+        return;
+      }
 
       // Redirect to auth if no user
       if (!user) {
@@ -44,31 +53,48 @@ const CommitteeOnboarding = () => {
         return;
       }
 
-      // Fetch society name from invite code
-      const { data: validationResult } = await supabase
-        .rpc("validate_invite_code", { invite_code: inviteCode });
-      
-      if (validationResult && validationResult.length > 0) {
-        setSocietyName(validationResult[0].society_name);
-      }
+      try {
+        // Fetch society name from invite code
+        const { data: validationResult, error: validationError } = await supabase
+          .rpc("validate_invite_code", { invite_code: inviteCode });
+        
+        if (validationError) {
+          console.error('[CommitteeOnboarding] Validation error:', validationError);
+          setProfileCheckAttempts(prev => prev + 1);
+          return;
+        }
+        
+        if (validationResult && validationResult.length > 0) {
+          setSocietyName(validationResult[0].society_name);
+        }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('phone_number, display_name, avatar_url')
-        .eq('id', user.id)
-        .maybeSingle();
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('phone_number, display_name, avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
 
-      if (profile?.phone_number && profile?.display_name) {
-        navigate(`/invite/committee/${inviteCode}`);
-      } else {
-        // Pre-fill display name from user metadata if available
-        setDisplayName(user.user_metadata?.display_name || "");
-        setCheckingProfile(false);
+        if (profileError) {
+          console.error('[CommitteeOnboarding] Profile fetch error:', profileError);
+          setProfileCheckAttempts(prev => prev + 1);
+          return;
+        }
+
+        if (profile?.phone_number && profile?.display_name) {
+          navigate(`/invite/committee/${inviteCode}`);
+        } else {
+          // Pre-fill display name from user metadata if available
+          setDisplayName(user.user_metadata?.display_name || "");
+          setCheckingProfile(false);
+        }
+      } catch (error) {
+        console.error('[CommitteeOnboarding] Unexpected error:', error);
+        setProfileCheckAttempts(prev => prev + 1);
       }
     };
 
     checkProfile();
-  }, [user, inviteCode, navigate, authLoading]);
+  }, [user, inviteCode, navigate, authLoading, profileCheckAttempts]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

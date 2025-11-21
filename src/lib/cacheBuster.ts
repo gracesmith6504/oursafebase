@@ -6,13 +6,17 @@ const RELOAD_FLAG_EXPIRY_MS = 5000; // 5 seconds to prevent reload loops
 
 export const runCacheBuster = (): boolean => {
   try {
-    // Skip cache busting ONLY on actual OAuth/password reset callbacks
-    // Don't skip for email confirmation (type=signup) - those need cache clearing
-    const isOAuthCallback = window.location.hash.includes('access_token') || 
-                           window.location.hash.includes('refresh_token') ||
-                           window.location.hash.includes('type=recovery');
+    // Skip cache busting on ANY auth callback with hash parameters
+    // This includes OAuth, password reset, and email confirmation
+    const hasHashParams = window.location.hash.length > 1;
+    const isAuthCallback = hasHashParams && (
+      window.location.hash.includes('access_token') || 
+      window.location.hash.includes('refresh_token') ||
+      window.location.hash.includes('type=')
+    );
     
-    if (isOAuthCallback) {
+    if (isAuthCallback) {
+      console.log('[CacheBuster] Skipping cache bust for auth callback');
       return true; // Allow app to render normally
     }
 
@@ -44,8 +48,11 @@ export const runCacheBuster = (): boolean => {
                                key.includes("supabase.auth.token");
         // Preserve reload guard to prevent loops
         const isReloadFlag = key === RELOAD_FLAG_KEY;
+        // Preserve invite codes and redirects during OAuth flows
+        const isInviteCode = key === 'pending_invite_code';
+        const isAuthRedirect = key === 'auth_redirectTo';
         
-        if (!isSupabaseAuth && !isReloadFlag) {
+        if (!isSupabaseAuth && !isReloadFlag && !isInviteCode && !isAuthRedirect) {
           localStorage.removeItem(key);
         }
       });

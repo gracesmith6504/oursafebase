@@ -12,12 +12,30 @@ const InviteJoin = () => {
   const { user, loading: authLoading } = useAuth();
   const [processing, setProcessing] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [sessionCheckTimeout, setSessionCheckTimeout] = useState(false);
+  
+  const INVITE_STORAGE_KEY = 'pending_invite_code';
+
+  // Add defensive timeout for session establishment
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (authLoading) {
+        console.warn('[InviteJoin] Session check timeout after 5s');
+        setSessionCheckTimeout(true);
+      }
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, [authLoading]);
 
   useEffect(() => {
+    // Only redirect if definitely no session AND timeout passed, or if we have a user
     if (!authLoading && !processing) {
-      if (!user) {
+      if (!user && sessionCheckTimeout) {
+        console.log('[InviteJoin] No user after timeout, redirecting to auth');
         navigate(`/auth?invite=${code}`);
-      } else {
+      } else if (user) {
+        console.log('[InviteJoin] User found, checking onboarding status');
         // Retry mechanism for race conditions after email confirmation
         const timer = setTimeout(() => {
           checkOnboardingStatus();
@@ -26,7 +44,7 @@ const InviteJoin = () => {
         return () => clearTimeout(timer);
       }
     }
-  }, [user, authLoading, code, processing, retryCount]);
+  }, [user, authLoading, code, processing, retryCount, sessionCheckTimeout]);
 
   const checkOnboardingStatus = async () => {
     if (!code || !user || processing) return;
@@ -176,6 +194,10 @@ const InviteJoin = () => {
       return;
     }
 
+    // Clear stored invite code after successful join
+    localStorage.removeItem(INVITE_STORAGE_KEY);
+    console.log('[InviteJoin] Successfully joined society, clearing stored invite');
+    
     toast.success(`Joined ${society.name}!`);
     
     // Redirect based on role

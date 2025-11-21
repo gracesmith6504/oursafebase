@@ -77,18 +77,40 @@ const Auth = () => {
   const inviteCode = searchParams.get("invite");
   const redirectPath = searchParams.get("redirect");
   const redirectTo = searchParams.get("redirectTo");
+  
+  const INVITE_STORAGE_KEY = 'pending_invite_code';
 
   // Helper function to get redirectTo from URL or localStorage
   const getRedirectTo = () => {
     return redirectTo || localStorage.getItem('auth_redirectTo');
   };
 
-  // Store redirectTo in localStorage when present in URL
+  // Store redirectTo and invite code in localStorage when present in URL
   useEffect(() => {
     if (redirectTo) {
       localStorage.setItem('auth_redirectTo', redirectTo);
     }
-  }, [redirectTo]);
+    if (inviteCode) {
+      console.log('[Auth] Storing invite code in localStorage:', inviteCode);
+      localStorage.setItem(INVITE_STORAGE_KEY, inviteCode);
+    }
+  }, [redirectTo, inviteCode]);
+
+  // Restore invite code from localStorage after OAuth if missing from URL
+  useEffect(() => {
+    // Only restore if we're on auth page without invite but have one stored
+    if (!inviteCode && !redirectTo) {
+      const storedInvite = localStorage.getItem(INVITE_STORAGE_KEY);
+      if (storedInvite) {
+        console.log('[Auth] Restoring invite code from localStorage:', storedInvite);
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('invite', storedInvite);
+        window.history.replaceState({}, '', currentUrl.toString());
+        // Force reload to pick up restored invite
+        window.location.reload();
+      }
+    }
+  }, []);
 
   // Immediate redirect for already logged-in users
   useEffect(() => {
@@ -120,6 +142,7 @@ const Auth = () => {
 
       // If we detect any auth callback, show loading state immediately
       if (accessToken || type || hashError) {
+        console.log('[Auth] Auth callback detected:', { accessToken: !!accessToken, type, inviteCode, hashError });
         setProcessingAuth(true);
         
         // Set appropriate loading message based on type
@@ -249,12 +272,14 @@ const Auth = () => {
         // Redirect logic with redirectTo taking priority
         const targetRedirect = getRedirectTo();
         if (targetRedirect) {
+          console.log('[Auth] Redirecting to stored redirectTo:', targetRedirect);
           localStorage.removeItem('auth_redirectTo');
           navigate(targetRedirect);
         } else if (inviteCode) {
           // Wait for society info to load if needed
           if (loadingSocietyInfo) return;
           
+          console.log('[Auth] Redirecting with invite code:', { inviteCode, role: societyInfo?.role });
           if (societyInfo?.role === 'committee') {
             navigate(`/onboarding?invite=${inviteCode}`);
           } else {
@@ -525,6 +550,8 @@ const Auth = () => {
     if (targetRedirect) params.set('redirectTo', targetRedirect);
     
     const redirectUrl = `${window.location.origin}/auth${params.toString() ? `?${params.toString()}` : ''}`;
+    
+    console.log('[Auth] Starting Google OAuth with params:', { inviteCode, redirectTo: targetRedirect, redirectUrl });
     
     const {
       error
