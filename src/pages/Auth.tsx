@@ -125,6 +125,8 @@ const Auth = () => {
         // Set appropriate loading message based on type
         if (type === "recovery") {
           setAuthLoadingMessage("Confirming your email...");
+        } else if (type === "signup") {
+          setAuthLoadingMessage("Confirming your email...");
         } else if (accessToken) {
           setAuthLoadingMessage("Signing you in...");
         }
@@ -156,9 +158,20 @@ const Auth = () => {
           return;
         }
 
-        // Specifically suppress the "otp_expired" popup entirely
-        if (hashErrorCode === "otp_expired") {
-          // Clean up URL and do not show any popup
+        // Handle email confirmation token errors specifically
+        if (hashErrorCode === "otp_expired" || hashErrorDescription?.includes("token")) {
+          // Extract email from URL if available
+          const urlParams = new URLSearchParams(window.location.search);
+          const emailFromUrl = urlParams.get("email");
+          if (emailFromUrl) {
+            setEmail(emailFromUrl);
+          }
+          
+          // Show resend confirmation UI
+          setShowEmailConfirmation(true);
+          toast.error("Your confirmation link has expired or was already used. Please request a new one.");
+          
+          // Clean up URL
           window.history.replaceState({}, document.title, window.location.pathname);
           setProcessingAuth(false);
           return;

@@ -40,9 +40,25 @@ export const useAuth = () => {
     // THEN check for an existing session and validate it
     const initializeAuth = async () => {
       try {
+        // Check if we're in an email confirmation flow - don't refresh session in that case
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const confirmationType = hashParams.get('type');
+        const isEmailConfirmation = confirmationType === 'signup' || confirmationType === 'email_change';
+        
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
         if (currentSession) {
+          // Skip session refresh during email confirmation to prevent consuming the token
+          if (isEmailConfirmation) {
+            console.log('[Auth] Skipping session refresh during email confirmation');
+            if (isSubscribed) {
+              setSession(currentSession);
+              setUser(currentSession.user);
+              setLoading(false);
+            }
+            return;
+          }
+          
           // Validate session by attempting refresh (catches stale Safari sessions)
           const { data: { session: refreshedSession }, error } = await supabase.auth.refreshSession();
           
