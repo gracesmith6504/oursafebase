@@ -40,17 +40,18 @@ export const useAuth = () => {
     // THEN check for an existing session and validate it
     const initializeAuth = async () => {
       try {
-        // Check if we're in an email confirmation flow - don't refresh session in that case
+        // Check if we're in ANY auth callback - don't refresh session in that case
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const confirmationType = hashParams.get('type');
-        const isEmailConfirmation = confirmationType === 'signup' || confirmationType === 'email_change';
+        const hasAccessToken = hashParams.has('access_token') || hashParams.has('refresh_token');
+        const isAuthCallback = confirmationType || hasAccessToken;
         
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         
         if (currentSession) {
-          // Skip session refresh during email confirmation to prevent consuming the token
-          if (isEmailConfirmation) {
-            console.log('[Auth] Skipping session refresh during email confirmation');
+          // Skip session refresh during ANY auth callback (OAuth, email confirmation, etc.)
+          if (isAuthCallback) {
+            console.log('[Auth] Skipping session refresh during auth callback:', { type: confirmationType, hasToken: hasAccessToken });
             if (isSubscribed) {
               setSession(currentSession);
               setUser(currentSession.user);
