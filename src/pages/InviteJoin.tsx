@@ -11,20 +11,27 @@ const InviteJoin = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [processing, setProcessing] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (!authLoading && !processing) {
       if (!user) {
         navigate(`/auth?invite=${code}`);
       } else {
-        checkOnboardingStatus();
+        // Retry mechanism for race conditions after email confirmation
+        const timer = setTimeout(() => {
+          checkOnboardingStatus();
+        }, retryCount > 0 ? 1000 : 0); // Delay retries by 1 second
+
+        return () => clearTimeout(timer);
       }
     }
-  }, [user, authLoading, code, processing]);
+  }, [user, authLoading, code, processing, retryCount]);
 
   const checkOnboardingStatus = async () => {
     if (!code || !user || processing) return;
     
+    console.log('[InviteJoin] Starting checkOnboardingStatus', { code, userId: user.id, retryCount });
     setProcessing(true);
     
     const { data: validationResult, error: validationError } = await supabase
@@ -32,6 +39,15 @@ const InviteJoin = () => {
 
     if (validationError || !validationResult || validationResult.length === 0) {
       console.error("Invite validation failed:", validationError);
+      
+      // Retry up to 3 times for transient errors
+      if (retryCount < 3) {
+        console.log('[InviteJoin] Retrying validation...', retryCount + 1);
+        setProcessing(false);
+        setRetryCount(retryCount + 1);
+        return;
+      }
+      
       toast.error("Invalid invite code");
       navigate("/dashboard");
       return;
