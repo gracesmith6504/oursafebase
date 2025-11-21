@@ -16,175 +16,180 @@ const InviteJoin = () => {
   const INVITE_STORAGE_KEY = 'pending_invite_code';
 
   useEffect(() => {
-    // Simple logic: if not loading and haven't attempted yet
+    console.log('[InviteJoin] useEffect triggered', { 
+      authLoading, 
+      hasAttempted, 
+      hasUser: !!user, 
+      processing, 
+      code 
+    });
+    
+    // If not loading and haven't attempted yet
     if (!authLoading && !hasAttempted) {
       if (!user) {
         console.log('[InviteJoin] No user, redirecting to auth');
+        setHasAttempted(true);
         navigate(`/auth?invite=${code}`);
       } else if (user && !processing) {
-        console.log('[InviteJoin] User found, checking onboarding status');
+        console.log('[InviteJoin] User found, starting join process');
         setHasAttempted(true);
-        checkOnboardingStatus();
+        handleInviteJoin();
       }
     }
-  }, [user, authLoading, hasAttempted, processing, code, navigate]);
+  }, [user, authLoading, hasAttempted]); // Fixed: removed navigate and processing
 
-  const checkOnboardingStatus = async () => {
-    if (!code || !user || processing) return;
-    
-    console.log('[InviteJoin] Starting checkOnboardingStatus', { code, userId: user.id });
+  const handleInviteJoin = async () => {
+    if (!code || !user) {
+      console.error('[InviteJoin] Missing code or user', { code, user: !!user });
+      return;
+    }
+
+    console.log('[InviteJoin] Starting handleInviteJoin', { code, userId: user.id });
     setProcessing(true);
     
     try {
+      // Single validation call
+      console.log('[InviteJoin] Validating invite code...');
       const { data: validationResult, error: validationError } = await supabase
         .rpc("validate_invite_code", { invite_code: code });
 
       if (validationError || !validationResult || validationResult.length === 0) {
-        console.error("Invite validation failed:", validationError);
+        console.error('[InviteJoin] Validation failed:', validationError);
+        setProcessing(false);
         toast.error("Invalid invite code");
         navigate("/dashboard");
         return;
       }
 
-      const role = validationResult[0].role_type;
+      const { society_id, society_name, society_slug, role_type } = validationResult[0];
+      console.log('[InviteJoin] Validation successful', { society_name, role_type });
 
-      // If committee member, check if profile is complete
-      if (role === 'committee') {
+      // Committee member needs onboarding check
+      if (role_type === 'committee') {
+        console.log('[InviteJoin] Checking committee onboarding status...');
         const { data: profile } = await supabase
           .from('profiles')
           .select('phone_number, display_name')
           .eq('id', user.id)
           .maybeSingle();
-
-        const needsOnboarding = !profile || !profile.phone_number || !profile.display_name;
+        
+        const needsOnboarding = !profile?.phone_number || !profile?.display_name;
+        console.log('[InviteJoin] Profile check', { needsOnboarding, hasProfile: !!profile });
 
         if (needsOnboarding) {
+          setProcessing(false);
+          console.log('[InviteJoin] Redirecting to onboarding');
           navigate(`/onboarding?invite=${code}`);
           return;
         }
-
-        // Profile complete - proceed to join
-        joinSociety();
-        return;
       }
 
-      // For attendees, join directly
-      joinSociety();
-    } catch (error) {
-      console.error('[InviteJoin] Unexpected error:', error);
-      toast.error("An error occurred. Please try again.");
-      navigate("/dashboard");
-    }
-  };
+      // Check if already member
+      console.log('[InviteJoin] Checking existing membership...');
+      const { data: existing } = await supabase
+        .from("society_members")
+        .select("id, role")
+        .eq("society_id", society_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-  const joinSociety = async () => {
-    if (!code || !user) return;
+      if (existing) {
+        console.log('[InviteJoin] User is already a member', { currentRole: existing.role, newRole: role_type });
+        
+        // Handle role upgrade
+        if (existing.role === 'attendee' && role_type === 'committee') {
+          console.log('[InviteJoin] Upgrading role from attendee to committee');
+          const { error: updateError } = await supabase
+            .from("society_members")
+            .update({ role: 'committee' })
+            .eq("id", existing.id);
 
-    setProcessing(true);
+          if (updateError) {
+            console.error('[InviteJoin] Role upgrade failed:', updateError);
+            setProcessing(false);
+            toast.error("Failed to update role");
+            navigate("/dashboard");
+            return;
+          }
 
-    // Validate invite code using security definer function
-    const { data: validationResult, error: validationError } = await supabase
-      .rpc("validate_invite_code", { invite_code: code });
-
-    if (validationError || !validationResult || validationResult.length === 0) {
-      toast.error("Invalid invite code");
-      navigate("/dashboard");
-      setProcessing(false);
-      return;
-    }
-
-    const society = {
-      id: validationResult[0].society_id,
-      name: validationResult[0].society_name,
-      slug: validationResult[0].society_slug,
-    };
-    const role = validationResult[0].role_type;
-
-    // Check if already a member
-    const { data: existing } = await supabase
-      .from("society_members")
-      .select("id, role")
-      .eq("society_id", society.id)
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (existing) {
-      // If user is upgrading from attendee to committee, update their role
-      if (existing.role === 'attendee' && role === 'committee') {
-        const { error: updateError } = await supabase
-          .from("society_members")
-          .update({ role: 'committee' })
-          .eq("id", existing.id);
-
-        if (updateError) {
-          console.error("Role update error:", updateError);
-          toast.error("Failed to update role");
-          navigate("/dashboard");
+          setProcessing(false);
+          toast.success(`Upgraded to committee member of ${society_name}!`);
+          navigate(`/society/${society_slug}/dashboard`);
           return;
         }
 
-        toast.success(`Joined ${society.name}!`);
-        navigate(`/society/${society.slug}/dashboard`);
-        return;
-      }
-
-      // Already have the same or higher role
-      toast.success(`You're already a member of ${society.name}`);
-      const destination = existing.role === 'committee' 
-        ? `/society/${society.slug}/dashboard` 
-        : '/dashboard';
-      navigate(destination);
-      return;
-    }
-
-    // Add user as member with appropriate role
-    const { error: memberError } = await supabase
-      .from("society_members")
-      .insert({
-        society_id: society.id,
-        user_id: user.id,
-        role: role as 'committee' | 'attendee',
-      });
-
-    if (memberError) {
-      console.error("Member insert error:", memberError);
-      
-      // Check if user was actually added despite error
-      const { data: checkMember } = await supabase
-        .from("society_members")
-        .select("id, role")
-        .eq("society_id", society.id)
-        .eq("user_id", user.id)
-        .maybeSingle();
-      
-      if (checkMember) {
-        // User was added successfully, proceed with success message
-        toast.success(`Joined ${society.name}!`);
-        
-        const destination = role === 'committee' 
-          ? `/society/${society.slug}/dashboard` 
+        // Already have same or higher role
+        setProcessing(false);
+        toast.success(`You're already a member of ${society_name}`);
+        const destination = existing.role === 'committee' 
+          ? `/society/${society_slug}/dashboard` 
           : '/dashboard';
+        console.log('[InviteJoin] Navigating to:', destination);
         navigate(destination);
         return;
       }
-      
-      // Actually failed
-      toast.error("Failed to join society");
-      navigate("/dashboard");
-      return;
-    }
 
-    // Clear stored invite code after successful join
-    localStorage.removeItem(INVITE_STORAGE_KEY);
-    console.log('[InviteJoin] Successfully joined society, clearing stored invite');
-    
-    toast.success(`Joined ${society.name}!`);
-    
-    // Redirect based on role
-    const destination = role === 'committee' 
-      ? `/society/${society.slug}/dashboard` 
-      : '/dashboard';
-    navigate(destination);
+      // Insert new membership
+      console.log('[InviteJoin] Creating new membership...');
+      const { error: memberError } = await supabase
+        .from("society_members")
+        .insert({
+          society_id,
+          user_id: user.id,
+          role: role_type as 'committee' | 'attendee',
+        });
+
+      if (memberError) {
+        console.error('[InviteJoin] Membership insert error:', memberError);
+        
+        // Double-check if actually added despite error
+        const { data: checkMember } = await supabase
+          .from("society_members")
+          .select("id, role")
+          .eq("society_id", society_id)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        
+        if (checkMember) {
+          console.log('[InviteJoin] Member was added despite error');
+          localStorage.removeItem(INVITE_STORAGE_KEY);
+          setProcessing(false);
+          toast.success(`Joined ${society_name}!`);
+          
+          const destination = role_type === 'committee' 
+            ? `/society/${society_slug}/dashboard` 
+            : '/dashboard';
+          console.log('[InviteJoin] Navigating to:', destination);
+          navigate(destination);
+          return;
+        }
+        
+        // Actually failed
+        console.error('[InviteJoin] Membership creation actually failed');
+        setProcessing(false);
+        toast.error("Failed to join society. Please try again.");
+        navigate("/dashboard");
+        return;
+      }
+
+      // Success!
+      console.log('[InviteJoin] Successfully joined society');
+      localStorage.removeItem(INVITE_STORAGE_KEY);
+      setProcessing(false);
+      toast.success(`Joined ${society_name}!`);
+      
+      const destination = role_type === 'committee' 
+        ? `/society/${society_slug}/dashboard` 
+        : '/dashboard';
+      console.log('[InviteJoin] Navigating to:', destination);
+      navigate(destination);
+      
+    } catch (error) {
+      console.error('[InviteJoin] Unexpected error in handleInviteJoin:', error);
+      setProcessing(false);
+      toast.error("An error occurred. Please try again.");
+      navigate("/dashboard");
+    }
   };
 
   return (
