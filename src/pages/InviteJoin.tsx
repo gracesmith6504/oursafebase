@@ -11,90 +11,70 @@ const InviteJoin = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [processing, setProcessing] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [sessionCheckTimeout, setSessionCheckTimeout] = useState(false);
+  const [hasAttempted, setHasAttempted] = useState(false);
   
   const INVITE_STORAGE_KEY = 'pending_invite_code';
 
-  // Add defensive timeout for session establishment
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (authLoading) {
-        console.warn('[InviteJoin] Session check timeout after 5s');
-        setSessionCheckTimeout(true);
-      }
-    }, 5000);
-
-    return () => clearTimeout(timeout);
-  }, [authLoading]);
-
-  useEffect(() => {
-    // Only redirect if definitely no session AND timeout passed, or if we have a user
-    if (!authLoading && !processing) {
-      if (!user && sessionCheckTimeout) {
-        console.log('[InviteJoin] No user after timeout, redirecting to auth');
+    // Simple logic: if not loading and haven't attempted yet
+    if (!authLoading && !hasAttempted) {
+      if (!user) {
+        console.log('[InviteJoin] No user, redirecting to auth');
         navigate(`/auth?invite=${code}`);
-      } else if (user) {
+      } else if (user && !processing) {
         console.log('[InviteJoin] User found, checking onboarding status');
-        // Retry mechanism for race conditions after email confirmation
-        const timer = setTimeout(() => {
-          checkOnboardingStatus();
-        }, retryCount > 0 ? 1000 : 0); // Delay retries by 1 second
-
-        return () => clearTimeout(timer);
+        setHasAttempted(true);
+        checkOnboardingStatus();
       }
     }
-  }, [user, authLoading, code, processing, retryCount, sessionCheckTimeout]);
+  }, [user, authLoading, hasAttempted, processing, code, navigate]);
 
   const checkOnboardingStatus = async () => {
     if (!code || !user || processing) return;
     
-    console.log('[InviteJoin] Starting checkOnboardingStatus', { code, userId: user.id, retryCount });
+    console.log('[InviteJoin] Starting checkOnboardingStatus', { code, userId: user.id });
     setProcessing(true);
     
-    const { data: validationResult, error: validationError } = await supabase
-      .rpc("validate_invite_code", { invite_code: code });
+    try {
+      const { data: validationResult, error: validationError } = await supabase
+        .rpc("validate_invite_code", { invite_code: code });
 
-    if (validationError || !validationResult || validationResult.length === 0) {
-      console.error("Invite validation failed:", validationError);
-      
-      // Retry up to 3 times for transient errors
-      if (retryCount < 3) {
-        console.log('[InviteJoin] Retrying validation...', retryCount + 1);
-        setProcessing(false);
-        setRetryCount(retryCount + 1);
-        return;
-      }
-      
-      toast.error("Invalid invite code");
-      navigate("/dashboard");
-      return;
-    }
-
-    const role = validationResult[0].role_type;
-
-    // If committee member, check if profile is complete
-    if (role === 'committee') {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('phone_number, display_name')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      const needsOnboarding = !profile || !profile.phone_number || !profile.display_name;
-
-      if (needsOnboarding) {
-        navigate(`/onboarding?invite=${code}`);
+      if (validationError || !validationResult || validationResult.length === 0) {
+        console.error("Invite validation failed:", validationError);
+        toast.error("Invalid invite code");
+        navigate("/dashboard");
         return;
       }
 
-      // Profile complete - proceed to join
+      const role = validationResult[0].role_type;
+
+      // If committee member, check if profile is complete
+      if (role === 'committee') {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('phone_number, display_name')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        const needsOnboarding = !profile || !profile.phone_number || !profile.display_name;
+
+        if (needsOnboarding) {
+          navigate(`/onboarding?invite=${code}`);
+          return;
+        }
+
+        // Profile complete - proceed to join
+        joinSociety();
+        return;
+      }
+
+      // For attendees, join directly
       joinSociety();
-      return;
+    } catch (error) {
+      console.error('[InviteJoin] Unexpected error:', error);
+      toast.error("An error occurred. Please try again.");
+      navigate("/dashboard");
     }
-
-    // For attendees, join directly
-    joinSociety();
   };
 
   const joinSociety = async () => {
