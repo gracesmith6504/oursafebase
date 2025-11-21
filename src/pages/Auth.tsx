@@ -112,24 +112,42 @@ const Auth = () => {
     }
   }, []);
 
-  // Immediate redirect for already logged-in users
-  useEffect(() => {
-    if (user && !checkingConsent && !processingAuth) {
-      const targetRedirect = getRedirectTo();
-      if (targetRedirect) {
-        localStorage.removeItem('auth_redirectTo');
-        navigate(targetRedirect);
-        return;
-      }
-      
-      // Existing invite/dashboard logic continues in checkConsent
-    }
-  }, [user, checkingConsent, processingAuth]);
+  // Removed competing redirect useEffect - all redirect logic now in checkConsent
 
   // Check if user is on an in-app browser on mount
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
   }, []);
+  
+  // Safety timeout: prevent infinite loading screen
+  useEffect(() => {
+    if (processingAuth) {
+      const timeout = setTimeout(() => {
+        console.error('[Auth] Processing auth timeout after 10s, forcing reset');
+        setProcessingAuth(false);
+        setCheckingConsent(false);
+        
+        // If we have a user, try to redirect
+        if (user) {
+          const targetRedirect = getRedirectTo();
+          if (targetRedirect) {
+            navigate(targetRedirect);
+          } else if (inviteCode) {
+            navigate(`/invite/attendee/${inviteCode}`);
+          } else {
+            navigate('/dashboard');
+          }
+        } else {
+          // No user after 10s, something is very wrong
+          toast.error('Authentication took too long. Please try again.');
+          setShowEmailConfirmation(false);
+          setShowPasswordReset(false);
+        }
+      }, 10000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [processingAuth, user, inviteCode, navigate]);
   useEffect(() => {
     (async () => {
       // Check for auth callback parameters in URL hash
@@ -220,15 +238,29 @@ const Auth = () => {
       return () => clearTimeout(timer);
     }
   }, [resendCooldown]);
+  // Fetch society info with timeout to prevent blocking
   useEffect(() => {
+    const SOCIETY_INFO_TIMEOUT = 3000; // 3 seconds max
+    
     const fetchSocietyInfo = async () => {
       if (inviteCode) {
         setLoadingSocietyInfo(true);
+        
+        const timeout = setTimeout(() => {
+          if (loadingSocietyInfo) {
+            console.warn('[Auth] Society info fetch timeout, proceeding anyway');
+            setLoadingSocietyInfo(false);
+          }
+        }, SOCIETY_INFO_TIMEOUT);
+        
         const {
           data
         } = await supabase.rpc("validate_invite_code", {
           invite_code: inviteCode
         });
+        
+        clearTimeout(timeout);
+        
         if (data && data.length > 0) {
           setSocietyInfo({
             name: data[0].society_name,
@@ -240,8 +272,8 @@ const Auth = () => {
     };
     fetchSocietyInfo();
   }, [inviteCode]);
+  // Check if user needs to provide consent - SINGLE SOURCE OF REDIRECT LOGIC
   useEffect(() => {
-    // Check if user needs to provide consent
     const checkConsent = async () => {
       if (!user) {
         setCheckingConsent(false);
@@ -255,6 +287,14 @@ const Auth = () => {
         setProcessingAuth(false);
         return;
       }
+
+      console.log('[Auth] Consent check started:', {
+        hasUser: !!user,
+        inviteCode,
+        loadingSocietyInfo,
+        checkingConsent,
+        processingAuth
+      });
 
       setCheckingConsent(true);
       setProcessingAuth(false); // Stop showing the auth processing screen
@@ -276,9 +316,7 @@ const Auth = () => {
           localStorage.removeItem('auth_redirectTo');
           navigate(targetRedirect);
         } else if (inviteCode) {
-          // Wait for society info to load if needed
-          if (loadingSocietyInfo) return;
-          
+          // Don't wait for society info - InviteJoin will validate
           console.log('[Auth] Redirecting with invite code:', { inviteCode, role: societyInfo?.role });
           if (societyInfo?.role === 'committee') {
             navigate(`/onboarding?invite=${inviteCode}`);
@@ -306,69 +344,77 @@ const Auth = () => {
         return;
       }
 
-      // For email signup users with accepted terms in metadata, auto-record consent
+      // For email signup users with accepted terms in metadata, auto-record consent with retry
       if (acceptedTermsInMetadata) {
-        // Auto-record consent for email signups
-        const { error: insertError } = await supabase.from("user_consents" as any).insert({
-          user_id: user.id,
-          accepted_terms: true,
-          user_agent: navigator.userAgent,
-        });
-
-        if (!insertError) {
-          setCheckingConsent(false);
-          // Redirect after auto-recording consent with redirectTo priority
-          const targetRedirect = getRedirectTo();
-          if (targetRedirect) {
-            localStorage.removeItem('auth_redirectTo');
-            navigate(targetRedirect);
-          } else if (inviteCode) {
-            if (loadingSocietyInfo) return;
-            
-            if (societyInfo?.role === 'committee') {
-              navigate(`/onboarding?invite=${inviteCode}`);
-            } else {
-              navigate(`/invite/attendee/${inviteCode}`);
-            }
-          } else if (redirectPath) {
-            navigate(redirectPath);
-          } else {
-            navigate("/dashboard");
+        console.log('[Auth] Auto-recording consent for email signup user');
+        
+        let retries = 3;
+        let insertError;
+        
+        // Retry consent recording up to 3 times
+        while (retries > 0) {
+          const result = await supabase.from("user_consents" as any).insert({
+            user_id: user.id,
+            accepted_terms: true,
+            user_agent: navigator.userAgent,
+          });
+          
+          insertError = result.error;
+          
+          if (!insertError) {
+            console.log('[Auth] Consent recorded successfully');
+            break; // Success!
           }
-          return;
-        } else {
-          console.error("Error recording consent:", insertError);
-          // If consent recording fails, still allow user through
-          setCheckingConsent(false);
-          const targetRedirect = getRedirectTo();
-          if (targetRedirect) {
-            localStorage.removeItem('auth_redirectTo');
-            navigate(targetRedirect);
-          } else if (inviteCode) {
-            if (societyInfo?.role === 'committee') {
-              navigate(`/onboarding?invite=${inviteCode}`);
-            } else {
-              navigate(`/invite/attendee/${inviteCode}`);
-            }
-          } else if (redirectPath) {
-            navigate(redirectPath);
-          } else {
-            navigate("/dashboard");
+          
+          console.warn(`[Auth] Consent recording attempt failed, retries left: ${retries - 1}`, insertError);
+          retries--;
+          
+          if (retries > 0) {
+            // Wait 500ms before retry
+            await new Promise(resolve => setTimeout(resolve, 500));
           }
-          return;
         }
+
+        // Redirect regardless of consent recording success
+        setCheckingConsent(false);
+        
+        const targetRedirect = getRedirectTo();
+        if (targetRedirect) {
+          console.log('[Auth] Redirecting to:', targetRedirect);
+          localStorage.removeItem('auth_redirectTo');
+          navigate(targetRedirect);
+        } else if (inviteCode) {
+          console.log('[Auth] Redirecting to invite:', inviteCode);
+          if (societyInfo?.role === 'committee') {
+            navigate(`/onboarding?invite=${inviteCode}`);
+          } else {
+            navigate(`/invite/attendee/${inviteCode}`);
+          }
+        } else if (redirectPath) {
+          console.log('[Auth] Redirecting to path:', redirectPath);
+          navigate(redirectPath);
+        } else {
+          console.log('[Auth] Redirecting to dashboard');
+          navigate("/dashboard");
+        }
+        
+        if (insertError) {
+          console.error("[Auth] All consent recording attempts failed, but user redirected anyway:", insertError);
+        }
+        
+        return;
       }
 
       // For any other case (shouldn't normally happen), just redirect
       if (!isGoogleUser && !consent) {
-        if (inviteCode && loadingSocietyInfo) return;
-        
         const cleaned = new URLSearchParams();
         if (inviteCode) cleaned.set("invite", inviteCode);
         if (redirectPath) cleaned.set("redirect", redirectPath);
         if (redirectTo) cleaned.set("redirectTo", redirectTo);
         const newUrl = `${window.location.pathname}${cleaned.toString() ? `?${cleaned.toString()}` : ""}`;
         window.history.replaceState({}, document.title, newUrl);
+        
+        console.log('[Auth] Fallback redirect for non-Google user without consent');
         if (redirectTo) {
           navigate(redirectTo);
         } else if (inviteCode && societyInfo?.role === "committee") {
@@ -386,7 +432,7 @@ const Auth = () => {
     };
 
     checkConsent();
-  }, [user, navigate, inviteCode, redirectPath, societyInfo, loadingSocietyInfo, showEmailConfirmation, showPasswordReset, loading]);
+  }, [user, navigate, inviteCode, redirectPath, societyInfo, showEmailConfirmation, showPasswordReset, loading]);
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setEmailError(null); // Clear previous errors
