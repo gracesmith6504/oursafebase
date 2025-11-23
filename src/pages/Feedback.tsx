@@ -354,11 +354,11 @@ const Feedback = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(user ? `/${societySlug}/${eventSlug}` : "/")}
+          onClick={() => navigate(user ? "/dashboard" : "/")}
           className="mb-2"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          {user ? "Back to Event" : "Back to Home"}
+          {user ? "Back to Dashboard" : "Back to Home"}
         </Button>
 
         {/* Header */}
