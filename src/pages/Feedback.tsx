@@ -62,29 +62,70 @@ const Feedback = () => {
       setLoading(true);
       setLoadError(null);
 
-      // Fetch event by slug - filter by BOTH society AND event slug (no auth required)
-      const { data: eventData, error: eventError } = await supabase
+      console.log("Fetching feedback form for:", { societySlug, eventSlug });
+
+      // Try Pattern A first (matching useEvent pattern)
+      let { data: eventData, error: eventError } = await supabase
         .from("events")
-        .select(`
-          id,
-          title,
-          society_id,
-          slug,
-          societies!inner (
-            name,
-            logo_url,
-            slug
-          )
-        `)
+        .select("id, title, society_id, slug, societies!inner(name, logo_url, slug)")
         .eq("slug", eventSlug)
         .eq("societies.slug", societySlug)
         .single();
 
-      if (eventError || !eventData) {
+      if (eventError) {
+        console.error("Pattern A query failed:", {
+          message: eventError.message,
+          code: eventError.code,
+          details: eventError.details,
+          societySlug,
+          eventSlug
+        });
+        
+        // Fallback to Pattern B (two separate queries)
+        console.log("Attempting fallback query pattern...");
+        
+        const { data: societyData, error: socErr } = await supabase
+          .from("societies")
+          .select("id, name, logo_url, slug")
+          .eq("slug", societySlug)
+          .single();
+
+        if (socErr || !societyData) {
+          console.error("Society not found:", societySlug, socErr);
+          setLoadError("Event not found");
+          return;
+        }
+
+        const { data: evtData, error: evtErr } = await supabase
+          .from("events")
+          .select("id, title, society_id, slug")
+          .eq("slug", eventSlug)
+          .eq("society_id", societyData.id)
+          .single();
+
+        if (evtErr || !evtData) {
+          console.error("Event not found:", eventSlug, evtErr);
+          setLoadError("Event not found");
+          return;
+        }
+
+        eventData = {
+          ...evtData,
+          societies: {
+            name: societyData.name,
+            logo_url: societyData.logo_url,
+            slug: societyData.slug,
+          },
+        };
+      }
+
+      if (!eventData) {
+        console.error("No event data returned");
         setLoadError("Event not found");
         return;
       }
 
+      console.log("Event fetched successfully:", eventData);
       setEvent(eventData);
 
       // Fetch feedback questions (no auth required)
@@ -94,7 +135,12 @@ const Feedback = () => {
         .eq("event_id", eventData.id)
         .order("display_order", { ascending: true });
 
-      if (questionsError) throw questionsError;
+      if (questionsError) {
+        console.error("Questions fetch error:", questionsError);
+        throw questionsError;
+      }
+
+      console.log(`Loaded ${questionsData?.length || 0} feedback questions`);
 
       // Parse options from JSON if they exist
       const parsedQuestions = (questionsData || []).map(q => ({
