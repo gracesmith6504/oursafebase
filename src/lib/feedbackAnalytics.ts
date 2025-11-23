@@ -6,6 +6,21 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+interface MultipleChoiceOption {
+  id: string;
+  text: string;
+}
+
+export interface FeedbackQuestion {
+  id: string;
+  question: string;
+  question_type: string;
+  is_required: boolean;
+  display_order: number;
+  options?: MultipleChoiceOption[];
+  allow_multiple_answers?: boolean;
+}
+
 export interface FeedbackMetrics {
   totalResponses: number;
   responseRate: number;
@@ -100,7 +115,7 @@ export async function getRatingAverages(eventId: string): Promise<RatingAverage[
   // Get all rating questions
   const { data: questions } = await supabase
     .from("event_feedback_questions")
-    .select("id, question")
+    .select("id, question, options, allow_multiple_answers")
     .eq("event_id", eventId)
     .eq("question_type", "rating")
     .order("display_order");
@@ -206,11 +221,17 @@ export async function getGroupedResponses(eventId: string): Promise<GroupedRespo
   // Get all questions for this event
   const { data: questions } = await supabase
     .from("event_feedback_questions")
-    .select("id, question, question_type")
+    .select("id, question, question_type, options, allow_multiple_answers")
     .eq("event_id", eventId)
     .order("display_order");
 
   if (!questions || questions.length === 0) return [];
+
+  // Parse options from JSON if they exist
+  const parsedQuestions = questions.map(q => ({
+    ...q,
+    options: q.options ? (Array.isArray(q.options) ? q.options : JSON.parse(JSON.stringify(q.options))) as MultipleChoiceOption[] : undefined,
+  }));
 
   // Get all responses with email and optional_name
   const { data: responses } = await supabase
@@ -230,7 +251,7 @@ export async function getGroupedResponses(eventId: string): Promise<GroupedRespo
     .in("response_id", responseIds);
 
   // Group by question
-  const grouped: GroupedResponse[] = questions.map(question => {
+  const grouped: GroupedResponse[] = parsedQuestions.map(question => {
     const questionAnswers = answers?.filter(a => a.question_id === question.id) || [];
     
     return {

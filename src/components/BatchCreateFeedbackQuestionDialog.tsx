@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { GripVertical, Plus, X } from "lucide-react";
+import { GripVertical, Plus, X, Trash2 } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -24,10 +24,17 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+interface MultipleChoiceOption {
+  id: string;
+  text: string;
+}
+
 interface FeedbackQuestionRow {
   tempId: string;
   question: string;
-  question_type: 'text' | 'rating';
+  question_type: 'text' | 'rating' | 'multiple_choice';
+  options?: MultipleChoiceOption[];
+  allow_multiple_answers?: boolean;
 }
 
 interface SortableFeedbackQuestionRowProps {
@@ -87,8 +94,15 @@ const SortableFeedbackQuestionRow = ({
           <Label htmlFor={`type-${row.tempId}`}>Response Type</Label>
           <Select
             value={row.question_type}
-            onValueChange={(value: 'text' | 'rating') =>
-              onUpdate(row.tempId, { question_type: value })
+            onValueChange={(value: 'text' | 'rating' | 'multiple_choice') =>
+              onUpdate(row.tempId, { 
+                question_type: value,
+                options: value === 'multiple_choice' ? (row.options || [
+                  { id: crypto.randomUUID(), text: '' },
+                  { id: crypto.randomUUID(), text: '' },
+                ]) : undefined,
+                allow_multiple_answers: value === 'multiple_choice' ? false : undefined,
+              })
             }
           >
             <SelectTrigger id={`type-${row.tempId}`}>
@@ -97,9 +111,75 @@ const SortableFeedbackQuestionRow = ({
             <SelectContent>
               <SelectItem value="text">Text Response</SelectItem>
               <SelectItem value="rating">Rating (1-5)</SelectItem>
+              <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
             </SelectContent>
           </Select>
         </div>
+
+        {row.question_type === 'multiple_choice' && (
+          <div className="space-y-3 pt-2 border-t">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm">Answer Options (2-6)</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor={`multi-select-${row.tempId}`} className="text-xs text-muted-foreground">
+                  Multi-select
+                </Label>
+                <Switch
+                  id={`multi-select-${row.tempId}`}
+                  checked={row.allow_multiple_answers || false}
+                  onCheckedChange={(checked) =>
+                    onUpdate(row.tempId, { allow_multiple_answers: checked })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {(row.options || []).map((option, optIdx) => (
+                <div key={option.id} className="flex items-center gap-2">
+                  <Input
+                    value={option.text}
+                    onChange={(e) => {
+                      const newOptions = [...(row.options || [])];
+                      newOptions[optIdx] = { ...option, text: e.target.value };
+                      onUpdate(row.tempId, { options: newOptions });
+                    }}
+                    placeholder={`Option ${optIdx + 1}`}
+                    className="flex-1"
+                  />
+                  {(row.options?.length || 0) > 2 && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const newOptions = (row.options || []).filter((_, i) => i !== optIdx);
+                        onUpdate(row.tempId, { options: newOptions });
+                      }}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+
+              {(row.options?.length || 0) < 6 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newOptions = [...(row.options || []), { id: crypto.randomUUID(), text: '' }];
+                    onUpdate(row.tempId, { options: newOptions });
+                  }}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Option
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <Button
@@ -165,7 +245,15 @@ export function BatchCreateFeedbackQuestionDialog({
   };
 
   const handleSubmit = () => {
-    const validRows = rows.filter((row) => row.question.trim() !== "");
+    const validRows = rows.filter((row) => {
+      if (row.question.trim() === "") return false;
+      if (row.question_type === 'multiple_choice') {
+        const validOptions = (row.options || []).filter(opt => opt.text.trim() !== '');
+        return validOptions.length >= 2 && validOptions.length <= 6;
+      }
+      return true;
+    });
+
     if (validRows.length === 0) {
       return;
     }
