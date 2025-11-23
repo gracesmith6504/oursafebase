@@ -19,6 +19,7 @@ export interface FeedbackQuestion {
   display_order: number;
   options?: MultipleChoiceOption[];
   allow_multiple_answers?: boolean;
+  placeholder_text?: string;
 }
 
 export interface FeedbackMetrics {

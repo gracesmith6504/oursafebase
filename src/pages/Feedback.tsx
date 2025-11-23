@@ -26,6 +26,7 @@ interface FeedbackQuestion {
   display_order: number;
   options?: MultipleChoiceOption[];
   allow_multiple_answers?: boolean;
+  placeholder_text?: string;
 }
 
 interface Event {
@@ -356,7 +357,7 @@ const Feedback = () => {
                       onChange={(e) =>
                         setAnswers({ ...answers, [question.id]: e.target.value })
                       }
-                      placeholder="Enter your response..."
+                      placeholder={question.placeholder_text || "Enter your response..."}
                       className="min-h-[100px]"
                     />
                   ) : question.question_type === "rating" ? (

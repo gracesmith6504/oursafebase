@@ -31,6 +31,7 @@ export interface FeedbackQuestion {
   is_required: boolean;
   options?: MultipleChoiceOption[];
   allow_multiple_answers?: boolean;
+  placeholder_text?: string;
 }
 
 interface SortableFeedbackQuestionItemProps {

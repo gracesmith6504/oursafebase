@@ -35,6 +35,7 @@ interface FeedbackQuestionRow {
   question_type: 'text' | 'rating' | 'multiple_choice';
   options?: MultipleChoiceOption[];
   allow_multiple_answers?: boolean;
+  placeholder_text?: string;
 }
 
 interface SortableFeedbackQuestionRowProps {
@@ -87,6 +88,16 @@ const SortableFeedbackQuestionRow = ({
             value={row.question}
             onChange={(e) => onUpdate(row.tempId, { question: e.target.value })}
             placeholder="e.g., How would you rate the event overall?"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor={`placeholder-${row.tempId}`}>Placeholder Text (Optional)</Label>
+          <Input
+            id={`placeholder-${row.tempId}`}
+            value={row.placeholder_text || ""}
+            onChange={(e) => onUpdate(row.tempId, { placeholder_text: e.target.value })}
+            placeholder="e.g., Tell us what you enjoyed most..."
           />
         </div>
 
