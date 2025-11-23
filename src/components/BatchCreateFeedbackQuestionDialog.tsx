@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { GripVertical, Plus, X, Trash2 } from "lucide-react";
 import {
   DndContext,
@@ -288,12 +289,13 @@ export function BatchCreateFeedbackQuestionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Add Feedback Questions</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <ScrollArea className="flex-1 px-1">
+          <div className="space-y-4 py-4 pr-4">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -321,7 +323,8 @@ export function BatchCreateFeedbackQuestionDialog({
             <Plus className="h-4 w-4 mr-2" />
             Add Another Question
           </Button>
-        </div>
+          </div>
+        </ScrollArea>
 
         <DialogFooter>
           <Button variant="outline" onClick={handleCancel}>
