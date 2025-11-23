@@ -195,6 +195,7 @@ const EditEvent = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
   const { isCommittee, loading: roleLoading } = useCommitteeRole(society?.id);
 
   // Drag and drop sensors
@@ -255,10 +256,11 @@ const EditEvent = () => {
   ];
 
   useEffect(() => {
-    if (user && slug && eventId) {
+    if (user && slug && eventId && !hasLoadedInitialData) {
       fetchData();
+      setHasLoadedInitialData(true);
     }
-  }, [user, slug, eventId]);
+  }, [user, slug, eventId, hasLoadedInitialData]); // Fetch once when params available, never refetch
 
   const fetchData = async () => {
     try {
