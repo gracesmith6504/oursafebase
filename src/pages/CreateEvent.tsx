@@ -197,6 +197,7 @@ const CreateEvent = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
   const { isCommittee, loading: roleLoading } = useCommitteeRole(society?.id);
 
   // Drag and drop sensors
@@ -267,10 +268,11 @@ const CreateEvent = () => {
   const [editingFeedbackQuestion, setEditingFeedbackQuestion] = useState<FeedbackQuestionType | null>(null);
 
   useEffect(() => {
-    if (user && slug) {
+    if (user && slug && !hasLoadedInitialData) {
       fetchData();
+      setHasLoadedInitialData(true);
     }
-  }, [user, slug]);
+  }, [user, slug, hasLoadedInitialData]); // Fetch once when params available, never refetch
 
   // Load draft on mount
   useEffect(() => {
