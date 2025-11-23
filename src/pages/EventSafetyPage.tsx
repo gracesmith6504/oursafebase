@@ -410,7 +410,7 @@ const EventSafetyPage = () => {
         </ErrorBoundary>
 
         {/* Post-Event Feedback Link */}
-        {showPostEventFeedback && isSocietyMember && (
+        {showPostEventFeedback && (
           <ErrorBoundary fallback={<SectionErrorFallback sectionName="Post-Event Feedback" />}>
             <Card className="border-primary/20 bg-primary/5">
               <CardContent className="pt-6">
