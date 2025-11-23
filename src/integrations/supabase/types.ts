@@ -360,6 +360,7 @@ export type Database = {
           id: string
           is_required: boolean
           options: Json | null
+          placeholder_text: string | null
           question: string
           question_type: string
           updated_at: string | null
@@ -372,6 +373,7 @@ export type Database = {
           id?: string
           is_required?: boolean
           options?: Json | null
+          placeholder_text?: string | null
           question: string
           question_type: string
           updated_at?: string | null
@@ -384,6 +386,7 @@ export type Database = {
           id?: string
           is_required?: boolean
           options?: Json | null
+          placeholder_text?: string | null
           question?: string
           question_type?: string
           updated_at?: string | null

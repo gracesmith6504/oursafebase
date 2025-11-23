@@ -19,6 +19,7 @@ interface FeedbackQuestion {
   is_required: boolean;
   options?: MultipleChoiceOption[];
   allow_multiple_answers?: boolean;
+  placeholder_text?: string;
 }
 
 interface EditFeedbackQuestionDialogProps {
@@ -38,6 +39,7 @@ export function EditFeedbackQuestionDialog({
   const [questionType, setQuestionType] = useState<'text' | 'rating' | 'multiple_choice'>("text");
   const [options, setOptions] = useState<MultipleChoiceOption[]>([]);
   const [allowMultipleAnswers, setAllowMultipleAnswers] = useState(false);
+  const [placeholderText, setPlaceholderText] = useState("");
 
   useEffect(() => {
     if (question) {
@@ -45,6 +47,7 @@ export function EditFeedbackQuestionDialog({
       setQuestionType(question.question_type);
       setOptions(question.options || []);
       setAllowMultipleAnswers(question.allow_multiple_answers || false);
+      setPlaceholderText(question.placeholder_text || "");
     }
   }, [question]);
 
@@ -61,6 +64,7 @@ export function EditFeedbackQuestionDialog({
       question_type: questionType,
       options: questionType === 'multiple_choice' ? options : undefined,
       allow_multiple_answers: questionType === 'multiple_choice' ? allowMultipleAnswers : undefined,
+      placeholder_text: placeholderText.trim() || undefined,
     });
 
     onOpenChange(false);
@@ -81,6 +85,16 @@ export function EditFeedbackQuestionDialog({
               value={questionText}
               onChange={(e) => setQuestionText(e.target.value)}
               placeholder="Enter your question"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-placeholder">Placeholder Text (Optional)</Label>
+            <Input
+              id="edit-placeholder"
+              value={placeholderText}
+              onChange={(e) => setPlaceholderText(e.target.value)}
+              placeholder="e.g., Tell us what you enjoyed most..."
             />
           </div>
 
