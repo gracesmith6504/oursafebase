@@ -436,7 +436,7 @@ export const FeedbackAnalyticsSection = ({
                       </CardHeader>
                     </CollapsibleTrigger>
 
-                    <CollapsibleContent>
+                     <CollapsibleContent>
                       <CardContent className="pt-0 px-3 sm:px-4">
                         <div className="space-y-3">
                           {group.answers.map((answer) => (
@@ -448,8 +448,35 @@ export const FeedbackAnalyticsSection = ({
                                 <div className="flex-1">
                                   {answer.answerRating !== undefined ? (
                                     renderStars(answer.answerRating)
+                                  ) : group.questionType === "multiple_choice" && group.options ? (
+                                    answer.answerText ? (
+                                      <div className="space-y-2">
+                                        {group.options.map((option) => {
+                                          const selectedIds = JSON.parse(answer.answerText || '[]');
+                                          const isSelected = selectedIds.includes(option.id);
+                                          return (
+                                            <div key={option.id} className="flex items-center gap-2">
+                                              <div className={`w-4 h-4 rounded border flex items-center justify-center ${
+                                                isSelected ? 'bg-primary border-primary' : 'border-border'
+                                              }`}>
+                                                {isSelected && (
+                                                  <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                  </svg>
+                                                )}
+                                              </div>
+                                              <span className={`text-xs sm:text-sm ${isSelected ? 'font-medium' : 'text-muted-foreground'}`}>
+                                                {option.text}
+                                              </span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    ) : (
+                                      <p className="text-xs text-muted-foreground italic">No response for this question</p>
+                                    )
                                   ) : (
-                                    <p className="text-xs sm:text-sm break-words">{answer.answerText}</p>
+                                    <p className="text-xs sm:text-sm break-words">{answer.answerText || <span className="text-muted-foreground italic">No response</span>}</p>
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2 sm:flex-col sm:items-end sm:text-right">
