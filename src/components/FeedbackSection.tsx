@@ -75,6 +75,7 @@ const SortableFeedbackQuestionItem = ({
       className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg group"
     >
       <button
+        type="button"
         className="mt-1 cursor-grab active:cursor-grabbing touch-none"
         {...attributes}
         {...listeners}
@@ -121,6 +122,7 @@ const SortableFeedbackQuestionItem = ({
 
       <div className="flex gap-1">
         <Button
+          type="button"
           variant="ghost"
           size="icon"
           className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -129,6 +131,7 @@ const SortableFeedbackQuestionItem = ({
           <Pencil className="h-4 w-4" />
         </Button>
         <Button
+          type="button"
           variant="ghost"
           size="icon"
           className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
