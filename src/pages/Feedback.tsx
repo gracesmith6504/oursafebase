@@ -178,6 +178,7 @@ const Feedback = () => {
   };
 
   const renderRatingSelector = (questionId: string, currentValue: string) => {
+    const selectedRating = parseInt(currentValue || '0');
     return (
       <div className="flex gap-2 mt-2">
         {[1, 2, 3, 4, 5].map((rating) => (
@@ -186,14 +187,14 @@ const Feedback = () => {
             type="button"
             onClick={() => setAnswers({ ...answers, [questionId]: rating.toString() })}
             className={`p-2 rounded-lg transition-colors ${
-              currentValue === rating.toString()
+              rating <= selectedRating
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted hover:bg-muted/80"
             }`}
           >
             <Star
               className={`h-6 w-6 ${
-                currentValue === rating.toString() ? "fill-current" : ""
+                rating <= selectedRating ? "fill-current" : ""
               }`}
             />
           </button>

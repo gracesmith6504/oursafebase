@@ -43,6 +43,8 @@ export interface GroupedResponse {
   questionId: string;
   question: string;
   questionType: string;
+  options?: MultipleChoiceOption[];
+  allowMultipleAnswers?: boolean;
   answers: Array<{
     answerId: string;
     answerText?: string;
@@ -259,6 +261,8 @@ export async function getGroupedResponses(eventId: string): Promise<GroupedRespo
       questionId: question.id,
       question: question.question,
       questionType: question.question_type,
+      options: question.options,
+      allowMultipleAnswers: question.allow_multiple_answers,
       answers: questionAnswers.map(answer => {
         const response = responses.find(r => r.id === answer.response_id);
         const submitterName = response?.is_anonymous 
