@@ -881,6 +881,9 @@ const EditEvent = () => {
             question_type: q.question_type,
             display_order: q.display_order,
             is_required: q.is_required,
+            options: (q.options as any) || null,
+            allow_multiple_answers: q.allow_multiple_answers || false,
+            placeholder_text: q.placeholder_text || null,
           }));
           
           const { error: questionsError } = await supabase
