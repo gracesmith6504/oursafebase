@@ -33,6 +33,7 @@ export interface GroupedResponse {
     answerRating?: number;
     submittedAt: string;
     isAnonymous: boolean;
+    submitterName?: string;
     userEmail?: string;
   }>;
 }
@@ -211,10 +212,10 @@ export async function getGroupedResponses(eventId: string): Promise<GroupedRespo
 
   if (!questions || questions.length === 0) return [];
 
-  // Get all responses with email
+  // Get all responses with email and optional_name
   const { data: responses } = await supabase
     .from("feedback_responses")
-    .select("id, submitted_at, is_anonymous, submitter_email")
+    .select("id, submitted_at, is_anonymous, submitter_email, optional_name, user_id")
     .eq("event_id", eventId)
     .order("submitted_at", { ascending: false });
 
@@ -238,12 +239,17 @@ export async function getGroupedResponses(eventId: string): Promise<GroupedRespo
       questionType: question.question_type,
       answers: questionAnswers.map(answer => {
         const response = responses.find(r => r.id === answer.response_id);
+        const submitterName = response?.is_anonymous 
+          ? undefined 
+          : response?.optional_name || undefined;
+        
         return {
           answerId: answer.id,
           answerText: answer.answer_text || undefined,
           answerRating: answer.answer_rating || undefined,
           submittedAt: response?.submitted_at || "",
           isAnonymous: response?.is_anonymous || false,
+          submitterName,
           userEmail: response?.submitter_email || undefined,
         };
       }),

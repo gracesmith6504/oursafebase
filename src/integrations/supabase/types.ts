@@ -540,6 +540,7 @@ export type Database = {
           event_id: string
           id: string
           is_anonymous: boolean
+          optional_name: string | null
           submitted_at: string
           submitter_email: string | null
           user_id: string | null
@@ -548,6 +549,7 @@ export type Database = {
           event_id: string
           id?: string
           is_anonymous?: boolean
+          optional_name?: string | null
           submitted_at?: string
           submitter_email?: string | null
           user_id?: string | null
@@ -556,6 +558,7 @@ export type Database = {
           event_id?: string
           id?: string
           is_anonymous?: boolean
+          optional_name?: string | null
           submitted_at?: string
           submitter_email?: string | null
           user_id?: string | null

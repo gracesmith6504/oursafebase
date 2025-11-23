@@ -7,8 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Star, CheckCircle2, ArrowLeft } from "lucide-react";
-import { ProtectedRoute } from "@/lib/auth";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { Footer } from "@/components/Footer";
 
 interface FeedbackQuestion {
@@ -38,8 +38,9 @@ const Feedback = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [questions, setQuestions] = useState<FeedbackQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  const [isMember, setIsMember] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(true);
+  const [optionalName, setOptionalName] = useState("");
+  const [optionalEmail, setOptionalEmail] = useState("");
 
   useEffect(() => {
     fetchEventAndQuestions();
@@ -49,15 +50,7 @@ const Feedback = () => {
     try {
       setLoading(true);
 
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("Please log in to submit feedback");
-        navigate(`/auth?redirectTo=/${societySlug}/${eventSlug}/feedback`);
-        return;
-      }
-
-      // Fetch event by slug
+      // Fetch event by slug (no auth required)
       const { data: eventData, error: eventError } = await supabase
         .from("events")
         .select(`
@@ -80,36 +73,7 @@ const Feedback = () => {
 
       setEvent(eventData);
 
-      // Check if user is a member of the society
-      const { data: memberData } = await supabase
-        .from("society_members")
-        .select("id")
-        .eq("society_id", eventData.society_id)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!memberData) {
-        toast.error("You must be a member of this society to submit feedback");
-        navigate(`/${societySlug}/${eventSlug}`);
-        return;
-      }
-
-      setIsMember(true);
-
-      // Check if user has already submitted feedback
-      const { data: existingResponse } = await supabase
-        .from("feedback_responses")
-        .select("id")
-        .eq("event_id", eventData.id)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (existingResponse) {
-        setSubmitted(true);
-        return;
-      }
-
-      // Fetch feedback questions
+      // Fetch feedback questions (no auth required)
       const { data: questionsData, error: questionsError } = await supabase
         .from("event_feedback_questions")
         .select("*")
@@ -143,18 +107,19 @@ const Feedback = () => {
     try {
       setSubmitting(true);
 
+      // Get user if logged in (optional)
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user || !event) return;
+      if (!event) return;
 
-      // Create feedback response
-      // Always store user_id for tracking, use is_anonymous flag for privacy
+      // Create feedback response (anonymous-friendly)
       const { data: responseData, error: responseError } = await supabase
         .from("feedback_responses")
         .insert({
           event_id: event.id,
-          user_id: user.id, // Always store for tracking
-          is_anonymous: isAnonymous,
-          submitter_email: isAnonymous ? null : user.email,
+          user_id: user?.id || null,
+          is_anonymous: isAnonymous || !user,
+          submitter_email: (!isAnonymous && optionalEmail) ? optionalEmail : null,
+          optional_name: (!isAnonymous && optionalName) ? optionalName : null,
         })
         .select()
         .single();
@@ -175,11 +140,11 @@ const Feedback = () => {
 
       if (answersError) throw answersError;
 
-      toast.success("Feedback submitted successfully!");
+      toast.success("Thank you for your feedback!");
       setSubmitted(true);
     } catch (error) {
       console.error("Error submitting feedback:", error);
-      toast.error("Failed to submit feedback");
+      toast.error("Failed to submit feedback. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -242,7 +207,7 @@ const Feedback = () => {
     );
   }
 
-  if (!event || !isMember) {
+  if (!event) {
     return null;
   }
 
@@ -304,6 +269,36 @@ const Feedback = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Optional Identity Fields */}
+        {!isAnonymous && (
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="optional-name">Name (Optional)</Label>
+                <Input
+                  id="optional-name"
+                  value={optionalName}
+                  onChange={(e) => setOptionalName(e.target.value)}
+                  placeholder="Your name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="optional-email">Email (Optional)</Label>
+                <Input
+                  id="optional-email"
+                  type="email"
+                  value={optionalEmail}
+                  onChange={(e) => setOptionalEmail(e.target.value)}
+                  placeholder="your.email@example.com"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Provide your email if you'd like the committee to follow up with you
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Questions */}
         {questions.length === 0 ? (
@@ -371,8 +366,4 @@ const Feedback = () => {
   );
 };
 
-export default () => (
-  <ProtectedRoute>
-    <Feedback />
-  </ProtectedRoute>
-);
+export default Feedback;
