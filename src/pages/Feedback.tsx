@@ -153,7 +153,13 @@ const Feedback = () => {
         answer_text: question.question_type === "text" 
           ? (typeof answer === 'string' ? answer : null)
           : question.question_type === "multiple_choice"
-            ? JSON.stringify(Array.isArray(answer) ? answer : [])
+            ? JSON.stringify(
+                Array.isArray(answer) 
+                  ? answer 
+                  : typeof answer === 'string' && answer 
+                    ? [answer] 
+                    : []
+              )
             : null,
         answer_rating: question.question_type === "rating" 
           ? parseInt(typeof answer === 'string' ? answer : '') 
