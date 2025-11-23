@@ -18,12 +18,19 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Badge } from "@/components/ui/badge";
 
+interface MultipleChoiceOption {
+  id: string;
+  text: string;
+}
+
 export interface FeedbackQuestion {
   id: string;
   question: string;
-  question_type: 'text' | 'rating';
+  question_type: 'text' | 'rating' | 'multiple_choice';
   display_order: number;
   is_required: boolean;
+  options?: MultipleChoiceOption[];
+  allow_multiple_answers?: boolean;
 }
 
 interface SortableFeedbackQuestionItemProps {
@@ -78,14 +85,37 @@ const SortableFeedbackQuestionItem = ({
         <div className="flex items-start gap-2 flex-wrap">
           <p className="text-sm flex-1">{question.question}</p>
           <div className="flex gap-1">
-            <Badge variant={question.question_type === 'rating' ? 'default' : 'secondary'} className="text-xs">
-              {question.question_type === 'rating' ? 'Rating 1-5' : 'Text'}
+            <Badge 
+              variant={
+                question.question_type === 'rating' 
+                  ? 'default' 
+                  : question.question_type === 'multiple_choice' 
+                    ? 'default' 
+                    : 'secondary'
+              } 
+              className="text-xs"
+            >
+              {question.question_type === 'rating' 
+                ? 'Rating 1-5' 
+                : question.question_type === 'multiple_choice'
+                  ? `Multiple Choice${question.allow_multiple_answers ? ' (Multi)' : ''}`
+                  : 'Text'}
             </Badge>
             {question.is_required && (
               <Badge variant="outline" className="text-xs">Required</Badge>
             )}
           </div>
         </div>
+        {question.question_type === 'multiple_choice' && question.options && (
+          <div className="text-xs text-muted-foreground pl-2 space-y-0.5">
+            {question.options.slice(0, 3).map((opt, idx) => (
+              <div key={opt.id}>• {opt.text || `Option ${idx + 1}`}</div>
+            ))}
+            {question.options.length > 3 && (
+              <div>• ... and {question.options.length - 3} more</div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex gap-1">

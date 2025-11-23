@@ -353,31 +353,37 @@ export type Database = {
       }
       event_feedback_questions: {
         Row: {
+          allow_multiple_answers: boolean | null
           created_at: string | null
           display_order: number
           event_id: string
           id: string
           is_required: boolean
+          options: Json | null
           question: string
           question_type: string
           updated_at: string | null
         }
         Insert: {
+          allow_multiple_answers?: boolean | null
           created_at?: string | null
           display_order?: number
           event_id: string
           id?: string
           is_required?: boolean
+          options?: Json | null
           question: string
           question_type: string
           updated_at?: string | null
         }
         Update: {
+          allow_multiple_answers?: boolean | null
           created_at?: string | null
           display_order?: number
           event_id?: string
           id?: string
           is_required?: boolean
+          options?: Json | null
           question?: string
           question_type?: string
           updated_at?: string | null

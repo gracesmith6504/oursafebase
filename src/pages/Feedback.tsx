@@ -9,7 +9,14 @@ import { toast } from "sonner";
 import { Loader2, Star, CheckCircle2, ArrowLeft } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Footer } from "@/components/Footer";
+
+interface MultipleChoiceOption {
+  id: string;
+  text: string;
+}
 
 interface FeedbackQuestion {
   id: string;
@@ -17,6 +24,8 @@ interface FeedbackQuestion {
   question_type: string;
   is_required: boolean;
   display_order: number;
+  options?: MultipleChoiceOption[];
+  allow_multiple_answers?: boolean;
 }
 
 interface Event {
@@ -37,7 +46,7 @@ const Feedback = () => {
   const [submitted, setSubmitted] = useState(false);
   const [event, setEvent] = useState<Event | null>(null);
   const [questions, setQuestions] = useState<FeedbackQuestion[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [optionalName, setOptionalName] = useState("");
   const [optionalEmail, setOptionalEmail] = useState("");
@@ -82,7 +91,12 @@ const Feedback = () => {
 
       if (questionsError) throw questionsError;
 
-      setQuestions(questionsData || []);
+      // Parse options from JSON if they exist
+      const parsedQuestions = (questionsData || []).map(q => ({
+        ...q,
+        options: q.options ? (Array.isArray(q.options) ? q.options : JSON.parse(JSON.stringify(q.options))) as MultipleChoiceOption[] : undefined,
+      }));
+      setQuestions(parsedQuestions);
     } catch (error) {
       console.error("Error fetching feedback form:", error);
       toast.error("Failed to load feedback form");
@@ -93,9 +107,12 @@ const Feedback = () => {
 
   const validateForm = () => {
     for (const question of questions) {
-      if (question.is_required && !answers[question.id]) {
-        toast.error(`Please answer: ${question.question}`);
-        return false;
+      if (question.is_required) {
+        const answer = answers[question.id];
+        if (!answer || (Array.isArray(answer) && answer.length === 0)) {
+          toast.error(`Please answer: ${question.question}`);
+          return false;
+        }
       }
     }
     return true;
@@ -126,13 +143,22 @@ const Feedback = () => {
 
       if (responseError) throw responseError;
 
-      // Create feedback answers
-      const answersToInsert = questions.map(question => ({
+    // Create feedback answers
+    const answersToInsert = questions.map(question => {
+      const answer = answers[question.id];
+      return {
         response_id: responseData.id,
         question_id: question.id,
-        answer_text: question.question_type === "text" ? answers[question.id] : null,
-        answer_rating: question.question_type === "rating" ? parseInt(answers[question.id]) : null,
-      }));
+        answer_text: question.question_type === "text" 
+          ? (typeof answer === 'string' ? answer : null)
+          : question.question_type === "multiple_choice"
+            ? JSON.stringify(Array.isArray(answer) ? answer : [])
+            : null,
+        answer_rating: question.question_type === "rating" 
+          ? parseInt(typeof answer === 'string' ? answer : '') 
+          : null,
+      };
+    });
 
       const { error: answersError } = await supabase
         .from("feedback_answers")
@@ -333,9 +359,54 @@ const Feedback = () => {
                       placeholder="Enter your response..."
                       className="min-h-[100px]"
                     />
-                  ) : (
-                    renderRatingSelector(question.id, answers[question.id])
-                  )}
+                  ) : question.question_type === "rating" ? (
+                    renderRatingSelector(question.id, typeof answers[question.id] === 'string' ? answers[question.id] as string : '')
+                  ) : question.question_type === "multiple_choice" ? (
+                    question.allow_multiple_answers ? (
+                      <div className="space-y-3">
+                        {question.options?.map((option) => (
+                          <div key={option.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`${question.id}-${option.id}`}
+                              checked={Array.isArray(answers[question.id]) && (answers[question.id] as string[]).includes(option.id)}
+                              onCheckedChange={(checked) => {
+                                const currentAnswers = Array.isArray(answers[question.id]) ? (answers[question.id] as string[]) : [];
+                                const newAnswers = checked
+                                  ? [...currentAnswers, option.id]
+                                  : currentAnswers.filter(id => id !== option.id);
+                                setAnswers({ ...answers, [question.id]: newAnswers });
+                              }}
+                            />
+                            <Label
+                              htmlFor={`${question.id}-${option.id}`}
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              {option.text}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <RadioGroup
+                        value={typeof answers[question.id] === 'string' ? answers[question.id] as string : ""}
+                        onValueChange={(value) =>
+                          setAnswers({ ...answers, [question.id]: value })
+                        }
+                      >
+                        {question.options?.map((option) => (
+                          <div key={option.id} className="flex items-center space-x-2">
+                            <RadioGroupItem value={option.id} id={`${question.id}-${option.id}`} />
+                            <Label
+                              htmlFor={`${question.id}-${option.id}`}
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              {option.text}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    )
+                  ) : null}
                 </div>
               ))}
             </CardContent>
