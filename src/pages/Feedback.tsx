@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,6 +43,7 @@ interface Event {
 const Feedback = () => {
   const { societySlug, eventSlug } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -352,11 +354,11 @@ const Feedback = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(`/${societySlug}/${eventSlug}`)}
+          onClick={() => navigate(user ? `/${societySlug}/${eventSlug}` : "/")}
           className="mb-2"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Event
+          {user ? "Back to Event" : "Back to Home"}
         </Button>
 
         {/* Header */}
