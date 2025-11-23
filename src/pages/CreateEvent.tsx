@@ -836,6 +836,9 @@ const CreateEvent = () => {
             question_type: question.question_type,
             display_order: question.display_order,
             is_required: question.is_required,
+            options: (question.options as any) || null,
+            allow_multiple_answers: question.allow_multiple_answers || false,
+            placeholder_text: question.placeholder_text || null,
           }));
 
           const { error: questionsError } = await supabase
