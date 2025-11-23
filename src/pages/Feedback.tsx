@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Star, CheckCircle2, ArrowLeft } from "lucide-react";
+import { Loader2, Star, CheckCircle2, ArrowLeft, AlertCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -43,6 +43,7 @@ const Feedback = () => {
   const { societySlug, eventSlug } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [event, setEvent] = useState<Event | null>(null);
@@ -59,25 +60,28 @@ const Feedback = () => {
   const fetchEventAndQuestions = async () => {
     try {
       setLoading(true);
+      setLoadError(null);
 
-      // Fetch event by slug (no auth required)
+      // Fetch event by slug - filter by BOTH society AND event slug (no auth required)
       const { data: eventData, error: eventError } = await supabase
         .from("events")
         .select(`
           id,
           title,
           society_id,
-          societies (
+          slug,
+          societies!inner (
             name,
-            logo_url
+            logo_url,
+            slug
           )
         `)
         .eq("slug", eventSlug)
+        .eq("societies.slug", societySlug)
         .single();
 
       if (eventError || !eventData) {
-        toast.error("Event not found");
-        navigate("/");
+        setLoadError("Event not found");
         return;
       }
 
@@ -100,6 +104,7 @@ const Feedback = () => {
       setQuestions(parsedQuestions);
     } catch (error) {
       console.error("Error fetching feedback form:", error);
+      setLoadError("Failed to load feedback form. Please try again later.");
       toast.error("Failed to load feedback form");
     } finally {
       setLoading(false);
@@ -217,6 +222,35 @@ const Feedback = () => {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <AlertCircle className="h-16 w-16 text-destructive mx-auto" />
+                <h2 className="text-2xl font-bold">
+                  {loadError === "Event not found" ? "Event Not Found" : "Unable to Load Form"}
+                </h2>
+                <p className="text-muted-foreground">{loadError}</p>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={() => window.location.reload()}>
+                    Try Again
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate("/")}>
+                    Go to Home
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   if (submitted) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -242,7 +276,27 @@ const Feedback = () => {
   }
 
   if (!event) {
-    return null;
+    return (
+      <div className="min-h-screen flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-4">
+                <AlertCircle className="h-16 w-16 text-destructive mx-auto" />
+                <h2 className="text-2xl font-bold">Event Not Found</h2>
+                <p className="text-muted-foreground">
+                  The feedback form you're looking for doesn't exist or has been removed.
+                </p>
+                <Button onClick={() => navigate("/")}>
+                  Go to Home
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   return (
