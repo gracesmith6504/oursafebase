@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, Trash2 } from "lucide-react";
 
 interface MultipleChoiceOption {
@@ -78,8 +77,8 @@ export function EditFeedbackQuestionDialog({
           <DialogTitle>Edit Feedback Question</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-1">
-          <div className="space-y-4 py-4 pr-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="edit-question">Question</Label>
             <Input
@@ -186,7 +185,7 @@ export function EditFeedbackQuestionDialog({
             </div>
           )}
           </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
