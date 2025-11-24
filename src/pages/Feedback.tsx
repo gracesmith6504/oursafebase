@@ -344,6 +344,9 @@ const Feedback = () => {
                 <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
                 <h2 className="text-2xl font-bold">Thank you for your feedback!</h2>
                 <p className="text-muted-foreground">Your response has been submitted successfully.</p>
+                <p className="text-sm text-muted-foreground italic mt-4">
+                  This is the first time OurSafeBase is being used, so we're still fine-tuning a few things. Your feedback helps us spot bugs and improve the experience - thank you for your support!
+                </p>
                 <Button onClick={() => navigate(`/${societySlug}/${eventSlug}`)}>Return to Event</Button>
               </div>
             </CardContent>
