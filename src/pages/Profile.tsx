@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ProtectedRoute, useAuth } from "@/lib/auth";
+import { ProtectedRoute } from "@/lib/auth";
+import { useAuthContext } from "@/lib/AuthContext";
 import { ArrowLeft, Upload, Bell, LogOut, Download } from "lucide-react";
 import { toast } from "sonner";
 import { LazyImage } from "@/components/LazyImage";
@@ -44,7 +45,7 @@ interface SocietyMembership {
   society: Society;
 }
 const Profile = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile>({
     display_name: "",

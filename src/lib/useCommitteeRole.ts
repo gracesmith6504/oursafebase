@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./auth";
+import { useAuthContext } from "./AuthContext";
 
 export const useCommitteeRole = (societyId: string | undefined) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [isCommittee, setIsCommittee] = useState(false);
   const [loading, setLoading] = useState(true);
 

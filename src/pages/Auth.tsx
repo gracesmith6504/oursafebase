@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/lib/auth";
+import { useAuthContext } from "@/lib/AuthContext";
 import logo from "@/assets/logo.png";
 import { Footer } from "@/components/Footer";
 import { getAppUrl } from "@/lib/constants";
@@ -73,7 +73,7 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const {
     user
-  } = useAuth();
+  } = useAuthContext();
   const inviteCode = searchParams.get("invite");
   const redirectPath = searchParams.get("redirect");
   const redirectTo = searchParams.get("redirectTo");

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { useAuthContext } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,7 +44,7 @@ interface Event {
 const Feedback = () => {
   const { societySlug, eventSlug } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuthContext();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -61,40 +61,66 @@ const Feedback = () => {
   const [platformFeedbackSubmitted, setPlatformFeedbackSubmitted] = useState(false);
   const [showPlatformFeedback, setShowPlatformFeedback] = useState(false);
 
+  // Wait for auth to resolve before fetching (prevents hanging with expired sessions)
   useEffect(() => {
-    fetchEventAndQuestions();
-  }, [societySlug, eventSlug]);
+    if (!authLoading) {
+      console.log('[Feedback] Auth resolved, fetching event data');
+      fetchEventAndQuestions();
+    }
+  }, [societySlug, eventSlug, authLoading]);
 
   useEffect(() => {
-    checkExistingSubmission();
-  }, [event, user]);
+    if (!authLoading) {
+      checkExistingSubmission();
+    }
+  }, [event, user, authLoading]);
 
   useEffect(() => {
     if (submitted) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [submitted]);
+  
+  // Timeout fallback: force loading to resolve after 15 seconds
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.error('[Feedback] Loading timeout - forcing state resolution');
+        setLoading(false);
+        setLoadError('Loading timed out. Please refresh the page or try again later.');
+      }
+    }, 15000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [loading]);
 
   const checkExistingSubmission = async () => {
     if (!event) return;
+    
+    // Only check database if user is present AND auth is fully loaded
+    // This prevents hanging queries with expired sessions
+    if (user && !authLoading) {
+      console.log('[Feedback] Checking existing submission for logged-in user');
+      try {
+        const { data, error } = await supabase
+          .from("feedback_responses")
+          .select("id")
+          .eq("event_id", event.id)
+          .eq("user_id", user.id)
+          .maybeSingle();
 
-    // Check for logged-in users via database
-    if (user) {
-      const { data, error } = await supabase
-        .from("feedback_responses")
-        .select("id")
-        .eq("event_id", event.id)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!error && data) {
-        toast.error("You have already submitted feedback for this event");
-        setSubmitted(true);
-        return;
+        if (!error && data) {
+          toast.error("You have already submitted feedback for this event");
+          setSubmitted(true);
+          return;
+        }
+      } catch (error) {
+        console.error('[Feedback] Error checking submission:', error);
+        // Continue to localStorage check on error
       }
     }
 
-    // Check for anonymous users via localStorage
+    // Always check localStorage (works for both logged-in and anonymous)
     const localStorageKey = `feedback_submitted_${event.id}`;
     const hasSubmitted = localStorage.getItem(localStorageKey);
     if (hasSubmitted) {

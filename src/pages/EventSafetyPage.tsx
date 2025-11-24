@@ -25,7 +25,7 @@ import logo from "@/assets/logo.png";
 import { getEventStatus, shouldShowPostEventFeedback } from "@/lib/eventHelpers";
 import CoCAcceptanceDialog from "@/components/CoCAcceptanceDialog";
 import { MembershipRequiredAlert } from "@/components/MembershipRequiredAlert";
-import { useAuth } from "@/lib/auth";
+import { useAuthContext } from "@/lib/AuthContext";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EventShareCard } from "@/components/EventShareCard";
@@ -126,7 +126,7 @@ interface FAQ {
 const EventSafetyPage = () => {
   const { eventId, societySlug, eventSlug } = useParams();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuthContext();
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [showMembershipAlert, setShowMembershipAlert] = useState(false);

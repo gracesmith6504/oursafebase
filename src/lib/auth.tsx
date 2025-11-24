@@ -1,129 +1,43 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Session, User } from "@supabase/supabase-js";
-import { updateLastLogin } from "./activityLogger";
-import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuthContext } from "./AuthContext";
 
+// Legacy hook for backwards compatibility - redirects to useAuthContext
 export const useAuth = () => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const queryClient = useQueryClient();
+  console.warn('[useAuth] DEPRECATED: Please use useAuthContext from AuthContext instead');
+  return useAuthContext();
+};
+
+// Hook to handle session expiration with page-specific logic
+export const useSessionExpiration = () => {
+  const { user, loading } = useAuthContext();
+  const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
-    let isSubscribed = true;
+    // Don't redirect if still loading or if user is present
+    if (loading || user) return;
     
-    // Listen for auth changes FIRST to avoid missing events
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!isSubscribed) return;
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      
-      // Invalidate React Query cache on auth state changes (fixes Safari stale data)
-      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-        setTimeout(() => {
-          queryClient.invalidateQueries();
-        }, 0);
-      }
-      
-      // Log login activity when user signs in
-      if (event === 'SIGNED_IN' && session?.user) {
-        updateLastLogin();
-      }
-    });
-
-    // THEN check for an existing session and validate it
-    const initializeAuth = async () => {
-      try {
-        // Check if we're in ANY auth callback - don't refresh session in that case
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const confirmationType = hashParams.get('type');
-        const hasAccessToken = hashParams.has('access_token') || hashParams.has('refresh_token');
-        const isAuthCallback = confirmationType || hasAccessToken;
-        
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        
-        if (currentSession) {
-          // Skip session refresh during ANY auth callback (OAuth, email confirmation, etc.)
-          if (isAuthCallback) {
-            console.log('[Auth] Skipping session refresh during auth callback:', { type: confirmationType, hasToken: hasAccessToken });
-            if (isSubscribed) {
-              setSession(currentSession);
-              setUser(currentSession.user);
-              setLoading(false);
-            }
-            return;
-          }
-          
-          // Validate session by attempting refresh (catches stale Safari sessions)
-          const { data: { session: refreshedSession }, error } = await supabase.auth.refreshSession();
-          
-          if (error || !refreshedSession) {
-            // Session is invalid, clear it
-            console.warn('Stale session detected, signing out:', error?.message);
-            await supabase.auth.signOut();
-            if (isSubscribed) {
-              setSession(null);
-              setUser(null);
-              setLoading(false);
-            }
-          } else {
-            // Session is valid
-            if (isSubscribed) {
-              setSession(refreshedSession);
-              setUser(refreshedSession.user);
-              setLoading(false);
-              updateLastLogin();
-            }
-          }
-        } else {
-          if (isSubscribed) {
-            setSession(null);
-            setUser(null);
-            setLoading(false);
-          }
-        }
-      } catch (err) {
-        console.error('Auth initialization error:', err);
-        // Fail-safe: allow app to continue
-        if (isSubscribed) {
-          setLoading(false);
-        }
-      }
-    };
+    // Special case: Feedback page should NOT redirect on session expiration
+    if (location.pathname.includes('/feedback')) {
+      console.log('[SessionExpiration] User logged out on feedback page, staying on page');
+      return;
+    }
     
-    // Add timeout to prevent auth from blocking app forever (fixes WhatsApp/iOS stuck loading)
-    const timeoutPromise = new Promise<void>((_, reject) => 
-      setTimeout(() => reject(new Error('Auth initialization timeout')), 8000)
-    );
+    // For all other pages, redirect to auth when session expires
+    const isPublicPage = ['/', '/auth', '/privacy', '/terms', '/contact', '/faq', '/about'].includes(location.pathname) 
+      || location.pathname.includes('/code-of-conduct/') 
+      || location.pathname.includes('/invite/');
     
-    Promise.race([initializeAuth(), timeoutPromise])
-      .catch((err) => {
-        console.error('[Auth] Timeout or error during initialization:', err);
-        // Fail-safe: allow app to continue without auth
-        if (isSubscribed) {
-          setSession(null);
-          setUser(null);
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      isSubscribed = false;
-      subscription.unsubscribe();
-    };
-  }, [queryClient]);
-
-  return { session, user, loading };
+    if (!isPublicPage) {
+      console.log('[SessionExpiration] Session expired on protected page, redirecting to auth');
+      navigate('/auth', { replace: true });
+    }
+  }, [user, loading, location.pathname, navigate]);
 };
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAuthContext();
   const navigate = useNavigate();
 
   useEffect(() => {
