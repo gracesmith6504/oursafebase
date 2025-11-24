@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -376,8 +377,36 @@ const Feedback = () => {
     );
   }
 
+  const pageUrl = `https://oursafebase.com/${societySlug}/${eventSlug}/feedback`;
+  const pageTitle = `Share Your Feedback - ${event.title}`;
+  const pageDescription = `We value your feedback for ${event.title} hosted by ${event.societies.name}. Help us improve future events by sharing your experience.`;
+  const pageImage = event.societies.logo_url || "https://oursafebase.com/favicon.png";
+
   return (
     <div className="min-h-screen bg-background py-8 px-4 flex flex-col">
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:image" content={pageImage} />
+        <meta property="og:image:width" content="512" />
+        <meta property="og:image:height" content="512" />
+        <meta property="og:image:alt" content={`${event.societies.name} logo`} />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={pageUrl} />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={pageImage} />
+        <meta name="twitter:image:alt" content={`${event.societies.name} logo`} />
+      </Helmet>
+
       <div className="max-w-2xl mx-auto space-y-6 flex-1">
         {/* Back Button - Only show for logged-in users */}
         {user && (
