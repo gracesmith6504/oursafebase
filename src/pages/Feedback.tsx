@@ -370,7 +370,7 @@ const Feedback = () => {
                 <Label htmlFor="anonymous-mode" className="text-base font-medium">
                   Submit Anonymously
                 </Label>
-                <p className="text-sm text-muted-foreground">Your identity will not be shared with the organizers</p>
+                <p className="text-sm text-muted-foreground">Your identity will not be shared</p>
               </div>
               <Switch id="anonymous-mode" checked={isAnonymous} onCheckedChange={setIsAnonymous} />
             </div>
@@ -399,9 +399,6 @@ const Feedback = () => {
                   onChange={(e) => setOptionalEmail(e.target.value)}
                   placeholder="your.email@example.com"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Provide your email if you'd like the committee to follow up with you
-                </p>
               </div>
             </CardContent>
           </Card>
