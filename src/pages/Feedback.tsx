@@ -389,16 +389,15 @@ const Feedback = () => {
                 {/* Platform Feedback Section */}
                 <div className="border-t pt-6 mt-6">
                   <Collapsible open={showPlatformFeedback} onOpenChange={setShowPlatformFeedback}>
-                    <CollapsibleTrigger className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      {showPlatformFeedback ? (
-                        <>Hide OurSafeBase Feedback Form</>
-                      ) : (
-                        <>Found a bug or have suggestions? Let us know!</>
-                      )}
+                    <CollapsibleTrigger asChild>
+                      <Button variant="outline" className="w-full">
+                        {showPlatformFeedback ? "Hide feedback form" : "Report a bug or suggest an improvement"}
+                      </Button>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="mt-4 space-y-4">
                       {!platformFeedbackSubmitted ? (
                         <>
+                          <h3 className="text-lg font-semibold text-left">OurSafeBase Feedback</h3>
                           <p className="text-sm text-muted-foreground text-left">
                             Help us improve OurSafeBase by reporting bugs, suggesting features, or sharing your experience.
                           </p>
