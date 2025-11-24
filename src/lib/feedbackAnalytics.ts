@@ -278,7 +278,7 @@ export async function getGroupedResponses(eventId: string): Promise<GroupedRespo
           submitterName,
           userEmail: response?.submitter_email || undefined,
         };
-      }),
+      }).sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()),
     };
   });
 
