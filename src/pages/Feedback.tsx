@@ -104,11 +104,19 @@ const Feedback = () => {
   };
 
   const fetchEventAndQuestions = async () => {
+    // Add timeout to prevent infinite loading (fixes WhatsApp/iOS stuck loading)
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error('Data fetch timeout')), 10000)
+    );
+
     try {
       setLoading(true);
       setLoadError(null);
 
       console.log("Fetching feedback form for:", { societySlug, eventSlug });
+
+      await Promise.race([
+        (async () => {
 
       // Try Pattern A first (matching useEvent pattern)
       let { data: eventData, error: eventError } = await supabase
@@ -196,9 +204,19 @@ const Feedback = () => {
           : undefined,
       }));
       setQuestions(parsedQuestions);
-    } catch (error) {
+        })(),
+        timeoutPromise
+      ]);
+    } catch (error: any) {
       console.error("Error fetching feedback form:", error);
-      setLoadError("Failed to load feedback form. Please try again later.");
+      
+      // Check if it's a timeout
+      if (error.message === 'Data fetch timeout') {
+        setLoadError("Loading timed out. This sometimes happens when opening from WhatsApp. Please try refreshing.");
+      } else {
+        setLoadError("Failed to load feedback form. Please try again later.");
+      }
+      
       toast.error("Failed to load feedback form");
     } finally {
       setLoading(false);

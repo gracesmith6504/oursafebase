@@ -97,7 +97,21 @@ export const useAuth = () => {
       }
     };
     
-    initializeAuth();
+    // Add timeout to prevent auth from blocking app forever (fixes WhatsApp/iOS stuck loading)
+    const timeoutPromise = new Promise<void>((_, reject) => 
+      setTimeout(() => reject(new Error('Auth initialization timeout')), 8000)
+    );
+    
+    Promise.race([initializeAuth(), timeoutPromise])
+      .catch((err) => {
+        console.error('[Auth] Timeout or error during initialization:', err);
+        // Fail-safe: allow app to continue without auth
+        if (isSubscribed) {
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+        }
+      });
 
     return () => {
       isSubscribed = false;

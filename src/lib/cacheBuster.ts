@@ -6,6 +6,19 @@ const RELOAD_FLAG_EXPIRY_MS = 5000; // 5 seconds to prevent reload loops
 
 export const runCacheBuster = (): boolean => {
   try {
+    // Detect iOS WebKit (Safari, Chrome on iOS, in-app browsers)
+    const isIOSWebKit = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const isIOSSafari = isIOSWebKit && /Safari/.test(navigator.userAgent) && !/CriOS|FxiOS/.test(navigator.userAgent);
+    const isIOSChrome = isIOSWebKit && /CriOS/.test(navigator.userAgent);
+    
+    if (isIOSWebKit) {
+      console.log('[CacheBuster] iOS WebKit detected:', {
+        safari: isIOSSafari,
+        chrome: isIOSChrome,
+        userAgent: navigator.userAgent.substring(0, 50)
+      });
+    }
+    
     // Skip cache busting on ANY auth callback with hash parameters
     // This includes OAuth, password reset, and email confirmation
     const hasHashParams = window.location.hash.length > 1;
@@ -34,7 +47,12 @@ export const runCacheBuster = (): boolean => {
     const storedVersion = localStorage.getItem(VERSION_KEY);
     
     if (storedVersion !== APP_VERSION) {
-      console.log(`Version change detected: ${storedVersion} → ${APP_VERSION}. Clearing cache...`);
+      console.log(`[CacheBuster] Version change detected: ${storedVersion} → ${APP_VERSION}. Clearing cache...`);
+      
+      // iOS WebKit specific logging
+      if (isIOSWebKit) {
+        console.log('[CacheBuster] Applying iOS-specific cache clearing');
+      }
       
       // Set reload flag to prevent infinite loops
       localStorage.setItem(RELOAD_FLAG_KEY, Date.now().toString());
