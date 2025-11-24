@@ -623,6 +623,36 @@ export type Database = {
           },
         ]
       }
+      platform_feedback: {
+        Row: {
+          created_at: string
+          feedback_text: string
+          id: string
+          page_context: string | null
+          submitted_at: string
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          feedback_text: string
+          id?: string
+          page_context?: string | null
+          submitted_at?: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          feedback_text?: string
+          id?: string
+          page_context?: string | null
+          submitted_at?: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

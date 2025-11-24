@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Footer } from "@/components/Footer";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface MultipleChoiceOption {
   id: string;
@@ -54,6 +55,11 @@ const Feedback = () => {
   const [isAnonymous, setIsAnonymous] = useState(true);
   const [optionalName, setOptionalName] = useState("");
   const [optionalEmail, setOptionalEmail] = useState("");
+  const [platformFeedback, setPlatformFeedback] = useState("");
+  const [platformFeedbackEmail, setPlatformFeedbackEmail] = useState("");
+  const [submittingPlatformFeedback, setSubmittingPlatformFeedback] = useState(false);
+  const [platformFeedbackSubmitted, setPlatformFeedbackSubmitted] = useState(false);
+  const [showPlatformFeedback, setShowPlatformFeedback] = useState(false);
 
   useEffect(() => {
     fetchEventAndQuestions();
@@ -212,6 +218,38 @@ const Feedback = () => {
     return true;
   };
 
+  const handlePlatformFeedbackSubmit = async () => {
+    if (!platformFeedback.trim()) {
+      toast.error("Please enter your feedback");
+      return;
+    }
+
+    try {
+      setSubmittingPlatformFeedback(true);
+
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const { error } = await supabase.from("platform_feedback").insert({
+        feedback_text: platformFeedback,
+        user_id: user?.id || null,
+        user_email: platformFeedbackEmail || null,
+        page_context: "feedback_success",
+      });
+
+      if (error) throw error;
+
+      toast.success("Thank you for helping us improve OurSafeBase!");
+      setPlatformFeedbackSubmitted(true);
+      setPlatformFeedback("");
+      setPlatformFeedbackEmail("");
+    } catch (error) {
+      console.error("Error submitting platform feedback:", error);
+      toast.error("Failed to submit feedback. Please try again.");
+    } finally {
+      setSubmittingPlatformFeedback(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
@@ -340,13 +378,68 @@ const Feedback = () => {
         <div className="flex-1 flex items-center justify-center p-4">
           <Card className="w-full max-w-2xl">
             <CardContent className="pt-6">
-              <div className="text-center space-y-4">
+              <div className="text-center space-y-6">
                 <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
                 <h2 className="text-2xl font-bold">Thank you for your feedback!</h2>
                 <p className="text-muted-foreground">Your response has been submitted successfully.</p>
                 <p className="text-sm text-muted-foreground italic mt-4">
                   This is the first time OurSafeBase is being used, so we're still fine-tuning a few things. Your feedback helps us spot bugs and improve the experience - thank you for your support!
                 </p>
+
+                {/* Platform Feedback Section */}
+                <div className="border-t pt-6 mt-6">
+                  <Collapsible open={showPlatformFeedback} onOpenChange={setShowPlatformFeedback}>
+                    <CollapsibleTrigger className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      {showPlatformFeedback ? (
+                        <>Hide OurSafeBase Feedback Form</>
+                      ) : (
+                        <>Found a bug or have suggestions? Let us know!</>
+                      )}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-4 space-y-4">
+                      {!platformFeedbackSubmitted ? (
+                        <>
+                          <p className="text-sm text-muted-foreground text-left">
+                            Help us improve OurSafeBase by reporting bugs, suggesting features, or sharing your experience.
+                          </p>
+                          <Textarea
+                            value={platformFeedback}
+                            onChange={(e) => setPlatformFeedback(e.target.value)}
+                            placeholder="Describe the bug, feature request, or feedback..."
+                            className="min-h-[100px]"
+                          />
+                          <Input
+                            type="email"
+                            value={platformFeedbackEmail}
+                            onChange={(e) => setPlatformFeedbackEmail(e.target.value)}
+                            placeholder="Your email (optional, for follow-up)"
+                          />
+                          <Button
+                            onClick={handlePlatformFeedbackSubmit}
+                            disabled={submittingPlatformFeedback}
+                            className="w-full"
+                            variant="outline"
+                          >
+                            {submittingPlatformFeedback ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Submitting...
+                              </>
+                            ) : (
+                              "Submit Feedback"
+                            )}
+                          </Button>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2 text-green-600">
+                          <CheckCircle2 className="h-5 w-5" />
+                          <p className="text-sm">Thank you! Your feedback has been received.</p>
+                        </div>
+                      )}
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+
                 <Button onClick={() => navigate(`/${societySlug}/${eventSlug}`)}>Return to Event</Button>
               </div>
             </CardContent>
