@@ -228,6 +228,7 @@ const Feedback = () => {
 
       toast.success("Thank you for your feedback!");
       setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error("Error submitting feedback:", error);
       toast.error("Failed to submit feedback. Please try again.");
@@ -336,11 +337,13 @@ const Feedback = () => {
   return (
     <div className="min-h-screen bg-background py-8 px-4 flex flex-col">
       <div className="max-w-2xl mx-auto space-y-6 flex-1">
-        {/* Back Button */}
-        <Button variant="ghost" size="sm" onClick={() => navigate(user ? "/dashboard" : "/")} className="mb-2">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {user ? "Back to Dashboard" : ""}
-        </Button>
+        {/* Back Button - Only show for logged-in users */}
+        {user && (
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="mb-2">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        )}
 
         {/* Header */}
         <Card>
