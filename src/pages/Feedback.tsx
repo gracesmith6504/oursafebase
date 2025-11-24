@@ -214,7 +214,7 @@ const Feedback = () => {
       // Check if it's a timeout
       if (error.message === "Data fetch timeout") {
         setLoadError(
-          "Loading timed out. This sometimes happens when opening from WhatsApp. Please try close the tab and press the link again.",
+          "Loading timed out. This sometimes happens when opening from WhatsApp. Please close the tab and press the link again.",
         );
       } else {
         setLoadError("Failed to load feedback form. Please try again later.");
