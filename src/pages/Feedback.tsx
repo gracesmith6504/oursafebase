@@ -59,6 +59,38 @@ const Feedback = () => {
     fetchEventAndQuestions();
   }, [societySlug, eventSlug]);
 
+  useEffect(() => {
+    checkExistingSubmission();
+  }, [event, user]);
+
+  const checkExistingSubmission = async () => {
+    if (!event) return;
+
+    // Check for logged-in users via database
+    if (user) {
+      const { data, error } = await supabase
+        .from("feedback_responses")
+        .select("id")
+        .eq("event_id", event.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!error && data) {
+        toast.error("You have already submitted feedback for this event");
+        setSubmitted(true);
+        return;
+      }
+    }
+
+    // Check for anonymous users via localStorage
+    const localStorageKey = `feedback_submitted_${event.id}`;
+    const hasSubmitted = localStorage.getItem(localStorageKey);
+    if (hasSubmitted) {
+      toast.error("You have already submitted feedback for this event from this device");
+      setSubmitted(true);
+    }
+  };
+
   const fetchEventAndQuestions = async () => {
     try {
       setLoading(true);
@@ -225,6 +257,11 @@ const Feedback = () => {
       const { error: answersError } = await supabase.from("feedback_answers").insert(answersToInsert);
 
       if (answersError) throw answersError;
+
+      // Mark as submitted in localStorage for anonymous users
+      if (!user) {
+        localStorage.setItem(`feedback_submitted_${event.id}`, "true");
+      }
 
       toast.success("Thank you for your feedback!");
       setSubmitted(true);
