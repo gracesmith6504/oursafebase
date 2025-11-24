@@ -186,18 +186,20 @@ const Feedback = () => {
       } = await supabase.auth.getUser();
       if (!event) return;
 
+      // Generate response ID client-side to avoid needing SELECT permission
+      const responseId = crypto.randomUUID();
+
       // Create feedback response (anonymous-friendly)
-      const { data: responseData, error: responseError } = await supabase
+      const { error: responseError } = await supabase
         .from("feedback_responses")
         .insert({
+          id: responseId,
           event_id: event.id,
           user_id: user?.id || null,
           is_anonymous: isAnonymous || !user,
           submitter_email: !isAnonymous && optionalEmail ? optionalEmail : null,
           optional_name: !isAnonymous && optionalName ? optionalName : null,
-        })
-        .select()
-        .single();
+        });
 
       if (responseError) throw responseError;
 
@@ -205,7 +207,7 @@ const Feedback = () => {
       const answersToInsert = questions.map((question) => {
         const answer = answers[question.id];
         return {
-          response_id: responseData.id,
+          response_id: responseId,
           question_id: question.id,
           answer_text:
             question.question_type === "text"
