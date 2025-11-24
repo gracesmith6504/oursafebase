@@ -437,6 +437,9 @@ const DuplicateEvent = () => {
           question_type: q.question_type,
           display_order: q.display_order,
           is_required: q.is_required,
+          options: q.options ? (Array.isArray(q.options) ? q.options : JSON.parse(JSON.stringify(q.options))) : undefined,
+          allow_multiple_answers: q.allow_multiple_answers || false,
+          placeholder_text: q.placeholder_text || undefined,
         })));
       }
 
