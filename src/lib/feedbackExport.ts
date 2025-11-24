@@ -7,6 +7,38 @@
 import type { FeedbackMetrics, RatingAverage, TextTheme, GroupedResponse } from "./feedbackAnalytics";
 import { format } from "date-fns";
 
+/**
+ * Calculate multiple choice statistics for a question group
+ */
+function getMultipleChoiceStats(group: GroupedResponse) {
+  if (!group.options) return null;
+  
+  const optionCounts: Record<string, number> = {};
+  group.options.forEach(opt => optionCounts[opt.id] = 0);
+  
+  group.answers.forEach(answer => {
+    if (answer.answerText) {
+      try {
+        const selectedIds = JSON.parse(answer.answerText);
+        selectedIds.forEach((id: string) => {
+          if (optionCounts[id] !== undefined) {
+            optionCounts[id]++;
+          }
+        });
+      } catch (e) {
+        console.error("Error parsing multiple choice answer", e);
+      }
+    }
+  });
+  
+  const totalResponses = group.answers.length;
+  return group.options.map(option => ({
+    ...option,
+    count: optionCounts[option.id],
+    percentage: totalResponses > 0 ? (optionCounts[option.id] / totalResponses) * 100 : 0,
+  }));
+}
+
 interface ExportData {
   eventName: string;
   societyName: string;
@@ -307,27 +339,58 @@ export function exportFeedbackAsPDF(data: ExportData): void {
         ` : ''}
 
         <h2>All Individual Responses</h2>
-        ${data.groupedResponses.map(group => `
+        ${data.groupedResponses.map(group => {
+          const mcStats = group.questionType === 'multiple_choice' ? getMultipleChoiceStats(group) : null;
+          return `
           <div class="response-group">
             <h3>${group.question}</h3>
             <div style="font-size: 11px; color: #64748b; margin-bottom: 10px;">
               Type: ${group.questionType} | Total Responses: ${group.answers.length}
             </div>
-            ${group.answers.map(answer => `
+            ${mcStats ? `
+              <div style="background: white; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+                <div style="font-weight: 600; font-size: 12px; margin-bottom: 10px; color: #475569;">Response Summary:</div>
+                ${mcStats.map(stat => `
+                  <div style="margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px;">
+                      <span>${stat.text}</span>
+                      <span style="font-weight: 600;">${stat.count} (${stat.percentage.toFixed(1)}%)</span>
+                    </div>
+                    <div style="background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden;">
+                      <div style="background: #3b82f6; height: 100%; width: ${stat.percentage}%;"></div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+            ${group.answers.map(answer => {
+              let answerDisplay = '';
+              if (group.questionType === 'rating') {
+                answerDisplay = `<div class="stars">${'★'.repeat(answer.answerRating || 0)}${'☆'.repeat(5 - (answer.answerRating || 0))} (${answer.answerRating}/5)</div>`;
+              } else if (group.questionType === 'multiple_choice' && answer.answerText) {
+                try {
+                  const selectedIds = JSON.parse(answer.answerText);
+                  const selectedLabels = group.options?.filter(opt => selectedIds.includes(opt.id)).map(opt => opt.text) || [];
+                  answerDisplay = `<div>${selectedLabels.length > 0 ? selectedLabels.join(', ') : 'No selection'}</div>`;
+                } catch (e) {
+                  answerDisplay = `<div>Invalid response data</div>`;
+                }
+              } else {
+                answerDisplay = `<div>${answer.answerText || 'No response'}</div>`;
+              }
+              return `
               <div class="response-item">
-                ${group.questionType === 'rating' ? `
-                  <div class="stars">${'★'.repeat(answer.answerRating || 0)}${'☆'.repeat(5 - (answer.answerRating || 0))} (${answer.answerRating}/5)</div>
-                ` : `
-                  <div>${answer.answerText || 'No response'}</div>
-                `}
+                ${answerDisplay}
                 <div class="response-meta">
                   Submitted: ${format(new Date(answer.submittedAt), "MMM dd, yyyy 'at' HH:mm")}
                   ${answer.isAnonymous ? ' • Anonymous' : ''}
                 </div>
               </div>
-            `).join('')}
+            `;
+            }).join('')}
           </div>
-        `).join('')}
+        `;
+        }).join('')}
 
         <script>
           window.onload = function() {
