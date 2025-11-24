@@ -583,11 +583,12 @@ export const FeedbackAnalyticsSection = ({
                                   <span>{format(new Date(answer.submittedAt), "MMM d, h:mm a")}</span>
                                   {answer.isAnonymous ? (
                                     <Badge variant="secondary" className="text-xs">Anonymous</Badge>
-                                  ) : answer.submitterName ? (
-                                    <span>• {answer.submitterName}</span>
-                                  ) : answer.userEmail ? (
-                                    <span>• {answer.userEmail}</span>
-                                  ) : null}
+                                  ) : (
+                                    <>
+                                      {answer.submitterName && <span>• {answer.submitterName}</span>}
+                                      {answer.userEmail && <span>• {answer.userEmail}</span>}
+                                    </>
+                                  )}
                                 </div>
                               </div>
                             );

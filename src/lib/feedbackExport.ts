@@ -383,7 +383,10 @@ export function exportFeedbackAsPDF(data: ExportData): void {
                 ${answerDisplay}
                 <div class="response-meta">
                   Submitted: ${format(new Date(answer.submittedAt), "MMM dd, yyyy 'at' HH:mm")}
-                  ${answer.isAnonymous ? ' • Anonymous' : ''}
+                  ${answer.isAnonymous 
+                    ? ' • Anonymous' 
+                    : (answer.submitterName ? ` • ${answer.submitterName}` : '') + (answer.userEmail ? ` • ${answer.userEmail}` : '')
+                  }
                 </div>
               </div>
             `;
