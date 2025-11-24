@@ -364,9 +364,9 @@ export const FeedbackAnalyticsSection = ({
             <CardTitle>Common Themes in Text Responses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
               {textThemes.map((theme) => (
-                <Badge key={theme.word} variant="secondary" className="text-sm">
+                <Badge key={theme.word} variant="secondary" className="text-sm px-3 py-1 whitespace-nowrap">
                   {theme.word} ({theme.count})
                 </Badge>
               ))}
