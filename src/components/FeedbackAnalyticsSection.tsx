@@ -1,8 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { MessageSquare, TrendingUp, Star, ChevronDown, Download, FileText, Filter, X } from "lucide-react";
+import { MessageSquare, TrendingUp, Star, ChevronDown, Download, FileText, Filter, X, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Progress } from "@/components/ui/progress";
 
 interface FeedbackAnalyticsSectionProps {
   eventName: string;
@@ -40,6 +40,7 @@ export const FeedbackAnalyticsSection = ({
   const [selectedRating, setSelectedRating] = useState<string>("all");
   const [selectedQuestion, setSelectedQuestion] = useState<string>("all");
   const [isExporting, setIsExporting] = useState(false);
+  const [expandedAnswers, setExpandedAnswers] = useState<Set<string>>(new Set());
 
   const toggleQuestion = (questionId: string) => {
     setOpenQuestions(prev =>
@@ -47,6 +48,48 @@ export const FeedbackAnalyticsSection = ({
         ? prev.filter(id => id !== questionId)
         : [...prev, questionId]
     );
+  };
+
+  const toggleAnswerExpanded = (answerId: string) => {
+    setExpandedAnswers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(answerId)) {
+        newSet.delete(answerId);
+      } else {
+        newSet.add(answerId);
+      }
+      return newSet;
+    });
+  };
+
+  // Calculate multiple choice statistics
+  const getMultipleChoiceStats = (group: GroupedResponse) => {
+    if (!group.options) return null;
+    
+    const optionCounts: Record<string, number> = {};
+    group.options.forEach(opt => optionCounts[opt.id] = 0);
+    
+    group.answers.forEach(answer => {
+      if (answer.answerText) {
+        try {
+          const selectedIds = JSON.parse(answer.answerText);
+          selectedIds.forEach((id: string) => {
+            if (optionCounts[id] !== undefined) {
+              optionCounts[id]++;
+            }
+          });
+        } catch (e) {
+          console.error("Error parsing multiple choice answer", e);
+        }
+      }
+    });
+    
+    const totalResponses = group.answers.length;
+    return group.options.map(option => ({
+      ...option,
+      count: optionCounts[option.id],
+      percentage: totalResponses > 0 ? (optionCounts[option.id] / totalResponses) * 100 : 0,
+    }));
   };
 
   // Filter responses based on selected filters
@@ -406,104 +449,157 @@ export const FeedbackAnalyticsSection = ({
           )}
         </CardHeader>
         <CardContent>
-          <ScrollArea className="max-h-[400px] sm:max-h-[500px] lg:max-h-[600px] pr-4">
-            <div className="space-y-4 pb-4">
-              {filteredResponses.map((group) => (
-                <Collapsible
-                  key={group.questionId}
-                  open={openQuestions.includes(group.questionId)}
-                  onOpenChange={() => toggleQuestion(group.questionId)}
-                >
-                  <Card>
-                    <CollapsibleTrigger className="w-full min-h-[48px]">
-                      <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0 px-3 py-3 sm:px-4 sm:py-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 text-left w-full">
-                          <Badge variant="outline" className="shrink-0">
-                            {group.questionType === "rating" ? "Rating" : "Text"}
-                          </Badge>
-                          <div className="flex-1">
-                            <p className="font-medium text-sm sm:text-base">{group.question}</p>
-                            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+          <div className="space-y-6">
+            {filteredResponses.map((group) => (
+              <Collapsible
+                key={group.questionId}
+                open={openQuestions.includes(group.questionId)}
+                onOpenChange={() => toggleQuestion(group.questionId)}
+              >
+                <Card className="border-2">
+                  <CollapsibleTrigger className="w-full">
+                    <CardHeader className="hover:bg-accent/50 transition-colors">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 text-left space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="outline" className="shrink-0">
+                              {group.questionType === "rating" 
+                                ? "Rating" 
+                                : group.questionType === "multiple_choice"
+                                ? "Multiple Choice"
+                                : "Text"}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
                               {group.answers.length} response{group.answers.length !== 1 ? "s" : ""}
-                            </p>
+                            </span>
                           </div>
-                          <ChevronDown
-                            className={`h-5 w-5 text-muted-foreground transition-transform shrink-0 ${
-                              openQuestions.includes(group.questionId) ? "rotate-180" : ""
-                            }`}
-                          />
+                          <p className="font-medium text-base break-words pr-8">{group.question}</p>
                         </div>
-                      </CardHeader>
-                    </CollapsibleTrigger>
+                        <ChevronDown
+                          className={`h-5 w-5 text-muted-foreground transition-transform shrink-0 mt-1 ${
+                            openQuestions.includes(group.questionId) ? "rotate-180" : ""
+                          }`}
+                        />
+                      </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
 
-                     <CollapsibleContent>
-                      <CardContent className="pt-0 px-3 sm:px-4">
+                  <CollapsibleContent>
+                    <CardContent className="pt-4 space-y-6">
+                      {/* Multiple Choice Summary */}
+                      {group.questionType === "multiple_choice" && group.options && (
+                        <div className="space-y-3 p-4 bg-muted/30 rounded-lg">
+                          <h4 className="font-semibold text-sm flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4" />
+                            Response Summary
+                          </h4>
+                          <div className="space-y-3">
+                            {getMultipleChoiceStats(group)?.map((option) => (
+                              <div key={option.id} className="space-y-1.5">
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="font-medium break-words flex-1 pr-4">{option.text}</span>
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <span className="text-muted-foreground">{option.count}</span>
+                                    <span className="font-semibold min-w-[3rem] text-right">
+                                      {option.percentage.toFixed(0)}%
+                                    </span>
+                                  </div>
+                                </div>
+                                <Progress value={option.percentage} className="h-2" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Individual Answers */}
+                      <div className="space-y-4">
+                        <h4 className="font-semibold text-sm">Individual Responses</h4>
                         <div className="space-y-3">
-                          {group.answers.map((answer) => (
-                            <div
-                              key={answer.answerId}
-                              className="border-l-2 border-border pl-3 sm:pl-4 py-2"
-                            >
-                              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
-                                <div className="flex-1">
-                                  {answer.answerRating !== undefined ? (
-                                    renderStars(answer.answerRating)
-                                  ) : group.questionType === "multiple_choice" && group.options ? (
-                                    answer.answerText ? (
-                                      <div className="space-y-2">
-                                        {group.options.map((option) => {
-                                          const selectedIds = JSON.parse(answer.answerText || '[]');
-                                          const isSelected = selectedIds.includes(option.id);
-                                          return (
-                                            <div key={option.id} className="flex items-center gap-2">
-                                              <div className={`w-4 h-4 rounded border flex items-center justify-center ${
-                                                isSelected ? 'bg-primary border-primary' : 'border-border'
-                                              }`}>
-                                                {isSelected && (
-                                                  <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                  </svg>
-                                                )}
-                                              </div>
-                                              <span className={`text-xs sm:text-sm ${isSelected ? 'font-medium' : 'text-muted-foreground'}`}>
+                          {group.answers.map((answer) => {
+                            const isLongText = answer.answerText && answer.answerText.length > 200;
+                            const isExpanded = expandedAnswers.has(answer.answerId);
+                            const displayText = isLongText && !isExpanded 
+                              ? answer.answerText.substring(0, 200) + "..." 
+                              : answer.answerText;
+
+                            return (
+                              <div
+                                key={answer.answerId}
+                                className="border-l-2 border-primary/20 pl-4 py-2 space-y-2"
+                              >
+                                <div className="space-y-2">
+                                  {/* Rating Display */}
+                                  {answer.answerRating !== undefined && (
+                                    <div>{renderStars(answer.answerRating)}</div>
+                                  )}
+
+                                  {/* Multiple Choice Display */}
+                                  {group.questionType === "multiple_choice" && group.options && answer.answerText && (
+                                    <div className="flex flex-wrap gap-2">
+                                      {(() => {
+                                        try {
+                                          const selectedIds = JSON.parse(answer.answerText);
+                                          return group.options
+                                            .filter(opt => selectedIds.includes(opt.id))
+                                            .map(option => (
+                                              <Badge key={option.id} variant="secondary" className="gap-1.5">
+                                                <CheckCircle2 className="h-3 w-3" />
                                                 {option.text}
-                                              </span>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    ) : (
-                                      <p className="text-xs text-muted-foreground italic">No response for this question</p>
-                                    )
-                                  ) : (
-                                    <p className="text-xs sm:text-sm break-words">{answer.answerText || <span className="text-muted-foreground italic">No response</span>}</p>
+                                              </Badge>
+                                            ));
+                                        } catch (e) {
+                                          return null;
+                                        }
+                                      })()}
+                                    </div>
+                                  )}
+
+                                  {/* Text Display */}
+                                  {group.questionType === "text" && answer.answerText && (
+                                    <div className="space-y-2">
+                                      <p className="text-sm break-words whitespace-pre-wrap leading-relaxed">
+                                        {displayText}
+                                      </p>
+                                      {isLongText && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleAnswerExpanded(answer.answerId);
+                                          }}
+                                          className="h-auto p-0 text-xs text-primary hover:text-primary/80"
+                                        >
+                                          {isExpanded ? "Show less" : "Show more"}
+                                        </Button>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-2 sm:flex-col sm:items-end sm:text-right">
-                                  <p className="text-xs text-muted-foreground whitespace-nowrap">
-                                    {format(new Date(answer.submittedAt), "MMM d, h:mm a")}
-                                  </p>
+
+                                {/* Metadata */}
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                  <span>{format(new Date(answer.submittedAt), "MMM d, h:mm a")}</span>
                                   {answer.isAnonymous ? (
-                                    <Badge variant="secondary" className="text-xs">
-                                      Anonymous
-                                    </Badge>
-                                  ) : answer.userEmail && (
-                                    <p className="text-xs text-muted-foreground">
-                                      {answer.userEmail}
-                                    </p>
-                                  )}
+                                    <Badge variant="secondary" className="text-xs">Anonymous</Badge>
+                                  ) : answer.submitterName ? (
+                                    <span>• {answer.submitterName}</span>
+                                  ) : answer.userEmail ? (
+                                    <span>• {answer.userEmail}</span>
+                                  ) : null}
                                 </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
-                      </CardContent>
-                    </CollapsibleContent>
-                  </Card>
-                </Collapsible>
-              ))}
-            </div>
-          </ScrollArea>
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>
