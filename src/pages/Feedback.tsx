@@ -63,6 +63,12 @@ const Feedback = () => {
     checkExistingSubmission();
   }, [event, user]);
 
+  useEffect(() => {
+    if (submitted) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [submitted]);
+
   const checkExistingSubmission = async () => {
     if (!event) return;
 
@@ -265,7 +271,6 @@ const Feedback = () => {
 
       toast.success("Thank you for your feedback!");
       setSubmitted(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error("Error submitting feedback:", error);
       toast.error("Failed to submit feedback. Please try again.");
