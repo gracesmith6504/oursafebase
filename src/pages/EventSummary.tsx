@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { ProtectedRoute, useAuth } from "@/lib/auth";
+import { ProtectedRoute } from "@/lib/auth";
+import { useAuthContext } from "@/lib/AuthContext";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { 
   ArrowLeft, FileText, MessageSquare, Eye, Shield, TrendingUp, 
@@ -85,7 +86,7 @@ const SAFETY_COLORS = ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444'];
 const EventSummary = () => {
   const { slug, eventId } = useParams<{ slug: string; eventId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [event, setEvent] = useState<Event | null>(null);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [severityData, setSeverityData] = useState<any[]>([]);

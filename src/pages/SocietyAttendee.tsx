@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ProtectedRoute, useAuth } from "@/lib/auth";
+import { ProtectedRoute } from "@/lib/auth";
+import { useAuthContext } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +24,7 @@ interface Event {
 
 const SocietyAttendee = () => {
   const { slug } = useParams();
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const navigate = useNavigate();
   const [society, setSociety] = useState<{ id: string; name: string; slug: string } | null>(null);
   const [events, setEvents] = useState<Event[]>([]);

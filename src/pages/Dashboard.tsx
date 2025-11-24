@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ProtectedRoute, useAuth } from "@/lib/auth";
+import { ProtectedRoute } from "@/lib/auth";
+import { useAuthContext } from "@/lib/AuthContext";
 import { Plus, User, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import CreateSocietyDialog from "@/components/CreateSocietyDialog";
@@ -27,7 +28,7 @@ interface SocietyMembership {
 }
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const navigate = useNavigate();
   const [societies, setSocieties] = useState<SocietyMembership[]>([]);
   const [loading, setLoading] = useState(true);

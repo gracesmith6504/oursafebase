@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ProtectedRoute, useAuth } from "@/lib/auth";
+import { ProtectedRoute } from "@/lib/auth";
+import { useAuthContext } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,7 +42,7 @@ interface Society {
 const SocietySettings = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [society, setSociety] = useState<Society | null>(null);
   const [isCreator, setIsCreator] = useState(false);
   const [loading, setLoading] = useState(true);

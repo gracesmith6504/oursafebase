@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ProtectedRoute, useAuth } from "@/lib/auth";
+import { ProtectedRoute } from "@/lib/auth";
+import { useAuthContext } from "@/lib/AuthContext";
 import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { ArrowLeft, Plus, Calendar, FileText, MessageSquare, Eye, Shield, Share2, Edit, BarChart, QrCode, ChevronRight, Copy } from "lucide-react";
 import {
@@ -52,7 +53,7 @@ interface EventMetrics {
 const SocietyEvents = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [societyId, setSocietyId] = useState<string | null>(null);
   const [societyName, setSocietyName] = useState("");
   const [societySlug, setSocietySlug] = useState("");

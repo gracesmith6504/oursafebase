@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
+import { useAuthContext } from "@/lib/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
@@ -9,7 +9,7 @@ import logo from "@/assets/logo.png";
 const InviteJoin = () => {
   const { type, code } = useParams<{ type: 'committee' | 'attendee'; code: string }>();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuthContext();
   const [processing, setProcessing] = useState(false);
   const [hasAttempted, setHasAttempted] = useState(false);
   

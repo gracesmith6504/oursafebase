@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { RouteLoadingFallback } from "./components/RouteLoadingFallback";
+import { AuthProvider } from "@/lib/AuthContext";
 
 // Lazy load all route components
 const Index = lazy(() => import("./pages/Index"));
@@ -45,20 +46,30 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes
       refetchOnWindowFocus: true, // Enable for Safari to refresh stale data
-      retry: 1,
+      retry: (failureCount, error: any) => {
+        // Don't retry if it's an auth error - fail fast
+        if (error?.message?.includes('JWT') || 
+            error?.message?.includes('session') ||
+            error?.message?.includes('refresh_token')) {
+          console.log('[ReactQuery] Auth error detected, skipping retry');
+          return false;
+        }
+        return failureCount < 1;
+      },
     },
   },
 });
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ScrollToTop />
-        <Suspense fallback={<RouteLoadingFallback />}>
-          <Routes>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <ScrollToTop />
+          <Suspense fallback={<RouteLoadingFallback />}>
+            <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/reset-password" element={<ResetPassword />} />
@@ -94,10 +105,11 @@ const App = () => (
           <Route path="/admin/societies" element={<AdminSocieties />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
-        </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </TooltipProvider>
+          </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
