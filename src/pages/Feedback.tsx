@@ -80,12 +80,12 @@ const Feedback = () => {
           code: eventError.code,
           details: eventError.details,
           societySlug,
-          eventSlug
+          eventSlug,
         });
-        
+
         // Fallback to Pattern B (two separate queries)
         console.log("Attempting fallback query pattern...");
-        
+
         const { data: societyData, error: socErr } = await supabase
           .from("societies")
           .select("id, name, logo_url, slug")
@@ -145,9 +145,11 @@ const Feedback = () => {
       console.log(`Loaded ${questionsData?.length || 0} feedback questions`);
 
       // Parse options from JSON if they exist
-      const parsedQuestions = (questionsData || []).map(q => ({
+      const parsedQuestions = (questionsData || []).map((q) => ({
         ...q,
-        options: q.options ? (Array.isArray(q.options) ? q.options : JSON.parse(JSON.stringify(q.options))) as MultipleChoiceOption[] : undefined,
+        options: q.options
+          ? ((Array.isArray(q.options) ? q.options : JSON.parse(JSON.stringify(q.options))) as MultipleChoiceOption[])
+          : undefined,
       }));
       setQuestions(parsedQuestions);
     } catch (error) {
@@ -179,7 +181,9 @@ const Feedback = () => {
       setSubmitting(true);
 
       // Get user if logged in (optional)
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!event) return;
 
       // Create feedback response (anonymous-friendly)
@@ -189,40 +193,34 @@ const Feedback = () => {
           event_id: event.id,
           user_id: user?.id || null,
           is_anonymous: isAnonymous || !user,
-          submitter_email: (!isAnonymous && optionalEmail) ? optionalEmail : null,
-          optional_name: (!isAnonymous && optionalName) ? optionalName : null,
+          submitter_email: !isAnonymous && optionalEmail ? optionalEmail : null,
+          optional_name: !isAnonymous && optionalName ? optionalName : null,
         })
         .select()
         .single();
 
       if (responseError) throw responseError;
 
-    // Create feedback answers
-    const answersToInsert = questions.map(question => {
-      const answer = answers[question.id];
-      return {
-        response_id: responseData.id,
-        question_id: question.id,
-        answer_text: question.question_type === "text" 
-          ? (typeof answer === 'string' ? answer : null)
-          : question.question_type === "multiple_choice"
-            ? JSON.stringify(
-                Array.isArray(answer) 
-                  ? answer 
-                  : typeof answer === 'string' && answer 
-                    ? [answer] 
-                    : []
-              )
-            : null,
-        answer_rating: question.question_type === "rating" 
-          ? parseInt(typeof answer === 'string' ? answer : '') 
-          : null,
-      };
-    });
+      // Create feedback answers
+      const answersToInsert = questions.map((question) => {
+        const answer = answers[question.id];
+        return {
+          response_id: responseData.id,
+          question_id: question.id,
+          answer_text:
+            question.question_type === "text"
+              ? typeof answer === "string"
+                ? answer
+                : null
+              : question.question_type === "multiple_choice"
+                ? JSON.stringify(Array.isArray(answer) ? answer : typeof answer === "string" && answer ? [answer] : [])
+                : null,
+          answer_rating:
+            question.question_type === "rating" ? parseInt(typeof answer === "string" ? answer : "") : null,
+        };
+      });
 
-      const { error: answersError } = await supabase
-        .from("feedback_answers")
-        .insert(answersToInsert);
+      const { error: answersError } = await supabase.from("feedback_answers").insert(answersToInsert);
 
       if (answersError) throw answersError;
 
@@ -237,7 +235,7 @@ const Feedback = () => {
   };
 
   const renderRatingSelector = (questionId: string, currentValue: string) => {
-    const selectedRating = parseInt(currentValue || '0');
+    const selectedRating = parseInt(currentValue || "0");
     return (
       <div className="flex gap-2 mt-2">
         {[1, 2, 3, 4, 5].map((rating) => (
@@ -246,16 +244,10 @@ const Feedback = () => {
             type="button"
             onClick={() => setAnswers({ ...answers, [questionId]: rating.toString() })}
             className={`p-2 rounded-lg transition-colors ${
-              rating <= selectedRating
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted hover:bg-muted/80"
+              rating <= selectedRating ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
             }`}
           >
-            <Star
-              className={`h-6 w-6 ${
-                rating <= selectedRating ? "fill-current" : ""
-              }`}
-            />
+            <Star className={`h-6 w-6 ${rating <= selectedRating ? "fill-current" : ""}`} />
           </button>
         ))}
       </div>
@@ -283,9 +275,7 @@ const Feedback = () => {
                 </h2>
                 <p className="text-muted-foreground">{loadError}</p>
                 <div className="flex gap-2 justify-center">
-                  <Button onClick={() => window.location.reload()}>
-                    Try Again
-                  </Button>
+                  <Button onClick={() => window.location.reload()}>Try Again</Button>
                   <Button variant="outline" onClick={() => navigate("/")}>
                     Go to Home
                   </Button>
@@ -308,12 +298,8 @@ const Feedback = () => {
               <div className="text-center space-y-4">
                 <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
                 <h2 className="text-2xl font-bold">Thank you for your feedback!</h2>
-                <p className="text-muted-foreground">
-                  Your response has been submitted successfully.
-                </p>
-                <Button onClick={() => navigate(`/${societySlug}/${eventSlug}`)}>
-                  Return to Event
-                </Button>
+                <p className="text-muted-foreground">Your response has been submitted successfully.</p>
+                <Button onClick={() => navigate(`/${societySlug}/${eventSlug}`)}>Return to Event</Button>
               </div>
             </CardContent>
           </Card>
@@ -335,9 +321,7 @@ const Feedback = () => {
                 <p className="text-muted-foreground">
                   The feedback form you're looking for doesn't exist or has been removed.
                 </p>
-                <Button onClick={() => navigate("/")}>
-                  Go to Home
-                </Button>
+                <Button onClick={() => navigate("/")}>Go to Home</Button>
               </div>
             </CardContent>
           </Card>
@@ -351,14 +335,9 @@ const Feedback = () => {
     <div className="min-h-screen bg-background py-8 px-4 flex flex-col">
       <div className="max-w-2xl mx-auto space-y-6 flex-1">
         {/* Back Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate(user ? "/dashboard" : "/")}
-          className="mb-2"
-        >
+        <Button variant="ghost" size="sm" onClick={() => navigate(user ? "/dashboard" : "/")} className="mb-2">
           <ArrowLeft className="h-4 w-4 mr-2" />
-          {user ? "Back to Dashboard" : "Back to Home"}
+          {user ? "Back to Dashboard" : ""}
         </Button>
 
         {/* Header */}
@@ -374,9 +353,7 @@ const Feedback = () => {
               )}
               <div>
                 <CardTitle className="text-2xl">{event.title}</CardTitle>
-                <CardDescription className="text-lg">
-                  {event.societies.name}
-                </CardDescription>
+                <CardDescription className="text-lg">{event.societies.name}</CardDescription>
               </div>
             </div>
             <p className="text-muted-foreground">
@@ -393,15 +370,9 @@ const Feedback = () => {
                 <Label htmlFor="anonymous-mode" className="text-base font-medium">
                   Submit Anonymously
                 </Label>
-                <p className="text-sm text-muted-foreground">
-                  Your identity will not be shared with the organizers
-                </p>
+                <p className="text-sm text-muted-foreground">Your identity will not be shared with the organizers</p>
               </div>
-              <Switch
-                id="anonymous-mode"
-                checked={isAnonymous}
-                onCheckedChange={setIsAnonymous}
-              />
+              <Switch id="anonymous-mode" checked={isAnonymous} onCheckedChange={setIsAnonymous} />
             </div>
           </CardContent>
         </Card>
@@ -440,9 +411,7 @@ const Feedback = () => {
         {questions.length === 0 ? (
           <Card>
             <CardContent className="pt-6">
-              <p className="text-center text-muted-foreground">
-                No feedback questions available for this event.
-              </p>
+              <p className="text-center text-muted-foreground">No feedback questions available for this event.</p>
             </CardContent>
           </Card>
         ) : (
@@ -455,22 +424,21 @@ const Feedback = () => {
                 <div key={question.id} className="space-y-2">
                   <Label htmlFor={question.id} className="text-base">
                     {question.question}
-                    {question.is_required && (
-                      <span className="text-destructive ml-1">*</span>
-                    )}
+                    {question.is_required && <span className="text-destructive ml-1">*</span>}
                   </Label>
                   {question.question_type === "text" ? (
                     <Textarea
                       id={question.id}
                       value={answers[question.id] || ""}
-                      onChange={(e) =>
-                        setAnswers({ ...answers, [question.id]: e.target.value })
-                      }
+                      onChange={(e) => setAnswers({ ...answers, [question.id]: e.target.value })}
                       placeholder={question.placeholder_text || "Enter your response..."}
                       className="min-h-[100px]"
                     />
                   ) : question.question_type === "rating" ? (
-                    renderRatingSelector(question.id, typeof answers[question.id] === 'string' ? answers[question.id] as string : '')
+                    renderRatingSelector(
+                      question.id,
+                      typeof answers[question.id] === "string" ? (answers[question.id] as string) : "",
+                    )
                   ) : question.question_type === "multiple_choice" ? (
                     question.allow_multiple_answers ? (
                       <div className="space-y-3">
@@ -478,12 +446,17 @@ const Feedback = () => {
                           <div key={option.id} className="flex items-center space-x-2">
                             <Checkbox
                               id={`${question.id}-${option.id}`}
-                              checked={Array.isArray(answers[question.id]) && (answers[question.id] as string[]).includes(option.id)}
+                              checked={
+                                Array.isArray(answers[question.id]) &&
+                                (answers[question.id] as string[]).includes(option.id)
+                              }
                               onCheckedChange={(checked) => {
-                                const currentAnswers = Array.isArray(answers[question.id]) ? (answers[question.id] as string[]) : [];
+                                const currentAnswers = Array.isArray(answers[question.id])
+                                  ? (answers[question.id] as string[])
+                                  : [];
                                 const newAnswers = checked
                                   ? [...currentAnswers, option.id]
-                                  : currentAnswers.filter(id => id !== option.id);
+                                  : currentAnswers.filter((id) => id !== option.id);
                                 setAnswers({ ...answers, [question.id]: newAnswers });
                               }}
                             />
@@ -498,10 +471,8 @@ const Feedback = () => {
                       </div>
                     ) : (
                       <RadioGroup
-                        value={typeof answers[question.id] === 'string' ? answers[question.id] as string : ""}
-                        onValueChange={(value) =>
-                          setAnswers({ ...answers, [question.id]: value })
-                        }
+                        value={typeof answers[question.id] === "string" ? (answers[question.id] as string) : ""}
+                        onValueChange={(value) => setAnswers({ ...answers, [question.id]: value })}
                       >
                         {question.options?.map((option) => (
                           <div key={option.id} className="flex items-center space-x-2">
@@ -525,12 +496,7 @@ const Feedback = () => {
 
         {/* Submit Button */}
         {questions.length > 0 && (
-          <Button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="w-full"
-            size="lg"
-          >
+          <Button onClick={handleSubmit} disabled={submitting} className="w-full" size="lg">
             {submitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
