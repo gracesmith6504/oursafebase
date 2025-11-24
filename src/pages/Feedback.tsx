@@ -540,16 +540,21 @@ const Feedback = () => {
 
         {/* Submit Button */}
         {questions.length > 0 && (
-          <Button onClick={handleSubmit} disabled={submitting} className="w-full" size="lg">
-            {submitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              "Submit Feedback"
-            )}
-          </Button>
+          <>
+            <p className="text-sm text-muted-foreground italic text-center">
+              This is the first time OurSafeBase is being used, so we're still fine-tuning a few things. Your feedback helps us spot bugs and improve the experience - thank you for your support!
+            </p>
+            <Button onClick={handleSubmit} disabled={submitting} className="w-full" size="lg">
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit Feedback"
+              )}
+            </Button>
+          </>
         )}
       </div>
       <Footer />
