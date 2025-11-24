@@ -71,7 +71,7 @@ const Feedback = () => {
 
   useEffect(() => {
     if (submitted) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [submitted]);
 
@@ -105,8 +105,8 @@ const Feedback = () => {
 
   const fetchEventAndQuestions = async () => {
     // Add timeout to prevent infinite loading (fixes WhatsApp/iOS stuck loading)
-    const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('Data fetch timeout')), 10000)
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("Data fetch timeout")), 10000),
     );
 
     try {
@@ -117,106 +117,109 @@ const Feedback = () => {
 
       await Promise.race([
         (async () => {
+          // Try Pattern A first (matching useEvent pattern)
+          let { data: eventData, error: eventError } = await supabase
+            .from("events")
+            .select("id, title, society_id, slug, societies!inner(name, logo_url, slug)")
+            .eq("slug", eventSlug)
+            .eq("societies.slug", societySlug)
+            .single();
 
-      // Try Pattern A first (matching useEvent pattern)
-      let { data: eventData, error: eventError } = await supabase
-        .from("events")
-        .select("id, title, society_id, slug, societies!inner(name, logo_url, slug)")
-        .eq("slug", eventSlug)
-        .eq("societies.slug", societySlug)
-        .single();
+          if (eventError) {
+            console.error("Pattern A query failed:", {
+              message: eventError.message,
+              code: eventError.code,
+              details: eventError.details,
+              societySlug,
+              eventSlug,
+            });
 
-      if (eventError) {
-        console.error("Pattern A query failed:", {
-          message: eventError.message,
-          code: eventError.code,
-          details: eventError.details,
-          societySlug,
-          eventSlug,
-        });
+            // Fallback to Pattern B (two separate queries)
+            console.log("Attempting fallback query pattern...");
 
-        // Fallback to Pattern B (two separate queries)
-        console.log("Attempting fallback query pattern...");
+            const { data: societyData, error: socErr } = await supabase
+              .from("societies")
+              .select("id, name, logo_url, slug")
+              .eq("slug", societySlug)
+              .single();
 
-        const { data: societyData, error: socErr } = await supabase
-          .from("societies")
-          .select("id, name, logo_url, slug")
-          .eq("slug", societySlug)
-          .single();
+            if (socErr || !societyData) {
+              console.error("Society not found:", societySlug, socErr);
+              setLoadError("Event not found");
+              return;
+            }
 
-        if (socErr || !societyData) {
-          console.error("Society not found:", societySlug, socErr);
-          setLoadError("Event not found");
-          return;
-        }
+            const { data: evtData, error: evtErr } = await supabase
+              .from("events")
+              .select("id, title, society_id, slug")
+              .eq("slug", eventSlug)
+              .eq("society_id", societyData.id)
+              .single();
 
-        const { data: evtData, error: evtErr } = await supabase
-          .from("events")
-          .select("id, title, society_id, slug")
-          .eq("slug", eventSlug)
-          .eq("society_id", societyData.id)
-          .single();
+            if (evtErr || !evtData) {
+              console.error("Event not found:", eventSlug, evtErr);
+              setLoadError("Event not found");
+              return;
+            }
 
-        if (evtErr || !evtData) {
-          console.error("Event not found:", eventSlug, evtErr);
-          setLoadError("Event not found");
-          return;
-        }
+            eventData = {
+              ...evtData,
+              societies: {
+                name: societyData.name,
+                logo_url: societyData.logo_url,
+                slug: societyData.slug,
+              },
+            };
+          }
 
-        eventData = {
-          ...evtData,
-          societies: {
-            name: societyData.name,
-            logo_url: societyData.logo_url,
-            slug: societyData.slug,
-          },
-        };
-      }
+          if (!eventData) {
+            console.error("No event data returned");
+            setLoadError("Event not found");
+            return;
+          }
 
-      if (!eventData) {
-        console.error("No event data returned");
-        setLoadError("Event not found");
-        return;
-      }
+          console.log("Event fetched successfully:", eventData);
+          setEvent(eventData);
 
-      console.log("Event fetched successfully:", eventData);
-      setEvent(eventData);
+          // Fetch feedback questions (no auth required)
+          const { data: questionsData, error: questionsError } = await supabase
+            .from("event_feedback_questions")
+            .select("*")
+            .eq("event_id", eventData.id)
+            .order("display_order", { ascending: true });
 
-      // Fetch feedback questions (no auth required)
-      const { data: questionsData, error: questionsError } = await supabase
-        .from("event_feedback_questions")
-        .select("*")
-        .eq("event_id", eventData.id)
-        .order("display_order", { ascending: true });
+          if (questionsError) {
+            console.error("Questions fetch error:", questionsError);
+            throw questionsError;
+          }
 
-      if (questionsError) {
-        console.error("Questions fetch error:", questionsError);
-        throw questionsError;
-      }
+          console.log(`Loaded ${questionsData?.length || 0} feedback questions`);
 
-      console.log(`Loaded ${questionsData?.length || 0} feedback questions`);
-
-      // Parse options from JSON if they exist
-      const parsedQuestions = (questionsData || []).map((q) => ({
-        ...q,
-        options: q.options
-          ? ((Array.isArray(q.options) ? q.options : JSON.parse(JSON.stringify(q.options))) as MultipleChoiceOption[])
-          : undefined,
-      }));
-      setQuestions(parsedQuestions);
+          // Parse options from JSON if they exist
+          const parsedQuestions = (questionsData || []).map((q) => ({
+            ...q,
+            options: q.options
+              ? ((Array.isArray(q.options)
+                  ? q.options
+                  : JSON.parse(JSON.stringify(q.options))) as MultipleChoiceOption[])
+              : undefined,
+          }));
+          setQuestions(parsedQuestions);
         })(),
-        timeoutPromise
+        timeoutPromise,
       ]);
     } catch (error: any) {
       console.error("Error fetching feedback form:", error);
-      
+
       // Check if it's a timeout
-      if (error.message === 'Data fetch timeout') {
-        setLoadError("Loading timed out. This sometimes happens when opening from WhatsApp. Please try refreshing.");
+      if (error.message === "Data fetch timeout") {
+        setLoadError(
+          "Loading timed out. This sometimes happens when opening from WhatsApp. Please try close the tab and press the link again.",
+        );
       } else {
         setLoadError("Failed to load feedback form. Please try again later.");
       }
-      
+
       toast.error("Failed to load feedback form");
     } finally {
       setLoading(false);
@@ -245,7 +248,9 @@ const Feedback = () => {
     try {
       setSubmittingPlatformFeedback(true);
 
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       const { error } = await supabase.from("platform_feedback").insert({
         feedback_text: platformFeedback,
@@ -284,16 +289,14 @@ const Feedback = () => {
       const responseId = crypto.randomUUID();
 
       // Create feedback response (anonymous-friendly)
-      const { error: responseError } = await supabase
-        .from("feedback_responses")
-        .insert({
-          id: responseId,
-          event_id: event.id,
-          user_id: user?.id || null,
-          is_anonymous: isAnonymous || !user,
-          submitter_email: !isAnonymous && optionalEmail ? optionalEmail : null,
-          optional_name: !isAnonymous && optionalName ? optionalName : null,
-        });
+      const { error: responseError } = await supabase.from("feedback_responses").insert({
+        id: responseId,
+        event_id: event.id,
+        user_id: user?.id || null,
+        is_anonymous: isAnonymous || !user,
+        submitter_email: !isAnonymous && optionalEmail ? optionalEmail : null,
+        optional_name: !isAnonymous && optionalName ? optionalName : null,
+      });
 
       if (responseError) throw responseError;
 
@@ -401,7 +404,8 @@ const Feedback = () => {
                 <h2 className="text-2xl font-bold">Thank you for your feedback!</h2>
                 <p className="text-muted-foreground">Your response has been submitted successfully.</p>
                 <p className="text-sm text-muted-foreground italic mt-4">
-                  This is the first time OurSafeBase is being used, so we're still fine-tuning a few things. Your feedback helps us spot bugs and improve the experience - thank you for your support!
+                  This is the first time OurSafeBase is being used, so we're still fine-tuning a few things. Your
+                  feedback helps us spot bugs and improve the experience - thank you for your support!
                 </p>
 
                 {/* Platform Feedback Section */}
@@ -417,7 +421,8 @@ const Feedback = () => {
                         <>
                           <h3 className="text-lg font-semibold text-left">OurSafeBase Feedback</h3>
                           <p className="text-sm text-muted-foreground text-left">
-                            Help us improve OurSafeBase by reporting bugs, suggesting features, or sharing your experience.
+                            Help us improve OurSafeBase by reporting bugs, suggesting features, or sharing your
+                            experience.
                           </p>
                           <Textarea
                             value={platformFeedback}
@@ -655,7 +660,8 @@ const Feedback = () => {
         {questions.length > 0 && (
           <>
             <p className="text-sm text-muted-foreground italic text-center">
-              This is the first time OurSafeBase is being used, so we're still fine-tuning a few things. Your feedback helps us spot bugs and improve the experience - thank you for your support!
+              This is the first time OurSafeBase is being used, so we're still fine-tuning a few things. Your feedback
+              helps us spot bugs and improve the experience - thank you for your support!
             </p>
             <Button onClick={handleSubmit} disabled={submitting} className="w-full" size="lg">
               {submitting ? (
