@@ -412,7 +412,7 @@ const Feedback = () => {
                 <div className="border-t pt-6 mt-6">
                   <Collapsible open={showPlatformFeedback} onOpenChange={setShowPlatformFeedback}>
                     <CollapsibleTrigger asChild>
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="w-full h-auto whitespace-normal py-2 px-4">
                         {showPlatformFeedback ? "Hide feedback form" : "Report a bug or suggest an improvement"}
                       </Button>
                     </CollapsibleTrigger>
