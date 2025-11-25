@@ -32,6 +32,13 @@ export const runCacheBuster = (): boolean => {
       console.log('[CacheBuster] Skipping cache bust for auth callback');
       return true; // Allow app to render normally
     }
+    
+    // Skip cache busting on feedback pages (prevents reload loops from WhatsApp)
+    const isFeedbackPage = window.location.pathname.includes('/feedback');
+    if (isFeedbackPage) {
+      console.log('[CacheBuster] Skipping cache bust for feedback page');
+      return true; // Allow feedback form to render immediately
+    }
 
     // Check if we just cleared cache (prevent reload loops)
     const reloadFlag = localStorage.getItem(RELOAD_FLAG_KEY);
