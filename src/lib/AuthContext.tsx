@@ -54,6 +54,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         console.log('[AuthContext] Starting session validation');
         
+        // PHASE 2: Proactively check and clear expired tokens from localStorage
+        const storedSession = localStorage.getItem('sb-kusgjgstdabonfntxwsq-auth-token');
+        if (storedSession) {
+          try {
+            const parsed = JSON.parse(storedSession);
+            if (parsed.expires_at) {
+              const expiryTime = parsed.expires_at * 1000;
+              if (Date.now() >= expiryTime) {
+                console.warn('[AuthContext] Preemptively clearing expired session from localStorage');
+                localStorage.removeItem('sb-kusgjgstdabonfntxwsq-auth-token');
+                sessionStorage.clear();
+                if (isSubscribed) {
+                  setSession(null);
+                  setUser(null);
+                  setLoading(false);
+                }
+                return; // Don't even try to validate
+              }
+            }
+          } catch (e) {
+            console.warn('[AuthContext] Malformed token in localStorage, clearing');
+            localStorage.removeItem('sb-kusgjgstdabonfntxwsq-auth-token');
+          }
+        }
+        
         // Check if we're in ANY auth callback - don't refresh session in that case
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const confirmationType = hashParams.get('type');
@@ -98,29 +123,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             return;
           }
           
-          // Validate session by attempting refresh (catches stale Safari sessions)
-          console.log('[AuthContext] Attempting session refresh');
-          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+          // PHASE 1: Validate session by attempting refresh with timeout (fixes WhatsApp hanging)
+          console.log('[AuthContext] Attempting session refresh with 3s timeout');
           
-          if (refreshError || !refreshedSession) {
-            // Session is invalid, clear it aggressively
-            console.warn('[AuthContext] Stale session detected, signing out:', refreshError?.message);
+          const refreshWithTimeout = Promise.race([
+            supabase.auth.refreshSession(),
+            new Promise<never>((_, reject) => 
+              setTimeout(() => reject(new Error('Session refresh timeout')), 3000)
+            )
+          ]);
+          
+          try {
+            const { data: { session: refreshedSession }, error: refreshError } = await refreshWithTimeout;
+            
+            if (refreshError || !refreshedSession) {
+              // Session is invalid, clear it aggressively
+              console.warn('[AuthContext] Stale session detected, signing out:', refreshError?.message);
+              await supabase.auth.signOut({ scope: 'local' });
+              localStorage.removeItem('sb-kusgjgstdabonfntxwsq-auth-token');
+              sessionStorage.clear();
+              if (isSubscribed) {
+                setSession(null);
+                setUser(null);
+                setLoading(false);
+              }
+            } else {
+              // Session is valid
+              console.log('[AuthContext] Session refreshed successfully');
+              if (isSubscribed) {
+                setSession(refreshedSession);
+                setUser(refreshedSession.user);
+                setLoading(false);
+                updateLastLogin();
+              }
+            }
+          } catch (timeoutError) {
+            // Refresh timed out (common in WhatsApp browser)
+            console.warn('[AuthContext] Refresh timed out, clearing session:', timeoutError);
             await supabase.auth.signOut({ scope: 'local' });
-            localStorage.removeItem('supabase.auth.token');
+            localStorage.removeItem('sb-kusgjgstdabonfntxwsq-auth-token');
             sessionStorage.clear();
             if (isSubscribed) {
               setSession(null);
               setUser(null);
               setLoading(false);
-            }
-          } else {
-            // Session is valid
-            console.log('[AuthContext] Session refreshed successfully');
-            if (isSubscribed) {
-              setSession(refreshedSession);
-              setUser(refreshedSession.user);
-              setLoading(false);
-              updateLastLogin();
             }
           }
         } else {

@@ -61,12 +61,22 @@ const Feedback = () => {
   const [platformFeedbackSubmitted, setPlatformFeedbackSubmitted] = useState(false);
   const [showPlatformFeedback, setShowPlatformFeedback] = useState(false);
 
-  // Wait for auth to resolve before fetching (prevents hanging with expired sessions)
+  // PHASE 4: Decouple auth loading from data loading (with 3s timeout fallback)
   useEffect(() => {
+    const timer = setTimeout(() => {
+      if (authLoading) {
+        console.warn('[Feedback] Auth still loading after 3s, fetching data anyway');
+        fetchEventAndQuestions();
+      }
+    }, 3000);
+    
     if (!authLoading) {
       console.log('[Feedback] Auth resolved, fetching event data');
+      clearTimeout(timer);
       fetchEventAndQuestions();
     }
+    
+    return () => clearTimeout(timer);
   }, [societySlug, eventSlug, authLoading]);
 
   useEffect(() => {
@@ -143,7 +153,8 @@ const Feedback = () => {
 
       await Promise.race([
         (async () => {
-          // Try Pattern A first (matching useEvent pattern)
+          // PHASE 3: Public queries (events, questions) work without auth
+          // No user-specific RLS policies, so expired sessions won't block these
           let { data: eventData, error: eventError } = await supabase
             .from("events")
             .select("id, title, society_id, slug, societies!inner(name, logo_url, slug)")
