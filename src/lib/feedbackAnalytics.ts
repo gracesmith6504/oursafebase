@@ -69,7 +69,7 @@ const STOP_WORDS = new Set([
  * Get overall feedback metrics for an event
  */
 export async function getFeedbackMetrics(eventId: string): Promise<FeedbackMetrics> {
-  // Get total responses
+  // Get all responses for this event
   const { data: responses, error: responsesError } = await supabase
     .from("feedback_responses")
     .select("id, submitted_at")
@@ -77,7 +77,15 @@ export async function getFeedbackMetrics(eventId: string): Promise<FeedbackMetri
 
   if (responsesError) throw responsesError;
 
-  const totalResponses = responses?.length || 0;
+  // Get all visible feedback answers to count only responses that actually have answers
+  const { data: answers } = await supabase
+    .from("feedback_answers")
+    .select("response_id")
+    .in("response_id", responses?.map(r => r.id) || []);
+
+  // Count unique responses that have at least one visible answer
+  const uniqueResponseIds = new Set(answers?.map(a => a.response_id) || []);
+  const totalResponses = uniqueResponseIds.size;
 
   // Get total code acceptances for response rate
   const { count: codeAcceptances } = await supabase
