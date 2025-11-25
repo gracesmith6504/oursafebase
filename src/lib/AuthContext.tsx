@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { updateLastLogin } from "./activityLogger";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface AuthContextType {
   session: Session | null;
@@ -65,6 +66,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 console.warn('[AuthContext] Preemptively clearing expired session from localStorage');
                 localStorage.removeItem('sb-kusgjgstdabonfntxwsq-auth-token');
                 sessionStorage.clear();
+                toast.info('Your session has expired. Please log in again to continue.', {
+                  duration: 4000,
+                });
                 if (isSubscribed) {
                   setSession(null);
                   setUser(null);
@@ -103,6 +107,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               await supabase.auth.signOut({ scope: 'local' });
               localStorage.removeItem('supabase.auth.token');
               sessionStorage.clear();
+              toast.info('Your session has expired. Please log in again.', {
+                duration: 4000,
+              });
               if (isSubscribed) {
                 setSession(null);
                 setUser(null);
@@ -142,6 +149,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               await supabase.auth.signOut({ scope: 'local' });
               localStorage.removeItem('sb-kusgjgstdabonfntxwsq-auth-token');
               sessionStorage.clear();
+              toast.info('Your session has expired. Please log in again.', {
+                duration: 4000,
+              });
               if (isSubscribed) {
                 setSession(null);
                 setUser(null);
@@ -163,6 +173,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             await supabase.auth.signOut({ scope: 'local' });
             localStorage.removeItem('sb-kusgjgstdabonfntxwsq-auth-token');
             sessionStorage.clear();
+            toast.info('Session validation timed out. You can continue as a guest or log in again.', {
+              duration: 5000,
+            });
             if (isSubscribed) {
               setSession(null);
               setUser(null);
