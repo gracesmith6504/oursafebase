@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth";
+import { useAuthContext } from "@/lib/AuthContext";
 
 interface JoinSocietyDialogProps {
   open: boolean;
@@ -21,7 +21,7 @@ interface JoinSocietyDialogProps {
 }
 
 const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogProps) => {
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
@@ -40,6 +40,7 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
       .rpc("validate_invite_code", { invite_code: inviteCode.trim() });
 
     if (validationError || !validationResult || validationResult.length === 0) {
+      toast.error("Invalid invite code. Please check and try again.");
       setLoading(false);
       return;
     }
@@ -68,7 +69,13 @@ const JoinSocietyDialog = ({ open, onOpenChange, onSuccess }: JoinSocietyDialogP
       .maybeSingle();
 
     if (existing) {
+      toast.info(`You're already a member of ${society.name}`);
       setLoading(false);
+      onOpenChange(false);
+      const destination = existing.role === 'committee' 
+        ? `/society/${society.slug}/dashboard` 
+        : '/dashboard';
+      navigate(destination);
       return;
     }
 

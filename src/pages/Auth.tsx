@@ -530,7 +530,7 @@ const Auth = () => {
     const {
       error
     } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `https://oursafebase.com/auth/reset-password`
+      redirectTo: `${getAppUrl()}/auth/reset-password`
     });
     if (error) {
       toast.error(error.message);

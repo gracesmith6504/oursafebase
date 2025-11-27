@@ -172,8 +172,25 @@ const InviteJoin = () => {
         return;
       }
 
-      // Success!
+      // Success! Track invite code usage for analytics
       console.log('[InviteJoin] Successfully joined society');
+      
+      // Track invite code usage (fire and forget - don't block on this)
+      supabase
+        .from("invite_code_usage")
+        .insert({
+          invite_code: code,
+          society_id,
+          role_type,
+          used_by: user.id,
+          referrer_url: document.referrer || null,
+        })
+        .then(({ error: trackingError }) => {
+          if (trackingError) {
+            console.warn('[InviteJoin] Failed to track invite usage:', trackingError);
+          }
+        });
+      
       localStorage.removeItem(INVITE_STORAGE_KEY);
       setProcessing(false);
       toast.success(`Joined ${society_name}!`);
