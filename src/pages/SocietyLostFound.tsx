@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Package, Search, MapPin, Clock, Filter, Inbox } from "lucide-react";
+import { ArrowLeft, Package, Search, MapPin, Clock, Filter, Inbox, Hand, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import LostFoundDetailDialog from "@/components/LostFoundDetailDialog";
 import { ProtectedRoute } from "@/lib/auth";
