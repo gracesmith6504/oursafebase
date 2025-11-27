@@ -652,6 +652,47 @@ export type Database = {
           },
         ]
       }
+      lost_found_claims: {
+        Row: {
+          contact_info: string | null
+          id: string
+          item_id: string
+          notes: string | null
+          reason: string
+          status: string
+          submitted_at: string | null
+          submitted_by: string | null
+        }
+        Insert: {
+          contact_info?: string | null
+          id?: string
+          item_id: string
+          notes?: string | null
+          reason: string
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+        }
+        Update: {
+          contact_info?: string | null
+          id?: string
+          item_id?: string
+          notes?: string | null
+          reason?: string
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lost_found_claims_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "lost_found_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lost_found_items: {
         Row: {
           category: string
