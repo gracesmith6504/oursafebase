@@ -228,6 +228,35 @@ export type Database = {
           },
         ]
       }
+      event_custom_categories: {
+        Row: {
+          category_name: string
+          created_at: string | null
+          event_id: string
+          id: string
+        }
+        Insert: {
+          category_name: string
+          created_at?: string | null
+          event_id: string
+          id?: string
+        }
+        Update: {
+          category_name?: string
+          created_at?: string | null
+          event_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_custom_categories_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_faqs: {
         Row: {
           answer: string
@@ -619,6 +648,62 @@ export type Database = {
             columns: ["society_id"]
             isOneToOne: false
             referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lost_found_items: {
+        Row: {
+          category: string
+          contact_info: string | null
+          description: string
+          event_id: string
+          id: string
+          location: string | null
+          notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          submitted_at: string | null
+          submitted_by: string | null
+          type: string
+        }
+        Insert: {
+          category: string
+          contact_info?: string | null
+          description: string
+          event_id: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          type: string
+        }
+        Update: {
+          category?: string
+          contact_info?: string | null
+          description?: string
+          event_id?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lost_found_items_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]

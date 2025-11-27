@@ -7,7 +7,7 @@ import { useCommitteeRole } from "@/lib/useCommitteeRole";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, Users, AlertCircle, Shield, ArrowLeft, ChevronRight, Settings, BarChart3 } from "lucide-react";
+import { Calendar, Users, AlertCircle, Shield, ArrowLeft, ChevronRight, Settings, BarChart3, Package } from "lucide-react";
 import { logActivity } from "@/lib/activityLogger";
 import {
   Breadcrumb,
@@ -41,6 +41,7 @@ const SocietyDashboard = () => {
     upcomingEvents: 0,
     totalMembers: 0,
     newReports: 0,
+    openLostFound: 0,
   });
   const { isCommittee, loading: roleLoading } = useCommitteeRole(society?.id);
 
@@ -128,10 +129,18 @@ const SocietyDashboard = () => {
       .eq("event.society_id", society.id)
       .eq("status", "new");
 
+    // Count open lost/found items
+    const { count: lostFoundCount } = await supabase
+      .from("lost_found_items")
+      .select("events!inner(society_id)", { count: "exact", head: true })
+      .eq("events.society_id", society.id)
+      .eq("status", "open");
+
     setStats({
       upcomingEvents: eventCount || 0,
       totalMembers: memberCount || 0,
       newReports: reportCount || 0,
+      openLostFound: lostFoundCount || 0,
     });
   };
 
@@ -281,6 +290,22 @@ const SocietyDashboard = () => {
               </CardHeader>
               <CardContent>
                 <Button className="w-full">View Analytics</Button>
+              </CardContent>
+            </Card>
+
+            <Card className="cursor-pointer transition-all hover:shadow-lg" onClick={() => navigate(`/society/${slug}/lost-found`)}>
+              <CardHeader className="relative">
+                <Package className="mb-2 h-10 w-10 text-primary" />
+                {stats.openLostFound > 0 && (
+                  <div className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                    {stats.openLostFound}
+                  </div>
+                )}
+                <CardTitle>Lost & Found</CardTitle>
+                <CardDescription>Manage lost and found item reports</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button className="w-full">View Items</Button>
               </CardContent>
             </Card>
           </div>
