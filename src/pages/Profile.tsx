@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -94,7 +100,7 @@ const Profile = () => {
     const { data, error } = await supabase
       .from("society_members")
       .select(
-        "id, role, email_notifications_enabled, society:societies(id, name, slug, logo_url, creator_email, is_verified)",
+        "id, role, email_notifications_enabled, society:societies(id, name, slug, logo_url, creator_email, is_verified)"
       )
       .eq("user_id", user?.id);
     if (error) {
@@ -103,7 +109,10 @@ const Profile = () => {
       setSocieties(data as any);
     }
   };
-  const handleNotificationToggle = async (membershipId: string, enabled: boolean) => {
+  const handleNotificationToggle = async (
+    membershipId: string,
+    enabled: boolean
+  ) => {
     // Optimistic update: Update UI immediately
     setSocieties((prev) =>
       prev.map((m) =>
@@ -112,8 +121,8 @@ const Profile = () => {
               ...m,
               email_notifications_enabled: enabled,
             }
-          : m,
-      ),
+          : m
+      )
     );
     const { error } = await supabase
       .from("society_members")
@@ -154,11 +163,15 @@ const Profile = () => {
       if (avatarFile && user) {
         const fileExt = avatarFile.name.split(".").pop();
         const fileName = `${user.id}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage.from("avatars").upload(fileName, avatarFile, {
-          upsert: true,
-        });
+        const { error: uploadError } = await supabase.storage
+          .from("avatars")
+          .upload(fileName, avatarFile, {
+            upsert: true,
+          });
         if (uploadError) throw uploadError;
-        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(fileName);
+        const { data: urlData } = supabase.storage
+          .from("avatars")
+          .getPublicUrl(fileName);
         avatarUrl = urlData.publicUrl;
       }
 
@@ -181,9 +194,15 @@ const Profile = () => {
       setSaving(false);
     }
   };
-  const handleLeaveSociety = async (membershipId: string, societyName: string) => {
+  const handleLeaveSociety = async (
+    membershipId: string,
+    societyName: string
+  ) => {
     try {
-      const { error } = await supabase.from("society_members").delete().eq("id", membershipId);
+      const { error } = await supabase
+        .from("society_members")
+        .delete()
+        .eq("id", membershipId);
       if (error) {
         console.error("Leave society error:", error);
         if (error.message.includes("policy")) {
@@ -200,7 +219,9 @@ const Profile = () => {
       setSocietyToLeave(null);
 
       // Navigate to dashboard if user left all societies
-      const updatedSocieties = societies.filter((s) => s.society.id !== societyToLeave?.id);
+      const updatedSocieties = societies.filter(
+        (s) => s.society.id !== societyToLeave?.id
+      );
       if (updatedSocieties.length === 0) {
         setTimeout(() => {
           toast.info("Redirecting to dashboard...");
@@ -235,11 +256,16 @@ const Profile = () => {
         supabase.from("profiles").select("*").eq("id", user.id).single(),
         supabase
           .from("society_members")
-          .select("role, joined_at, email_notifications_enabled, society:societies(name)")
+          .select(
+            "role, joined_at, email_notifications_enabled, society:societies(name)"
+          )
           .eq("user_id", user.id),
         supabase.from("events").select("*").eq("created_by", user.id),
         supabase.from("reports").select("*").eq("reporter_email", userEmail),
-        supabase.from("event_feedback").select("*").eq("contact_email", userEmail),
+        supabase
+          .from("event_feedback")
+          .select("*")
+          .eq("contact_email", userEmail),
         supabase.from("code_acceptances").select("*").eq("user_id", user.id),
         supabase.from("event_notes").select("*").eq("user_id", user.id),
         supabase.from("report_bookmarks").select("*").eq("user_id", user.id),
@@ -276,10 +302,12 @@ const Profile = () => {
         is_anonymous: feedback.is_anonymous,
       }));
 
-      const sanitizedAcceptances = acceptancesData.data?.map((acceptance: any) => ({
-        accepted_at: acceptance.accepted_at,
-        accepted_version: acceptance.accepted_version,
-      }));
+      const sanitizedAcceptances = acceptancesData.data?.map(
+        (acceptance: any) => ({
+          accepted_at: acceptance.accepted_at,
+          accepted_version: acceptance.accepted_version,
+        })
+      );
 
       const sanitizedNotes = notesData.data?.map((note: any) => ({
         content: note.content,
@@ -311,11 +339,15 @@ const Profile = () => {
       };
 
       // Create JSON blob and download
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: "application/json",
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `oursafebase-data-export-${new Date().toISOString().split("T")[0]}.json`;
+      a.download = `oursafebase-data-export-${
+        new Date().toISOString().split("T")[0]
+      }.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -386,15 +418,26 @@ const Profile = () => {
       <div className="min-h-screen bg-muted overflow-x-hidden">
         <header className="border-b bg-background">
           <div className="container mx-auto flex items-center justify-between px-4 py-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/dashboard")}
+            >
               <ArrowLeft className="h-4 w-4 md:mr-2" />
               <span className="hidden md:inline">Dashboard</span>
             </Button>
-            <div className="flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={() => navigate("/")}>
+            <div
+              className="flex items-center gap-2 sm:gap-3 cursor-pointer"
+              onClick={() => navigate("/")}
+            >
               <LazyImage src={logo} alt="OurSafeBase" className="h-8 md:h-10" />
               <h1 className="text-lg md:text-xl font-bold">OurSafeBase</h1>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setLogoutDialogOpen(true)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLogoutDialogOpen(true)}
+            >
               <LogOut className="h-4 w-4 md:mr-2" />
               <span className="hidden md:inline">Sign Out</span>
             </Button>
@@ -404,7 +447,9 @@ const Profile = () => {
         <main className="container mx-auto max-w-4xl px-3 py-4 md:px-4 md:py-8">
           <div className="mb-8">
             <h2 className="mb-2 text-3xl font-bold">Edit Profile</h2>
-            <p className="text-muted-foreground">Update your personal information and manage society memberships</p>
+            <p className="text-muted-foreground">
+              Update your personal information and manage society memberships
+            </p>
           </div>
 
           <div className="space-y-6">
@@ -412,7 +457,9 @@ const Profile = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
-                <CardDescription>Your display name and contact details</CardDescription>
+                <CardDescription>
+                  Your display name and contact details
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Avatar */}
@@ -427,7 +474,12 @@ const Profile = () => {
                     <Label htmlFor="avatar" className="cursor-pointer">
                       <div className="space-y-1">
                         <div>
-                          <Button type="button" variant="outline" size="sm" asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            asChild
+                          >
                             <span>
                               <Upload className="mr-2 h-4 w-4" />
                               Upload Photo
@@ -437,7 +489,13 @@ const Profile = () => {
                         <p className="text-sm text-muted-foreground">Max 2MB</p>
                       </div>
                     </Label>
-                    <Input id="avatar" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                    <Input
+                      id="avatar"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
                   </div>
                 </div>
 
@@ -460,8 +518,17 @@ const Profile = () => {
                 {/* Email Address (read-only) */}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
-                  <Input id="email" type="email" value={userEmail} readOnly disabled className="bg-muted" />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed. Contact support if needed.</p>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={userEmail}
+                    readOnly
+                    disabled
+                    className="bg-muted"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Email cannot be changed. Contact support if needed.
+                  </p>
                 </div>
 
                 {/* Phone Number */}
@@ -493,7 +560,8 @@ const Profile = () => {
                 <CardHeader>
                   <CardTitle>Notification Preferences</CardTitle>
                   <CardDescription>
-                    Manage email notifications for societies where you're a committee member
+                    Manage email notifications for societies where you're a
+                    committee member
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -501,17 +569,26 @@ const Profile = () => {
                     {societies
                       .filter((m) => m.role === "committee")
                       .map((membership) => (
-                        <div key={membership.id} className="flex items-center justify-between rounded-lg border p-4">
+                        <div
+                          key={membership.id}
+                          className="flex items-center justify-between rounded-lg border p-4"
+                        >
                           <div className="flex items-center gap-3 flex-1 min-w-0">
                             <Bell className="h-5 w-5 text-muted-foreground shrink-0" />
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium break-words">{membership.society.name}</p>
-                              <p className="text-sm text-muted-foreground">Report email notifications</p>
+                              <p className="font-medium break-words">
+                                {membership.society.name}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                Report email notifications
+                              </p>
                             </div>
                           </div>
                           <Switch
                             checked={membership.email_notifications_enabled}
-                            onCheckedChange={(checked) => handleNotificationToggle(membership.id, checked)}
+                            onCheckedChange={(checked) =>
+                              handleNotificationToggle(membership.id, checked)
+                            }
                           />
                         </div>
                       ))}
@@ -524,14 +601,21 @@ const Profile = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Data Export</CardTitle>
-                <CardDescription>Download all your data in JSON format (GDPR Article 20)</CardDescription>
+                <CardDescription>
+                  Download all your data in JSON format (GDPR Article 20)
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Export includes your personal data and activity only. Does not include other members' information,
-                  internal system IDs, or sensitive society details.
+                  Export includes your personal data and activity only. Does not
+                  include other members' information, internal system IDs, or
+                  sensitive society details.
                 </p>
-                <Button onClick={handleExportData} disabled={exporting} variant="outline">
+                <Button
+                  onClick={handleExportData}
+                  disabled={exporting}
+                  variant="outline"
+                >
                   <Download className="mr-2 h-4 w-4" />
                   {exporting ? "Exporting..." : "Export My Data"}
                 </Button>
@@ -542,19 +626,28 @@ const Profile = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Society Memberships</CardTitle>
-                <CardDescription>Societies you are currently a member of</CardDescription>
+                <CardDescription>
+                  Societies you are currently a member of
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {societies.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">You are not a member of any societies yet.</p>
+                  <p className="text-sm text-muted-foreground">
+                    You are not a member of any societies yet.
+                  </p>
                 ) : (
                   <div className="space-y-3">
                     {societies.map((membership) => (
-                      <div key={membership.id} className="flex items-center justify-between rounded-lg border p-4">
+                      <div
+                        key={membership.id}
+                        className="flex items-center justify-between rounded-lg border p-4"
+                      >
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold break-words flex items-center gap-2">
                             {membership.society.name}
-                            {membership.society.is_verified && <VerifiedBadge size="sm" />}
+                            {membership.society.is_verified && (
+                              <VerifiedBadge size="sm" />
+                            )}
                           </h3>
                         </div>
                         <Button
@@ -575,8 +668,12 @@ const Profile = () => {
             {/* Delete Account */}
             <Card className="border-destructive">
               <CardHeader>
-                <CardTitle className="text-destructive">Delete Account</CardTitle>
-                <CardDescription>Permanently delete your account and personal data</CardDescription>
+                <CardTitle className="text-destructive">
+                  Delete Account
+                </CardTitle>
+                <CardDescription>
+                  Permanently delete your account and personal data
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="rounded-lg bg-destructive/10 p-4 space-y-2">
@@ -590,19 +687,32 @@ const Profile = () => {
                 </div>
 
                 <div className="rounded-lg bg-muted p-4 space-y-2">
-                  <p className="text-sm font-medium">What will be retained (for safety records):</p>
+                  <p className="text-sm font-medium">
+                    What will be retained (for safety records):
+                  </p>
                   <ul className="text-sm text-muted-foreground space-y-1 ml-4 list-disc">
-                    <li>Anonymous reports you submitted (cannot be traced back to you)</li>
-                    <li>Non-anonymous reports (contact info removed, content kept for welfare records)</li>
+                    <li>
+                      Anonymous reports you submitted (cannot be traced back to
+                      you)
+                    </li>
+                    <li>
+                      Non-anonymous reports (contact info removed, content kept
+                      for welfare records)
+                    </li>
                     <li>Events you created (your name will be removed)</li>
                   </ul>
                   <p className="text-xs text-muted-foreground mt-2">
-                    This retention is required for legal compliance and student safety.
+                    This retention is required for legal compliance and student
+                    safety.
                   </p>
                 </div>
 
                 <div className="pt-2">
-                  <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)} disabled={deleting}>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setDeleteDialogOpen(true)}
+                    disabled={deleting}
+                  >
                     Delete My Account
                   </Button>
                 </div>
@@ -612,19 +722,25 @@ const Profile = () => {
         </main>
 
         {/* Leave Society Confirmation Dialog */}
-        <AlertDialog open={!!societyToLeave} onOpenChange={() => setSocietyToLeave(null)}>
+        <AlertDialog
+          open={!!societyToLeave}
+          onOpenChange={() => setSocietyToLeave(null)}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Leave Society?</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to leave {societyToLeave?.name}? You will need an invite code to rejoin.
+                Are you sure you want to leave {societyToLeave?.name}? You will
+                need an invite code to rejoin.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
-                  const membership = societies.find((m) => m.society.id === societyToLeave?.id);
+                  const membership = societies.find(
+                    (m) => m.society.id === societyToLeave?.id
+                  );
                   if (membership && societyToLeave) {
                     handleLeaveSociety(membership.id, societyToLeave.name);
                   }
@@ -638,7 +754,7 @@ const Profile = () => {
 
         {/* Sign Out Confirmation Dialog */}
         <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
-          <AlertDialogContent className="max-w-[80%] rounded-xl">
+          <AlertDialogContent className="xl:max-w-[40%] rounded-xl">
             <AlertDialogHeader>
               <AlertDialogTitle>Log out of your account?</AlertDialogTitle>
             </AlertDialogHeader>
@@ -649,7 +765,9 @@ const Profile = () => {
               >
                 Log Out
               </AlertDialogAction>
-              <AlertDialogCancel className="w-full mt-0">Cancel</AlertDialogCancel>
+              <AlertDialogCancel className="w-full mt-0">
+                Cancel
+              </AlertDialogCancel>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -661,21 +779,30 @@ const Profile = () => {
               <AlertDialogTitle>Delete Account Permanently?</AlertDialogTitle>
               <AlertDialogDescription className="space-y-3">
                 <p>
-                  This action <strong>cannot be undone</strong>. Your account and personal data will be permanently
-                  deleted.
+                  This action <strong>cannot be undone</strong>. Your account
+                  and personal data will be permanently deleted.
                 </p>
                 <div className="rounded-lg bg-muted p-3 space-y-2 text-left">
-                  <p className="font-medium text-foreground text-sm">Data Retention Policy:</p>
+                  <p className="font-medium text-foreground text-sm">
+                    Data Retention Policy:
+                  </p>
                   <ul className="text-xs space-y-1 ml-4 list-disc">
-                    <li>Anonymous reports remain for safety records (untraceable to you)</li>
                     <li>
-                      Non-anonymous reports: your contact info is removed, but report content is kept for welfare and
-                      legal purposes
+                      Anonymous reports remain for safety records (untraceable
+                      to you)
                     </li>
-                    <li>Events you created remain active (your name removed)</li>
+                    <li>
+                      Non-anonymous reports: your contact info is removed, but
+                      report content is kept for welfare and legal purposes
+                    </li>
+                    <li>
+                      Events you created remain active (your name removed)
+                    </li>
                   </ul>
                 </div>
-                <p className="text-sm">Are you absolutely sure you want to delete your account?</p>
+                <p className="text-sm">
+                  Are you absolutely sure you want to delete your account?
+                </p>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
