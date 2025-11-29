@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -25,212 +24,136 @@ const ResetPassword = () => {
   const [isValidToken, setIsValidToken] = useState<boolean | null>(null);
   const [checkingToken, setCheckingToken] = useState(true);
 
-  // useEffect(() => {
-  //   const checkRecoveryToken = async () => {
-  //     try {
-  //       const hash = window.location.hash;
-  //       const params = new URLSearchParams(hash.substring(1));
-  //       const type = params.get("type");
-  //       const errorParam = params.get("error");
-  //       const errorCode = params.get("error_code");
-  //       const errorDescription = params.get("error_description");
-
-  //       // Handle error in URL (expired link, etc.)
-  //       if (errorParam) {
-  //         setIsValidToken(false);
-
-  //         if (errorCode === "otp_expired") {
-  //           setError("This password reset link has expired. Please request a new one.");
-  //         } else {
-  //           setError(errorDescription || "Invalid or expired reset link. Please request a new one.");
-  //         }
-  //         setCheckingToken(false);
-  //         return;
-  //       }
-
-  //       // Check if this is a recovery type
-  //       if (type === "recovery") {
-  //         // Token is valid, user can proceed
-  //         setIsValidToken(true);
-  //       } else {
-  //         // No recovery token found
-  //         setIsValidToken(false);
-  //         setError("No valid password reset token found. Please request a new password reset link.");
-  //       }
-  //     } catch (err) {
-  //       console.error("Error checking recovery token:", err);
-  //       setIsValidToken(false);
-  //       setError("An error occurred. Please try requesting a new password reset link.");
-  //     } finally {
-  //       setCheckingToken(false);
-  //     }
-  //   };
-
-  //   checkRecoveryToken();
-  // }, []);
-
   useEffect(() => {
-    const checkRecoveryToken = async () => {
+    const verifyRecoveryToken = async () => {
       try {
+        console.log("Starting token verification...");
+        
+        // Get the full URL and hash
         const hash = window.location.hash;
-        const params = new URLSearchParams(hash.substring(1));
-        const type = params.get("type");
-        const accessToken = params.get("access_token");
-        const errorParam = params.get("error");
-        const errorCode = params.get("error_code");
-        const errorDescription = params.get("error_description");
+        console.log("URL hash:", hash);
 
-        console.log("URL params:", {
-          type,
-          accessToken,
-          errorParam,
-          errorCode,
-          errorDescription,
-        });
-
-        // Handle error in URL (expired link, etc.)
-        if (errorParam) {
+        if (!hash || hash === "#") {
+          console.log("No hash found in URL");
           setIsValidToken(false);
-
-          if (errorCode === "otp_expired") {
-            setError(
-              "This password reset link has expired. Please request a new one."
-            );
-          } else {
-            setError(
-              errorDescription ||
-                "Invalid or expired reset link. Please request a new one."
-            );
-          }
+          setError("No password reset token found. Please request a new reset link.");
           setCheckingToken(false);
           return;
         }
 
-        // Check if this is a recovery type AND we have an access token
-        if (type === "recovery" && accessToken) {
-          // Set the session with the access token from the URL
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: params.get("refresh_token") || "",
-          });
+        // Parse the hash parameters
+        const hashParams = new URLSearchParams(hash.substring(1));
+        const type = hashParams.get("type");
+        const accessToken = hashParams.get("access_token");
+        
+        console.log("Type:", type);
+        console.log("Access token exists:", !!accessToken);
 
-          if (sessionError) {
-            console.error("Session error:", sessionError);
-            setIsValidToken(false);
-            setError(
-              "Invalid or expired reset link. Please request a new one."
-            );
-          } else {
-            // Token is valid, user can proceed
-            setIsValidToken(true);
-          }
-        } else {
-          // No recovery token found
+        // Check if it's a recovery flow
+        if (type !== "recovery" || !accessToken) {
+          console.log("Not a recovery flow or missing access token");
           setIsValidToken(false);
-          setError(
-            "No valid password reset token found. Please request a new password reset link."
-          );
+          setError("Invalid reset link format. Please request a new password reset link.");
+          setCheckingToken(false);
+          return;
         }
+
+        // Try to set the session with the recovery token
+        console.log("Attempting to set session with recovery token...");
+        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: hashParams.get("refresh_token") || "",
+        });
+
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          setIsValidToken(false);
+          setError("This reset link is invalid or has expired. Please request a new one.");
+          setCheckingToken(false);
+          return;
+        }
+
+        console.log("Session set successfully:", sessionData);
+
+        // Verify we have a user
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !userData.user) {
+          console.error("User verification failed:", userError);
+          setIsValidToken(false);
+          setError("Unable to verify your account. Please request a new reset link.");
+          setCheckingToken(false);
+          return;
+        }
+
+        console.log("User verified:", userData.user.email);
+        setIsValidToken(true);
+        
       } catch (err) {
-        console.error("Error checking recovery token:", err);
+        console.error("Unexpected error during token verification:", err);
         setIsValidToken(false);
-        setError(
-          "An error occurred. Please try requesting a new password reset link."
-        );
+        setError("An unexpected error occurred. Please try requesting a new password reset link.");
       } finally {
         setCheckingToken(false);
       }
     };
 
-    checkRecoveryToken();
+    verifyRecoveryToken();
   }, []);
 
-  // const handlePasswordUpdate = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   setError(null);
-
-  //   // Validation
-  //   if (newPassword.length < 6) {
-  //     setError("Password must be at least 6 characters long");
-  //     return;
-  //   }
-
-  //   if (newPassword !== confirmPassword) {
-  //     setError("Passwords do not match");
-  //     return;
-  //   }
-
-  //   setLoading(true);
-
-  //   try {
-  //     const { error } = await supabase.auth.updateUser({
-  //       password: newPassword,
-  //     });
-
-  //     if (error) throw error;
-
-  //     setSuccess(true);
-
-  //     // Clean up the hash
-  //     window.history.replaceState(null, "", window.location.pathname);
-
-  //     // Redirect after success
-  //     setTimeout(() => {
-  //       navigate("/dashboard");
-  //     }, 2000);
-  //   } catch (error: any) {
-  //     console.error("Password update error:", error);
-  //     setError(error.message || "Failed to update password. Please try again.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-
   const handlePasswordUpdate = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError(null);
+    e.preventDefault();
+    setError(null);
 
-  // Validation
-  if (newPassword.length < 6) {
-    setError("Password must be at least 6 characters long");
-    return;
-  }
+    // Validation
+    if (newPassword.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
 
-  if (newPassword !== confirmPassword) {
-    setError("Passwords do not match");
-    return;
-  }
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
 
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-    });
+    try {
+      console.log("Attempting to update password...");
+      
+      const { data, error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
 
-    if (error) throw error;
+      if (updateError) {
+        console.error("Password update error:", updateError);
+        throw updateError;
+      }
 
-    setSuccess(true);
+      console.log("Password updated successfully:", data);
+      setSuccess(true);
 
-    // Clean up the hash and sign out the temporary session
-    window.history.replaceState(null, "", window.location.pathname);
-    await supabase.auth.signOut();
+      // Clean up the URL
+      window.history.replaceState(null, "", window.location.pathname);
 
-    // Redirect after success
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 2000);
-  } catch (error: any) {
-    console.error("Password update error:", error);
-    setError(error.message || "Failed to update password. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+      // Sign out the recovery session
+      await supabase.auth.signOut();
+
+      // Redirect after success
+      setTimeout(() => {
+        navigate("/auth");
+      }, 3000);
+
+    } catch (error: any) {
+      console.error("Password update failed:", error);
+      setError(error.message || "Failed to update password. The link may have expired. Please request a new reset link.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleRequestNewLink = () => {
-    navigate("/auth");
+    navigate("/auth?mode=reset");
   };
 
   if (checkingToken) {
@@ -260,7 +183,7 @@ const ResetPassword = () => {
             <Alert className="bg-green-50 border-green-200">
               <CheckCircle className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
-                Password updated successfully! Redirecting to dashboard...
+                Password updated successfully! Redirecting to login...
               </AlertDescription>
             </Alert>
           ) : isValidToken === false ? (
@@ -272,7 +195,6 @@ const ResetPassword = () => {
               <Button
                 onClick={handleRequestNewLink}
                 className="w-full"
-                variant="outline"
               >
                 Request New Reset Link
               </Button>
@@ -292,7 +214,7 @@ const ResetPassword = () => {
                   id="newPassword"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
+                  placeholder="Enter new password (min. 6 characters)"
                   required
                   minLength={6}
                   disabled={loading}
