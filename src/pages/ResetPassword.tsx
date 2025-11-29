@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   Card,
   CardContent,
@@ -12,7 +12,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { PasswordInput } from "@/components/ui/password-input";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 
 const ResetPassword = () => {
@@ -25,102 +24,46 @@ const ResetPassword = () => {
   const [isValidToken, setIsValidToken] = useState<boolean | null>(null);
   const [checkingToken, setCheckingToken] = useState(true);
 
-  // useEffect(() => {
-  //   const checkRecoveryToken = async () => {
-  //     try {
-  //       const hash = window.location.hash;
-  //       const params = new URLSearchParams(hash.substring(1));
-  //       const type = params.get("type");
-  //       const errorParam = params.get("error");
-  //       const errorCode = params.get("error_code");
-  //       const errorDescription = params.get("error_description");
-
-  //       // Handle error in URL (expired link, etc.)
-  //       if (errorParam) {
-  //         setIsValidToken(false);
-
-  //         if (errorCode === "otp_expired") {
-  //           setError(
-  //             "This password reset link has expired. Please request a new one."
-  //           );
-  //         } else {
-  //           setError(
-  //             errorDescription ||
-  //               "Invalid or expired reset link. Please request a new one."
-  //           );
-  //         }
-  //         setCheckingToken(false);
-  //         return;
-  //       }
-
-  //       // Check if this is a recovery type
-  //       if (type === "recovery") {
-  //         // Token is valid, user can proceed
-  //         setIsValidToken(true);
-  //       } else {
-  //         // No recovery token found
-  //         setIsValidToken(false);
-  //         setError(
-  //           "No valid password reset token found. Please request a new password reset link."
-  //         );
-  //       }
-  //     } catch (err) {
-  //       console.error("Error checking recovery token:", err);
-  //       setIsValidToken(false);
-  //       setError(
-  //         "An error occurred. Please try requesting a new password reset link."
-  //       );
-  //     } finally {
-  //       setCheckingToken(false);
-  //     }
-  //   };
-
-  //   checkRecoveryToken();
-  // }, []);
-
   useEffect(() => {
     const checkRecoveryToken = async () => {
       try {
-        // Read hash and query
         const hash = window.location.hash;
-        const query = window.location.search;
+        const search = window.location.search;
 
-        const params = new URLSearchParams(hash ? hash.substring(1) : query);
+        const params = new URLSearchParams(hash ? hash.substring(1) : search);
         const type = params.get("type");
         const errorParam = params.get("error");
         const errorCode = params.get("error_code");
         const errorDescription = params.get("error_description");
+        const accessToken = params.get("access_token");
 
+        // Handle errors in the URL
         if (errorParam) {
           setIsValidToken(false);
           if (errorCode === "otp_expired") {
-            setError(
-              "This password reset link has expired. Please request a new one."
-            );
+            setError("This password reset link has expired. Please request a new one.");
           } else {
-            setError(
-              errorDescription ||
-                "Invalid or expired reset link. Please request a new one."
-            );
+            setError(errorDescription || "Invalid or expired reset link. Please request a new one.");
           }
           setCheckingToken(false);
           return;
         }
 
-        if (type === "recovery") {
+        // Check if this is a recovery token
+        if (type === "recovery" && accessToken) {
+          // Set session with Supabase
+          const { error: sessionError } = await supabase.auth.setSession({ access_token: accessToken });
+          if (sessionError) throw sessionError;
+
           setIsValidToken(true);
         } else {
           setIsValidToken(false);
-          setError(
-            "No valid password reset token found. Please request a new password reset link."
-          );
+          setError("No valid password reset token found. Please request a new password reset link.");
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error checking recovery token:", err);
         setIsValidToken(false);
-        setError(
-          "An error occurred. Please try requesting a new password reset link."
-        );
+        setError("An error occurred. Please try requesting a new password reset link.");
       } finally {
         setCheckingToken(false);
       }
@@ -133,7 +76,6 @@ const ResetPassword = () => {
     e.preventDefault();
     setError(null);
 
-    // Validation
     if (newPassword.length < 6) {
       setError("Password must be at least 6 characters long");
       return;
@@ -147,32 +89,25 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (error) throw error;
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateError) throw updateError;
 
       setSuccess(true);
 
-      // Clean up the hash
+      // Clean URL
       window.history.replaceState(null, "", window.location.pathname);
 
-      // Redirect after success
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 2000);
-    } catch (error: any) {
-      console.error("Password update error:", error);
-      setError(error.message || "Failed to update password. Please try again.");
+      // Redirect after 2 seconds
+      setTimeout(() => navigate("/dashboard"), 2000);
+    } catch (err: any) {
+      console.error("Password update error:", err);
+      setError(err.message || "Failed to update password. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRequestNewLink = () => {
-    navigate("/auth");
-  };
+  const handleRequestNewLink = () => navigate("/auth");
 
   if (checkingToken) {
     return (
@@ -191,9 +126,7 @@ const ResetPassword = () => {
         <CardHeader>
           <CardTitle>Reset Your Password</CardTitle>
           <CardDescription>
-            {isValidToken
-              ? "Enter your new password below"
-              : "This link is invalid or has expired"}
+            {isValidToken ? "Enter your new password below" : "This link is invalid or has expired"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -210,11 +143,7 @@ const ResetPassword = () => {
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
-              <Button
-                onClick={handleRequestNewLink}
-                className="w-full"
-                variant="outline"
-              >
+              <Button onClick={handleRequestNewLink} className="w-full" variant="outline">
                 Request New Reset Link
               </Button>
             </div>
@@ -226,7 +155,6 @@ const ResetPassword = () => {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New Password</Label>
                 <PasswordInput
@@ -239,7 +167,6 @@ const ResetPassword = () => {
                   disabled={loading}
                 />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <PasswordInput
@@ -252,7 +179,6 @@ const ResetPassword = () => {
                   disabled={loading}
                 />
               </div>
-
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <>
