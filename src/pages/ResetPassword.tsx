@@ -29,12 +29,12 @@ const ResetPassword = () => {
       if (event === "PASSWORD_RECOVERY") {
         setIsRecoveryMode(true);
         setChecking(false);
-        // Remove the #access_token=...&type=recovery from URL
+        // Clean the URL hash (#access_token=...&type=recovery...)
         window.history.replaceState({}, "", "/auth/reset-password");
       }
     });
 
-    // In case the page was refreshed and Supabase already restored the session
+    // Handle page refresh — Supabase may have already recovered the session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session && window.location.hash.includes("type=recovery")) {
         setIsRecoveryMode(true);
@@ -61,7 +61,9 @@ const ResetPassword = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
       if (error) throw error;
 
       setSuccess(true);
@@ -69,10 +71,12 @@ const ResetPassword = () => {
       // Sign out + redirect to login with success message
       setTimeout(async () => {
         await supabase.auth.signOut();
-        navigate("/auth", { state: { message: "Password changed successfully! Please log in." } });
+        navigate("/auth", {
+          state: { message: "Password updated successfully! Please log in." },
+        });
       }, 2500);
     } catch (err: any) {
-      setError(err.message || "Failed to update password");
+      setError(err.message || "Failed to update password. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -82,7 +86,7 @@ const ResetPassword = () => {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-muted-foreground">Verifying your reset link...</p>
+        <p className="text-muted-foreground">Verifying reset link...</p>
       </div>
     );
   }
@@ -90,21 +94,21 @@ const ResetPassword = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl">Reset Password</CardTitle>
+        <CardHeader className="space-y-3 text-center">
+          <CardTitle className="text-2xl">Reset Your Password</CardTitle>
           <CardDescription>
             {isRecoveryMode
-              ? "Enter your new password below"
-              : "This reset link is invalid or has expired"}
+              ? "Choose a strong new password"
+              : "This link is invalid or has expired"}
           </CardDescription>
         </CardHeader>
 
-        <CardContent>
+        <CardContent className="space-y-6">
           {success ? (
-            <Alert className="border-green-200 bg-green-50">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              <AlertDescription className="text-green-800">
-                Password updated successfully! Taking you back to login...
+            <Alert className="border-green-200 bg-green-50 text-green-800">
+              <CheckCircle className="h-5 w-5" />
+              <AlertDescription>
+                Password changed successfully! Redirecting to login...
               </AlertDescription>
             </Alert>
           ) : !isRecoveryMode ? (
@@ -115,8 +119,12 @@ const ResetPassword = () => {
                   {error || "This password reset link is no longer valid."}
                 </AlertDescription>
               </Alert>
-              <Button onClick={() => navigate("/auth")} className="w-full" variant="outline">
-                Request New Reset Link
+              <Button
+                onClick={() => navigate("/auth")}
+                className="w-full"
+                variant="outline"
+              >
+                Back to Login
               </Button>
             </div>
           ) : (
@@ -134,7 +142,7 @@ const ResetPassword = () => {
                   id="new-password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter strong password"
+                  placeholder="••••••••"
                   required
                   minLength={6}
                   disabled={loading}
@@ -148,7 +156,7 @@ const ResetPassword = () => {
                   id="confirm-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat your password"
+                  placeholder="••••••••"
                   required
                   minLength={6}
                   disabled={loading}
@@ -159,7 +167,7 @@ const ResetPassword = () => {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating...
+                    Updating Password...
                   </>
                 ) : (
                   "Update Password"
