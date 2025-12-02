@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Card,
@@ -21,72 +22,114 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const [isValidToken, setIsValidToken] = useState<boolean | null>(null);
+  const [checkingToken, setCheckingToken] = useState(true);
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setIsRecoveryMode(true);
-        setChecking(false);
-        // Clean the URL hash (#access_token=...&type=recovery...)
-        window.history.replaceState({}, "", "/auth/reset-password");
-      }
-    });
+    const checkRecoveryToken = async () => {
+      try {
+        const hash = window.location.hash;
+        const params = new URLSearchParams(hash.substring(1));
+        const type = params.get("type");
+        const errorParam = params.get("error");
+        const errorCode = params.get("error_code");
+        const errorDescription = params.get("error_description");
 
-    // Handle page refresh — Supabase may have already recovered the session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && window.location.hash.includes("type=recovery")) {
-        setIsRecoveryMode(true);
-        window.history.replaceState({}, "", "/auth/reset-password");
-      }
-      setChecking(false);
-    });
+        // Handle error in URL (expired link, etc.)
+        if (errorParam) {
+          setIsValidToken(false);
 
-    return () => listener.subscription.unsubscribe();
+          if (errorCode === "otp_expired") {
+            setError(
+              "This password reset link has expired. Please request a new one."
+            );
+          } else {
+            setError(
+              errorDescription ||
+                "Invalid or expired reset link. Please request a new one."
+            );
+          }
+          setCheckingToken(false);
+          return;
+        }
+
+        // Check if this is a recovery type
+        if (type === "recovery") {
+          // Token is valid, user can proceed
+          setIsValidToken(true);
+        } else {
+          // No recovery token found
+          setIsValidToken(false);
+          setError(
+            "No valid password reset token found. Please request a new password reset link."
+          );
+        }
+      } catch (err) {
+        console.error("Error checking recovery token:", err);
+        setIsValidToken(false);
+        setError(
+          "An error occurred. Please try requesting a new password reset link."
+        );
+      } finally {
+        setCheckingToken(false);
+      }
+    };
+
+    checkRecoveryToken();
   }, []);
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
+    // Validation
     if (newPassword.length < 6) {
       setError("Password must be at least 6 characters long");
       return;
     }
+
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
 
     setLoading(true);
+
     try {
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
+
       if (error) throw error;
 
       setSuccess(true);
 
-      // Sign out + redirect to login with success message
-      setTimeout(async () => {
-        await supabase.auth.signOut();
-        navigate("/auth", {
-          state: { message: "Password updated successfully! Please log in." },
-        });
-      }, 2500);
-    } catch (err: any) {
-      setError(err.message || "Failed to update password. Please try again.");
+      // Clean up the hash
+      window.history.replaceState(null, "", window.location.pathname);
+
+      // Redirect after success
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 2000);
+    } catch (error: any) {
+      console.error("Password update error:", error);
+      setError(error.message || "Failed to update password. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (checking) {
+  const handleRequestNewLink = () => {
+    navigate("/auth");
+  };
+
+  if (checkingToken) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="text-muted-foreground">Verifying reset link...</p>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Verifying reset link...</p>
+        </div>
       </div>
     );
   }
@@ -94,69 +137,65 @@ const ResetPassword = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="space-y-3 text-center">
-          <CardTitle className="text-2xl">Reset Your Password</CardTitle>
+        <CardHeader>
+          <CardTitle>Reset Your Password</CardTitle>
           <CardDescription>
-            {isRecoveryMode
-              ? "Choose a strong new password"
+            {isValidToken
+              ? "Enter your new password below"
               : "This link is invalid or has expired"}
           </CardDescription>
         </CardHeader>
-
-        <CardContent className="space-y-6">
+        <CardContent>
           {success ? (
-            <Alert className="border-green-200 bg-green-50 text-green-800">
-              <CheckCircle className="h-5 w-5" />
-              <AlertDescription>
-                Password changed successfully! Redirecting to login...
+            <Alert className="bg-green-50 border-green-200">
+              <CheckCircle className="h-4 w-4 text-green-600" />
+              <AlertDescription className="text-green-800">
+                Password updated successfully! Redirecting to dashboard...
               </AlertDescription>
             </Alert>
-          ) : !isRecoveryMode ? (
-            <div className="space-y-6">
+          ) : isValidToken === false ? (
+            <div className="space-y-4">
               <Alert variant="destructive">
-                <AlertCircle className="h-5 w-5" />
-                <AlertDescription>
-                  {error || "This password reset link is no longer valid."}
-                </AlertDescription>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
               <Button
-                onClick={() => navigate("/auth")}
+                onClick={handleRequestNewLink}
                 className="w-full"
                 variant="outline"
               >
-                Back to Login
+                Request New Reset Link
               </Button>
             </div>
           ) : (
-            <form onSubmit={handlePasswordUpdate} className="space-y-5">
+            <form onSubmit={handlePasswordUpdate} className="space-y-4">
               {error && (
                 <Alert variant="destructive">
-                  <AlertCircle className="h-5 w-5" />
+                  <AlertCircle className="h-4 w-4" />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
+                <Label htmlFor="newPassword">New Password</Label>
                 <PasswordInput
-                  id="new-password"
+                  id="newPassword"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Enter new password"
                   required
                   minLength={6}
                   disabled={loading}
-                  autoFocus
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <PasswordInput
-                  id="confirm-password"
+                  id="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Confirm new password"
                   required
                   minLength={6}
                   disabled={loading}
