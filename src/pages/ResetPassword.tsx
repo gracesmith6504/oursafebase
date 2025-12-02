@@ -21,33 +21,29 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [sessionValid, setSessionValid] = useState<boolean | null>(null);
-  const [checkingSession, setCheckingSession] = useState(true);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [checking, setChecking] = useState(true);
 
-  // Check for recovery session from URL
   useEffect(() => {
-    const initRecovery = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSessionFromUrl({
-          storeSession: true, // Store the temporary session
-        });
-
-        if (error || !data.session) {
-          setSessionValid(false);
-          setError("No valid password reset token found. Please request a new link.");
-        } else {
-          setSessionValid(true);
-        }
-      } catch (err) {
-        console.error("Error during recovery:", err);
-        setSessionValid(false);
-        setError("An error occurred. Please try again.");
-      } finally {
-        setCheckingSession(false);
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecoveryMode(true);
+        setChecking(false);
+        // Remove the #access_token=...&type=recovery from URL
+        window.history.replaceState({}, "", "/auth/reset-password");
       }
-    };
+    });
 
-    initRecovery();
+    // In case the page was refreshed and Supabase already restored the session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session && window.location.hash.includes("type=recovery")) {
+        setIsRecoveryMode(true);
+        window.history.replaceState({}, "", "/auth/reset-password");
+      }
+      setChecking(false);
+    });
+
+    return () => listener.subscription.unsubscribe();
   }, []);
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
@@ -58,45 +54,35 @@ const ResetPassword = () => {
       setError("Password must be at least 6 characters long");
       return;
     }
-
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
 
     setLoading(true);
-
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
 
       setSuccess(true);
 
-      // Remove any query params or hash from the URL
-      window.history.replaceState(null, "", window.location.pathname);
-
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 2000);
+      // Sign out + redirect to login with success message
+      setTimeout(async () => {
+        await supabase.auth.signOut();
+        navigate("/auth", { state: { message: "Password changed successfully! Please log in." } });
+      }, 2500);
     } catch (err: any) {
-      console.error("Password update error:", err);
-      setError(err.message || "Failed to update password.");
+      setError(err.message || "Failed to update password");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRequestNewLink = () => {
-    navigate("/auth"); // Send user to request a new password reset
-  };
-
-  if (checkingSession) {
+  if (checking) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Verifying reset link...</p>
-        </div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-muted-foreground">Verifying your reset link...</p>
       </div>
     );
   }
@@ -104,64 +90,65 @@ const ResetPassword = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Reset Your Password</CardTitle>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl">Reset Password</CardTitle>
           <CardDescription>
-            {sessionValid
+            {isRecoveryMode
               ? "Enter your new password below"
-              : "This link is invalid or has expired"}
+              : "This reset link is invalid or has expired"}
           </CardDescription>
         </CardHeader>
 
         <CardContent>
           {success ? (
-            <Alert className="bg-green-50 border-green-200">
-              <CheckCircle className="h-4 w-4 text-green-600" />
+            <Alert className="border-green-200 bg-green-50">
+              <CheckCircle className="h-5 w-5 text-green-600" />
               <AlertDescription className="text-green-800">
-                Password updated successfully! Redirecting to dashboard...
+                Password updated successfully! Taking you back to login...
               </AlertDescription>
             </Alert>
-          ) : sessionValid === false ? (
-            <div className="space-y-4">
+          ) : !isRecoveryMode ? (
+            <div className="space-y-6">
               <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertCircle className="h-5 w-5" />
+                <AlertDescription>
+                  {error || "This password reset link is no longer valid."}
+                </AlertDescription>
               </Alert>
-              <Button
-                onClick={handleRequestNewLink}
-                className="w-full"
-                variant="outline"
-              >
+              <Button onClick={() => navigate("/auth")} className="w-full" variant="outline">
                 Request New Reset Link
               </Button>
             </div>
           ) : (
-            <form onSubmit={handlePasswordUpdate} className="space-y-4">
+            <form onSubmit={handlePasswordUpdate} className="space-y-5">
               {error && (
                 <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
+                  <AlertCircle className="h-5 w-5" />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="new-password">New Password</Label>
                 <PasswordInput
-                  id="newPassword"
+                  id="new-password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter strong password"
                   required
                   minLength={6}
                   disabled={loading}
+                  autoFocus
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirm-password">Confirm Password</Label>
                 <PasswordInput
-                  id="confirmPassword"
+                  id="confirm-password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat your password"
                   required
                   minLength={6}
                   disabled={loading}
@@ -172,7 +159,7 @@ const ResetPassword = () => {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating Password...
+                    Updating...
                   </>
                 ) : (
                   "Update Password"
