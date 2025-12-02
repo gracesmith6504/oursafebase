@@ -24,25 +24,30 @@ const ResetPassword = () => {
   const [sessionValid, setSessionValid] = useState<boolean | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
 
-  // Check for an active Supabase session
+  // Check for recovery session from URL
   useEffect(() => {
-    const checkSession = async () => {
+    const initRecovery = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        if (data.session) {
-          setSessionValid(true);
-        } else {
+        const { data, error } = await supabase.auth.getSessionFromUrl({
+          storeSession: true, // Store the temporary session
+        });
+
+        if (error || !data.session) {
           setSessionValid(false);
+          setError("No valid password reset token found. Please request a new link.");
+        } else {
+          setSessionValid(true);
         }
       } catch (err) {
-        console.error("Error checking session:", err);
+        console.error("Error during recovery:", err);
         setSessionValid(false);
+        setError("An error occurred. Please try again.");
       } finally {
         setCheckingSession(false);
       }
     };
 
-    checkSession();
+    initRecovery();
   }, []);
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
@@ -120,9 +125,7 @@ const ResetPassword = () => {
             <div className="space-y-4">
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  No valid session found. Please request a new password reset link.
-                </AlertDescription>
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
               <Button
                 onClick={handleRequestNewLink}
