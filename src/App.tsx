@@ -39,7 +39,7 @@ const AdminSocieties = lazy(() => import("./pages/AdminSocieties"));
 const SocietySettings = lazy(() => import("./pages/SocietySettings"));
 const SocietyAnalytics = lazy(() => import("./pages/SocietyAnalytics"));
 const Feedback = lazy(() => import("./pages/Feedback"));
-const SocietyLostFound = lazy(() => import("./pages/SocietyLostFound"));
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -98,7 +98,7 @@ const App = () => (
           <Route path="/society/:slug/events/:eventId/summary" element={<EventSummary />} />
           <Route path="/society/:slug/reports" element={<SocietyReports />} />
           <Route path="/society/:slug/codes-of-conduct" element={<SocietyCodesOfConduct />} />
-          <Route path="/society/:slug/lost-found" element={<SocietyLostFound />} />
+          
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/contact" element={<Contact />} />

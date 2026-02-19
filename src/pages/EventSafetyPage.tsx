@@ -37,8 +37,6 @@ import { ImportantContactsCard, EmergencyInfoCard, FAQsCard } from "@/components
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SectionErrorFallback } from "@/components/SectionErrorFallback";
 import DOMPurify from "dompurify";
-import LostFoundSection from "@/components/LostFoundSection";
-import FoundItemsBoard from "@/components/FoundItemsBoard";
 
 // Lazy load heavy dialog components to reduce initial bundle size
 const ReportConcernDialog = lazy(() =>
@@ -485,15 +483,6 @@ const EventSafetyPage = () => {
           </ErrorBoundary>
         )}
 
-        {/* Lost & Found Section */}
-        <ErrorBoundary fallback={<SectionErrorFallback sectionName="Lost & Found" />}>
-          <LostFoundSection eventId={event?.id || eventId!} />
-        </ErrorBoundary>
-
-        {/* Found Items Board - Public view */}
-        <ErrorBoundary fallback={<SectionErrorFallback sectionName="Found Items" />}>
-          <FoundItemsBoard eventId={event?.id || eventId!} />
-        </ErrorBoundary>
       </main>
 
       <Footer />
