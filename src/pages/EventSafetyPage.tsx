@@ -18,6 +18,8 @@ import {
   Share2,
   ChevronRight,
   ArrowRight,
+  Smartphone,
+  X,
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -37,6 +39,8 @@ import { ImportantContactsCard, EmergencyInfoCard, FAQsCard } from "@/components
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SectionErrorFallback } from "@/components/SectionErrorFallback";
 import DOMPurify from "dompurify";
+import AddToHomeScreenBanner from "@/components/AddToHomeScreenBanner";
+
 
 // Lazy load heavy dialog components to reduce initial bundle size
 const ReportConcernDialog = lazy(() =>
@@ -482,6 +486,9 @@ const EventSafetyPage = () => {
             </Card>
           </ErrorBoundary>
         )}
+
+        {/* Add to Home Screen Banner */}
+        <AddToHomeScreenBanner />
 
       </main>
 
