@@ -41,6 +41,16 @@ if (shouldRender) {
   clearTimeout(timeoutId);
   sessionStorage.setItem(RENDER_FLAG_KEY, 'success');
   
+  // Register PWA service worker (auto-updates in background)
+  if ('serviceWorker' in navigator && import.meta.env.PROD) {
+    // Defer SW registration until after React renders to not block initial paint
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((err) => {
+        console.warn('[PWA] Service worker registration failed:', err);
+      });
+    });
+  }
+  
   // Clean up flag after successful render
   setTimeout(() => {
     sessionStorage.removeItem(RENDER_FLAG_KEY);
