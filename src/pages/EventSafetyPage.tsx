@@ -514,9 +514,9 @@ const EventSafetyPage = () => {
               <div className="flex items-start gap-3 text-xs text-muted-foreground leading-relaxed">
                 <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5 text-muted-foreground/70" />
                 <p>
-                  <strong className="text-foreground">Important:</strong> OurSafeBase is a support tool and is not a
+                  <strong className="text-foreground">Important:</strong> OurSafeBase is a support tool for student societies and is not a
                   substitute for professional medical, legal, or emergency services. If you're in immediate danger,
-                  please contact emergency services (999/112).
+                  please contact emergency services (999/112) or professional support services. All data is handled in accordance with GDPR and our privacy policy.
                 </p>
               </div>
             </CardContent>
