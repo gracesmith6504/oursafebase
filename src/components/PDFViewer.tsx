@@ -19,7 +19,7 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
         setShowFallback(true);
         onError?.();
       }
-    }, 5000);
+    }, 8000);
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -78,7 +78,7 @@ export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
 
       {/* iframe — always mounted */}
       <iframe
-        src={src}
+        src={`https://docs.google.com/viewer?url=${encodeURIComponent(src)}&embedded=true`}
         className="w-full h-full border-0"
         onLoad={handleLoad}
         style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}
