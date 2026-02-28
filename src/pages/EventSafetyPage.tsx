@@ -354,24 +354,6 @@ const EventSafetyPage = () => {
               </div>
             </div>
 
-            {/* Share Button */}
-            {society && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-9 w-9 shrink-0">
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-auto p-0">
-                  <EventShareCard
-                    societySlug={society.slug}
-                    eventSlug={eventSlug || event.slug}
-                    eventTitle={event.title}
-                    onShowQRCode={() => setQrDialogOpen(true)}
-                  />
-                </PopoverContent>
-              </Popover>
-            )}
           </div>
         </div>
       </header>
