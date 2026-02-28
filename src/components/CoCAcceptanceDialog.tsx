@@ -2,18 +2,10 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { FileText, Download, Loader2 } from "lucide-react";
+import { FileText, Download, CheckCircle2, Loader2 } from "lucide-react";
 import { getFileExtension } from "@/lib/fileUtils";
 import DOMPurify from "dompurify";
 import { PDFViewer } from "@/components/PDFViewer";
@@ -42,186 +34,39 @@ const CoCAcceptanceDialog = ({
   const [agreed, setAgreed] = useState(false);
   const [scrolledToBottom, setScrolledToBottom] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [pdfError, setPdfError] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollDivRef = useRef<HTMLDivElement>(null);
 
-  // Get the actual scrollable viewport element from ScrollArea
-  const getViewport = useCallback(() => {
-    if (!scrollRef.current) return null;
-    // ScrollArea uses Radix which has a viewport child element
-    return scrollRef.current.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
-  }, []);
-
-  // Debounce scroll handler for better performance
-  const handleScroll = useCallback(() => {
-    const viewport = getViewport();
-    if (viewport) {
-      const { scrollTop, scrollHeight, clientHeight } = viewport;
-      // Consider "scrolled to bottom" when within 20px of bottom
-      const isBottom = scrollTop + clientHeight >= scrollHeight - 20;
-      setScrolledToBottom(isBottom);
-    }
-  }, [getViewport]);
-
-  // Debounced scroll handler
+  // For file-based CoCs, allow immediate acceptance
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    const debouncedScroll = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleScroll, 100);
-    };
-    
-    const viewport = getViewport();
-    if (viewport) {
-      viewport.addEventListener('scroll', debouncedScroll, { passive: true });
-      return () => {
-        viewport.removeEventListener('scroll', debouncedScroll);
-        clearTimeout(timeoutId);
-      };
-    }
-  }, [handleScroll, getViewport]);
-
-  // Simplified scroll detection: allow immediate acceptance for all file-based CoCs
-  useEffect(() => {
-    // For file-based CoCs, allow immediate acceptance
-    // Users can open files in new tabs if they want to review in detail
     if (cocFileUrl) {
       setScrolledToBottom(true);
+    }
+  }, [cocFileUrl]);
+
+  // For text content: check if content fits without scrolling
+  useEffect(() => {
+    if (cocFileUrl || !cocContent) {
+      if (!cocContent && !cocFileUrl) setScrolledToBottom(true);
       return;
     }
-    
-    // For text content, check if it fits on screen using the viewport
-    if (!cocFileUrl) {
-      const viewport = getViewport();
-      if (viewport) {
-        const { scrollHeight, clientHeight } = viewport;
-        if (scrollHeight <= clientHeight) {
-          setScrolledToBottom(true);
-        }
+    requestAnimationFrame(() => {
+      const el = scrollDivRef.current;
+      if (el && el.scrollHeight <= el.clientHeight + 20) {
+        setScrolledToBottom(true);
       }
+    });
+  }, [cocContent, cocFileUrl]);
+
+  // Scroll listener for text content
+  const handleScroll = useCallback(() => {
+    const el = scrollDivRef.current;
+    if (el) {
+      const isBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 20;
+      if (isBottom) setScrolledToBottom(true);
     }
-    
-    // Fallback: if no content and no file, allow acceptance
-    if (!cocContent && !cocFileUrl) {
-      setScrolledToBottom(true);
-    }
-  }, [cocContent, cocFileUrl, getViewport]);
+  }, []);
 
-  // Secondary check: Re-evaluate scroll state after DOM updates (fixes race condition)
-  useEffect(() => {
-    if (!cocFileUrl) {
-      // Use RAF to ensure DOM is fully painted
-      requestAnimationFrame(() => {
-        const viewport = getViewport();
-        if (viewport) {
-          const { scrollHeight, clientHeight } = viewport;
-          if (scrollHeight <= clientHeight + 20) { // +20px buffer
-            setScrolledToBottom(true);
-          }
-        }
-      });
-    }
-  }, [cocFileUrl, cocContent, getViewport]);
-
-  const renderFileViewer = useCallback(() => {
-    if (!cocFileUrl) return null;
-
-    // Debug: Log the URL
-    console.log('🔗 CoC File URL:', cocFileUrl);
-
-    // Validate URL format
-    try {
-      const url = new URL(cocFileUrl);
-      console.log('✅ Valid URL:', url.href);
-    } catch (e) {
-      console.error('❌ Invalid URL:', cocFileUrl, e);
-      return (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md m-4">
-          <p className="text-sm text-red-800 dark:text-red-200">Invalid file URL format</p>
-        </div>
-      );
-    }
-
-    const fileExt = getFileExtension(cocFileUrl);
-
-    // PDF files
-    if (fileExt === 'pdf') {
-      return (
-        <div>
-          <div className="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md m-4 mb-2">
-            <p className="text-xs text-blue-800 dark:text-blue-200">
-              PDF Loading... If it doesn't appear,{' '}
-              <button
-                onClick={() => window.open(cocFileUrl, '_blank')}
-                className="underline font-semibold hover:text-blue-900 dark:hover:text-blue-100"
-              >
-                click here to open in new tab
-              </button>
-            </p>
-          </div>
-          {pdfError && (
-            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md mx-4 mb-4">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">Unable to display PDF preview</p>
-              <Button
-                onClick={() => window.open(cocFileUrl, '_blank')}
-                size="sm"
-                variant="outline"
-              >
-                Open PDF in New Tab
-              </Button>
-            </div>
-          )}
-          <div className="max-h-[60vh] overflow-y-auto rounded-lg border">
-            <PDFViewer
-              src={cocFileUrl}
-              onLoadSuccess={() => {
-                setPdfError(false);
-              }}
-              onError={() => {
-                setPdfError(true);
-              }}
-            />
-          </div>
-        </div>
-      );
-    }
-    
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
-      return (
-        <div className="w-full flex items-center justify-center py-2 sm:py-4">
-          <img 
-            src={cocFileUrl} 
-            alt="Code of Conduct" 
-            className="w-full h-auto max-w-full object-contain"
-          />
-        </div>
-      );
-    }
-    
-    // For other file types (DOC, DOCX, TXT)
-    return (
-      <div className="flex flex-col items-center justify-center py-8 sm:py-12 px-4 sm:px-6 space-y-3 sm:space-y-4 min-h-[40vh]">
-        <FileText className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground" />
-        <div className="text-center max-w-md">
-          <p className="font-medium text-sm sm:text-base mb-2">Cannot Preview</p>
-          <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
-            Download to view this document
-          </p>
-        </div>
-        <Button 
-          onClick={() => window.open(cocFileUrl, '_blank')}
-          variant="outline"
-          size="sm"
-          className="text-xs sm:text-sm"
-        >
-          <Download className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-          Download Document
-        </Button>
-      </div>
-    );
-  }, [cocFileUrl, pdfError]);
-
-  // Memoize sanitized HTML to avoid re-sanitizing on every render
+  // Sanitized HTML
   const sanitizedContent = useMemo(() => {
     if (!cocContent) return "";
     return DOMPurify.sanitize(cocContent, {
@@ -231,17 +76,7 @@ const CoCAcceptanceDialog = ({
   }, [cocContent]);
 
   const handleAccept = useCallback(async () => {
-    if (!agreed) {
-      toast.error("Please agree to the Code of Conduct");
-      return;
-    }
-
-    if (!scrolledToBottom) {
-      toast.error("Please review the full Code of Conduct");
-      return;
-    }
-
-    if (!user) return;
+    if (!agreed || !scrolledToBottom || !user) return;
 
     setLoading(true);
     try {
@@ -270,37 +105,128 @@ const CoCAcceptanceDialog = ({
 
   const canAccept = agreed && scrolledToBottom;
 
-  return (
-    <Dialog open={true} onOpenChange={() => {}}>
-      <DialogContent hideClose className="max-w-6xl w-[95vw] h-[85vh] sm:max-h-[95vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 sm:pb-4 border-b shrink-0">
-          <DialogTitle className="text-base sm:text-lg">Code of Conduct</DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm">
-            Please review and accept to continue
-          </DialogDescription>
-        </DialogHeader>
+  // Status dot color
+  const dotColor = canAccept
+    ? "bg-emerald-500"
+    : scrolledToBottom
+      ? "bg-amber-500"
+      : "bg-muted-foreground/40";
 
-        <div className="flex-1 min-h-0 overflow-auto">
-          {cocFileUrl ? (
-            renderFileViewer()
-          ) : (
-            <ScrollArea 
-              ref={scrollRef} 
-              className="flex-1 px-2 sm:px-4 py-4"
-            >
-              <div className="border rounded-md bg-background px-4 py-4">
-                <div className="ql-snow">
-                  <div
-                    className="ql-editor"
-                    dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-                  />
-                </div>
-              </div>
-            </ScrollArea>
-          )}
+  const renderFileViewer = () => {
+    if (!cocFileUrl) return null;
+
+    try {
+      new URL(cocFileUrl);
+    } catch {
+      return (
+        <div className="flex items-center justify-center h-full p-4">
+          <p className="text-sm text-destructive">Invalid file URL</p>
         </div>
+      );
+    }
 
-        <div className="border-t bg-background px-4 sm:px-6 py-4 sm:py-4 space-y-3 sm:space-y-3 shrink-0">
+    const fileExt = getFileExtension(cocFileUrl);
+
+    if (fileExt === 'pdf') {
+      return (
+        <div className="w-full h-full">
+          <PDFViewer src={cocFileUrl} />
+        </div>
+      );
+    }
+
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+      return (
+        <div className="w-full h-full overflow-auto flex items-center justify-center p-4"
+          style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+        >
+          <img
+            src={cocFileUrl}
+            alt="Code of Conduct"
+            className="w-full h-auto max-w-full object-contain"
+          />
+        </div>
+      );
+    }
+
+    // Other file types
+    return (
+      <div className="flex flex-col items-center justify-center h-full px-6 space-y-4">
+        <div className="rounded-full bg-muted p-4">
+          <FileText className="h-10 w-10 text-muted-foreground" />
+        </div>
+        <div className="text-center max-w-md">
+          <p className="font-medium text-sm mb-1">Download to review this document</p>
+          <p className="text-xs text-muted-foreground mb-4">
+            This file type cannot be previewed in the browser
+          </p>
+        </div>
+        <Button
+          onClick={() => window.open(cocFileUrl, '_blank')}
+          variant="outline"
+          size="sm"
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Download Document
+        </Button>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-background"
+      style={{ height: '100dvh' }}
+    >
+      {/* Header */}
+      <div className="shrink-0 h-14 flex items-center justify-between px-4 sm:px-6 border-b bg-background">
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className={`shrink-0 h-2.5 w-2.5 rounded-full transition-colors duration-300 ${dotColor}`}
+          />
+          <div className="min-w-0">
+            <h1 className="text-sm font-semibold truncate">{eventTitle}</h1>
+            <p className="text-xs text-muted-foreground">Code of Conduct</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Content area */}
+      <div className="flex-1 min-h-0">
+        {cocFileUrl ? (
+          renderFileViewer()
+        ) : (
+          <div
+            ref={scrollDivRef}
+            onScroll={handleScroll}
+            className="h-full overflow-y-auto px-3 sm:px-6 py-4"
+            style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+          >
+            <div className="border rounded-md bg-background px-4 py-4 max-w-3xl mx-auto">
+              <div className="ql-snow">
+                <div
+                  className="ql-editor"
+                  dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div
+        className="shrink-0 border-t bg-background px-4 sm:px-6 pt-3"
+        style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+      >
+        {/* Helper text for text CoCs */}
+        {!cocFileUrl && !scrolledToBottom && (
+          <p className="text-xs text-muted-foreground text-center mb-2 animate-pulse">
+            Scroll to the bottom to unlock acceptance
+          </p>
+        )}
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center space-x-2">
             <Checkbox
               id="agree"
@@ -314,26 +240,28 @@ const CoCAcceptanceDialog = ({
             </Label>
           </div>
 
-          <div className="flex justify-end">
-            <Button
-              onClick={handleAccept}
-              disabled={!canAccept || loading}
-              className="w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10"
-            >
-              {loading 
-                ? "Accepting..." 
-                : (
-                  <>
-                    <span className="hidden sm:inline">Accept Code of Conduct</span>
-                    <span className="sm:hidden">Accept</span>
-                  </>
-                )
-              }
-            </Button>
-          </div>
+          <Button
+            onClick={handleAccept}
+            disabled={!canAccept || loading}
+            className={`w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10 transition-colors ${
+              canAccept && !loading
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                : ''
+            }`}
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                {canAccept && <CheckCircle2 className="mr-1.5 h-4 w-4" />}
+                <span className="hidden sm:inline">Accept Code of Conduct</span>
+                <span className="sm:hidden">Accept</span>
+              </>
+            )}
+          </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 
