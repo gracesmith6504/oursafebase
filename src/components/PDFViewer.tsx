@@ -11,7 +11,7 @@ interface PDFViewerProps {
 export const PDFViewer = ({ src, onLoadSuccess, onError }: PDFViewerProps) => {
   const [loading, setLoading] = useState(true);
   const [showFallback, setShowFallback] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     timeoutRef.current = setTimeout(() => {

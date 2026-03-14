@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => ({
             '@radix-ui/react-toast',
             '@radix-ui/react-tooltip',
           ],
-          'pdf-vendor': ['react-pdf', 'pdfjs-dist'],
+          
           'chart-vendor': ['recharts'],
           'form-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
           'supabase': ['@supabase/supabase-js'],
@@ -54,6 +54,6 @@ export default defineConfig(({ mode }) => ({
       '@supabase/supabase-js',
       'date-fns',
     ],
-    exclude: ['pdfjs-dist'],
+    exclude: [],
   },
 }));
