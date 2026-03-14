@@ -54,6 +54,6 @@ export default defineConfig(({ mode }) => ({
       '@supabase/supabase-js',
       'date-fns',
     ],
-    exclude: ['pdfjs-dist'],
+    exclude: [],
   },
 }));
