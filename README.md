@@ -4,6 +4,8 @@
 
 OurSafeBase helps student organisations manage event safety — from codes of conduct and welfare contacts to anonymous incident reporting and post-event feedback — all through a mobile-first interface accessible via QR code.
 
+[![Visit Website](https://img.shields.io/badge/Website-OurSafeBase-blue)](https://oursafebase.com/)
+
 ![React](https://img.shields.io/badge/React-18-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue) ![Supabase](https://img.shields.io/badge/Supabase-Backend-green) ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-3-blue)
 
 ---
